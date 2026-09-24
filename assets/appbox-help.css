@@ -1,0 +1,962 @@
+/*
+  お役立ちアプリBOX 共通ヘルプページCSS
+
+  出典: appbox\textdiff\textdiff.css の 823-1226行（ヘルプ部）と
+        1375-1405行（印刷時のヘルプ部）、および 21-206行の基盤部。
+        色リテラルは appbox-tokens.css / appbox-themes.css の
+        --appbox-* トークンに置き換えてあります。
+
+  ヘルプページはツール本体のCSSを読み込みません。
+  そのため、このファイルはレイアウトを含めて単独で完結しています。
+  フロー図メーカーのように本体が Excalidraw で描画されるツールでも、
+  ヘルプは他7ツールと同じ骨格で表示できます。
+
+  読み込み順:
+    appbox-tokens.css → appbox-themes.css → appbox-base.css
+    → appbox-chrome.css → appbox-help.css
+
+  @layer は使っていません。ヘルプページには競合するツールCSSが無く、
+  @layer 非対応環境で無視されるとページが無スタイルになるためです。
+*/
+
+/* 基盤 ----------------------------------------------------------------- */
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--appbox-text);
+  background: var(--appbox-page-bg);
+  font-family: var(--appbox-font-sans);
+}
+
+.app-shell {
+  width: min(1220px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 42px;
+}
+
+.help-shell {
+  width: min(var(--appbox-content-max-width, 1160px), calc(100% - 32px));
+}
+
+/* ヘッダ --------------------------------------------------------------- */
+
+.topbar,
+.brand,
+.top-actions {
+  display: flex;
+  align-items: center;
+}
+
+.topbar {
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.brand {
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  color: var(--appbox-primary);
+  background: var(--appbox-primary-soft);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--appbox-primary-rgb), 0.1);
+}
+
+.brand-mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+.brand-name {
+  margin: 0;
+  color: var(--appbox-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.app-name {
+  margin: 2px 0 0;
+  font-size: clamp(22px, 4vw, 30px);
+  line-height: 1.25;
+}
+
+.top-actions {
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* パネル --------------------------------------------------------------- */
+
+.panel {
+  overflow: hidden;
+  border: 1px solid var(--appbox-border);
+  border-radius: var(--appbox-panel-radius);
+  background: var(--appbox-panel-bg);
+  box-shadow: var(--appbox-shadow);
+}
+
+.panel-inner {
+  padding: 26px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.4;
+}
+
+.lead {
+  margin: 8px 0 22px;
+  color: var(--appbox-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ボタン --------------------------------------------------------------- */
+
+.btn {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-primary {
+  color: #ffffff;
+  background: var(--appbox-primary);
+  box-shadow: var(--appbox-primary-shadow);
+}
+
+.btn-primary:hover {
+  background: var(--appbox-primary-hover);
+}
+
+/* フッター ------------------------------------------------------------- */
+
+footer {
+  margin-top: 20px;
+  color: var(--appbox-footer-color);
+  font-size: var(--appbox-footer-size);
+  text-align: center;
+}
+
+/* ヘルプ本体 ----------------------------------------------------------- */
+
+.help-panel {
+  overflow: visible;
+}
+
+.help-inner {
+  padding: 32px;
+}
+
+.help-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.version-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  flex: 0 0 auto;
+  border: 1px solid var(--appbox-help-badge-border);
+  border-radius: 999px;
+  color: var(--appbox-primary);
+  background: var(--appbox-surface-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.help-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0 28px;
+  padding: 16px;
+  border: 1px solid var(--appbox-border);
+  border-radius: 15px;
+  background: var(--appbox-help-nav-bg);
+}
+
+.help-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 11px;
+  border-radius: 9px;
+  color: var(--appbox-primary);
+  background: var(--appbox-surface);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.help-nav a:hover {
+  background: var(--appbox-primary-soft);
+}
+
+.help-section {
+  padding: 30px 0;
+  border-top: 1px solid var(--appbox-border);
+  scroll-margin-top: 20px;
+}
+
+.help-section:first-of-type {
+  border-top: 0;
+}
+
+.help-section h3 {
+  margin: 0 0 16px;
+  color: var(--appbox-text);
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+.help-section h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.help-section p,
+.help-section li,
+.help-section dd {
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.help-section ul,
+.help-section ol {
+  margin: 12px 0 0;
+  padding-left: 1.6em;
+}
+
+.help-section li + li {
+  margin-top: 7px;
+}
+
+/* 手順（丸数字） ------------------------------------------------------- */
+
+.help-steps {
+  counter-reset: help-step;
+  padding-left: 0 !important;
+  list-style: none;
+}
+
+.help-steps li {
+  position: relative;
+  min-height: 38px;
+  padding: 5px 0 5px 48px;
+  counter-increment: help-step;
+}
+
+.help-steps li::before {
+  content: counter(help-step);
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--appbox-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.help-steps li strong {
+  display: block;
+  font-size: 15px;
+  color: var(--appbox-text);
+  line-height: 1.4;
+}
+
+.help-steps li p,
+.appbox-help-step-desc {
+  margin: 4px 0 0;
+  color: var(--appbox-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* コールアウト --------------------------------------------------------- */
+
+.help-callout {
+  margin-top: 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--appbox-border);
+  border-left-width: 5px;
+  border-radius: 13px;
+}
+
+.help-callout strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.help-callout p {
+  margin: 5px 0 0;
+}
+
+.help-callout-info {
+  border-left-color: var(--appbox-primary);
+  background: var(--appbox-help-info-bg);
+}
+
+/*
+  警告とセキュリティの色は「意味」を表すもので、ツールのブランド色では
+  ありません。庁内ツール間で意味色が揃っている方が読み取りを誤りにくいため、
+  全ツール共通の値にしています（左の線だけはツール色を使います）。
+*/
+.help-callout-warning {
+  border-color: var(--appbox-warn-border);
+  border-left-color: var(--appbox-warn-accent);
+  background: var(--appbox-warn-bg);
+}
+
+.help-callout-security {
+  border-color: var(--appbox-ok-border);
+  border-left-color: var(--appbox-primary);
+  background: var(--appbox-ok-bg);
+}
+
+/* 表 ------------------------------------------------------------------- */
+
+.help-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--appbox-border);
+  border-radius: 14px;
+}
+
+.help-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--appbox-surface);
+  font-size: 13px;
+}
+
+.help-table th,
+.help-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--appbox-border);
+  vertical-align: top;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.help-table tr:last-child th,
+.help-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.help-table thead th {
+  color: var(--appbox-muted);
+  background: var(--appbox-help-thead-bg);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.help-table tbody th {
+  min-width: 150px;
+  color: var(--appbox-primary);
+  background: var(--appbox-help-tint);
+}
+
+.help-shortcut-table {
+  min-width: 430px;
+}
+
+kbd {
+  display: inline-block;
+  min-width: 28px;
+  padding: 2px 7px;
+  border: 1px solid var(--appbox-kbd-border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: var(--appbox-text);
+  background: var(--appbox-kbd-bg);
+  box-shadow:
+    inset 0 -1px 0 var(--appbox-kbd-shadow);
+  font-family: var(--appbox-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* 用語定義 ------------------------------------------------------------- */
+
+.help-definition-list {
+  margin: 0;
+}
+
+.help-definition-list > div {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--appbox-border);
+}
+
+.help-definition-list > div:first-child {
+  padding-top: 0;
+}
+
+.help-definition-list > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.help-definition-list dt {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.help-definition-list dd {
+  margin: 6px 0 0;
+  color: var(--appbox-muted);
+}
+
+/* 凡例・カード --------------------------------------------------------- */
+
+.help-result-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.help-result-legend > div {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid var(--appbox-border);
+  border-radius: 13px;
+  background: var(--appbox-help-tint);
+  font-size: 13px;
+}
+
+/*
+  差分の色見本。textdiff.css:551-568 と同一寸法。
+  色はツールごとに意味が違うのでテーマトークン経由にしています。
+*/
+.legend-swatch {
+  width: 22px;
+  height: 13px;
+  display: inline-block;
+  flex: 0 0 auto;
+  border-radius: 3px;
+}
+
+.legend-swatch.del {
+  border: 1px solid var(--appbox-legend-del-border);
+  background: var(--appbox-legend-del-bg);
+  text-decoration: line-through;
+}
+
+.legend-swatch.add {
+  border: 1px solid var(--appbox-legend-add-border);
+  background: var(--appbox-legend-add-bg);
+}
+
+.help-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.help-card {
+  padding: 16px;
+  border: 1px solid var(--appbox-border);
+  border-radius: 13px;
+  background: var(--appbox-help-tint);
+}
+
+.help-card p {
+  margin: 0;
+  color: var(--appbox-muted);
+  font-size: 13px;
+}
+
+.help-subheading,
+.appbox-help-subheading {
+  margin-top: 24px !important;
+}
+
+/* FAQ ------------------------------------------------------------------ */
+
+.help-section details {
+  border: 1px solid var(--appbox-border);
+  border-radius: 12px;
+  background: var(--appbox-surface);
+}
+
+.help-section details + details {
+  margin-top: 10px;
+}
+
+.help-section summary {
+  padding: 14px 16px;
+  color: var(--appbox-text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.help-section details p {
+  margin: 0;
+  padding: 0 16px 16px;
+  color: var(--appbox-muted);
+}
+
+/* 末尾の戻り導線 ------------------------------------------------------- */
+
+.help-footer-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 28px;
+  border-top: 1px solid var(--appbox-border);
+}
+
+.help-primary-link {
+  flex: 0 1 300px;
+  text-decoration: none;
+}
+
+/* ==========================================================================
+   DADS × AppBox 新標準ヘルプレイアウト（2ペイン & 220pxスリム目次）
+   ========================================================================== */
+
+/* タイトルカード ------------------------------------------------------- */
+
+.appbox-help-header-card {
+  background: var(--appbox-surface, #ffffff);
+  border: 1px solid var(--appbox-border);
+  border-top: 4px solid var(--appbox-primary);
+  border-radius: 12px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.appbox-help-header-card__info {
+  flex: 1;
+  min-width: 260px;
+}
+
+.appbox-help-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--appbox-primary);
+  margin-bottom: 6px;
+}
+
+.appbox-help-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.appbox-help-app-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  background: var(--appbox-surface-soft);
+  border: 1px solid var(--appbox-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--appbox-primary);
+}
+
+.appbox-help-app-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.appbox-help-h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--appbox-text);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.appbox-help-header-desc {
+  font-size: 15px;
+  color: var(--appbox-muted);
+  margin: 0 0 0 52px;
+}
+
+@media (max-width: 640px) {
+  .appbox-help-header-desc {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+/* 2ペイングリッドレイアウト --------------------------------------------- */
+
+.appbox-help-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .appbox-help-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .appbox-help-nav-card {
+    position: static;
+  }
+}
+
+/* 左カラム: 220px スリム目次 ------------------------------------------ */
+
+.appbox-help-sidebar {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.appbox-help-nav-card {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  background: var(--appbox-surface, #ffffff);
+  border: 1px solid var(--appbox-border);
+  border-radius: 10px;
+  padding: 18px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.appbox-help-nav-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--appbox-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--appbox-border);
+}
+
+.appbox-help-nav-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+}
+
+.appbox-help-nav-link {
+  display: block;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--appbox-text);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.appbox-help-nav-link:hover {
+  background: var(--appbox-surface-soft);
+  color: var(--appbox-primary);
+}
+
+.appbox-help-nav-link.is-active {
+  background: var(--appbox-surface-soft);
+  color: var(--appbox-primary);
+  font-weight: 700;
+  border-left: 3px solid var(--appbox-primary);
+  padding-left: 7px;
+}
+
+.appbox-help-nav-link:focus-visible {
+  outline: none;
+  box-shadow: var(--appbox-focus-ring-double, 0 0 0 2px #ffffff, 0 0 0 5px #eab308, 0 0 0 7px #1a1a1a);
+}
+
+/* 右カラム: メイン記事 ------------------------------------------------- */
+
+.appbox-help-content {
+  background: var(--appbox-surface, #ffffff);
+  border: 1px solid var(--appbox-border);
+  border-radius: 12px;
+  padding: 36px 40px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 640px) {
+  .appbox-help-content {
+    padding: 24px 20px;
+  }
+}
+
+.appbox-help-h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--appbox-text);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--appbox-border);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appbox-help-p {
+  font-size: 14px;
+  color: var(--appbox-text);
+  margin-bottom: 14px;
+  line-height: 1.85;
+}
+
+.appbox-help-step-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--appbox-surface-soft);
+  border: 1px solid var(--appbox-border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.appbox-help-step-num {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--appbox-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.appbox-help-step-content {
+  flex: 1;
+}
+
+.appbox-help-step-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--appbox-text);
+}
+
+.appbox-help-step-content p {
+  font-size: 14px;
+  color: var(--appbox-muted);
+  margin: 0;
+}
+
+.appbox-help-faq-item {
+  border: 1px solid var(--appbox-border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: visible;
+  background: var(--appbox-surface);
+}
+
+.appbox-help-faq-item summary {
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--appbox-text);
+  cursor: pointer;
+  background: var(--appbox-surface-soft);
+  transition: background 0.15s ease;
+  display: list-item;
+  list-style-position: inside;
+  border-radius: 7px;
+}
+
+.appbox-help-faq-item[open] summary {
+  border-radius: 7px 7px 0 0;
+}
+
+.appbox-help-faq-item summary::marker {
+  color: var(--appbox-primary);
+}
+
+.appbox-help-faq-item summary:hover {
+  background: var(--appbox-primary-soft);
+}
+
+.appbox-help-faq-item summary:focus-visible {
+  outline: none;
+  box-shadow: var(--appbox-focus-ring-double, 0 0 0 2px #ffffff, 0 0 0 5px #eab308, 0 0 0 7px #1a1a1a);
+}
+
+.appbox-help-faq-answer {
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--appbox-muted);
+  border-top: 1px solid var(--appbox-border);
+}
+
+@media (forced-colors: active) {
+  .appbox-help-nav-link:focus-visible,
+  .appbox-help-faq-item summary:focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+/* レスポンシブ --------------------------------------------------------- */
+
+@media (max-width: 700px) {
+  .help-inner {
+    padding: 22px 18px;
+  }
+
+  .help-heading {
+    flex-direction: column;
+  }
+
+  .help-result-legend,
+  .help-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .help-table {
+    min-width: 680px;
+  }
+
+  .help-shortcut-table {
+    min-width: 430px;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-shell {
+    width: min(100% - 20px, 980px);
+  }
+
+  .help-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 12px;
+  }
+
+  .help-nav a {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 印刷 ----------------------------------------------------------------- */
+
+@media print {
+  @page {
+    size: auto;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    min-height: 0;
+    background: #ffffff;
+    color: #000000;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .app-shell,
+  .help-shell {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .topbar,
+  .top-actions,
+  .help-nav,
+  .help-footer-actions,
+  footer {
+    display: none !important;
+  }
+
+  .help-panel {
+    display: block !important;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .help-inner {
+    padding: 0;
+  }
+
+  .help-section,
+  .help-section details {
+    break-inside: avoid;
+  }
+
+  /* 閉じたままの FAQ も印刷では中身を出す。 */
+  .help-section details > * {
+    display: block;
+  }
+}

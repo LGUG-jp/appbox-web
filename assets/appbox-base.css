@@ -1,0 +1,91 @@
+/*
+  お役立ちアプリBOX 共通ベース
+
+  全体を @layer appbox で包んでいます。CSS Cascade Layers では
+  「レイヤーなしの宣言」が「レイヤー内の宣言」に常に勝つため、
+  詳細度にも読み込み順にも関係なく各ツールのCSSが優先されます。
+  つまり、このファイルを読み込んでも既存画面の見た目は変わりません。
+
+  @layer 非対応のブラウザではブロックごと無視されます。
+  その場合も「共通CSSが効かない＝現状のまま」になるため安全側です。
+
+  注意: !important はレイヤーの優先順位を逆転させます
+  （前方レイヤーの !important が最も強くなる）。
+  そのためこのファイルでは .appbox-sr-only を除いて !important を使いません。
+  [hidden] や prefers-reduced-motion の共通化を安易に持ち込まないこと。
+*/
+
+@layer appbox {
+  /*
+    各ツールは「* { box-sizing: border-box }」を宣言しています。
+    ここも同じ範囲に揃え、疑似要素は対象にしません。
+    「*」は ::before / ::after に一致しないため、
+    「*::before」を書くと競合相手が無く、レイヤーの保護が効かないまま
+    既存ツールの疑似要素の寸法計算を変えてしまいます。
+  */
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+  }
+
+  body {
+    font-family: var(--appbox-font-sans);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible,
+  [tabindex]:focus-visible {
+    outline:
+      var(--appbox-focus-ring-width)
+      solid
+      var(--appbox-focus-ring);
+    outline-offset: var(--appbox-focus-ring-offset);
+  }
+}
+
+/*
+  スクリーンリーダー専用テキスト。
+
+  qrcode / textdiff の .visually-hidden、kakeizu / schedule の .sr-only と
+  プロパティが完全に一致しているため、ここで1つに統合します。
+  既存クラスもエイリアスとして併記してあるので、各ツールのCSSから
+  重複定義を削除しても表示は変わりません。
+
+  ここだけは !important を保持します（元の4実装がそうであり、
+  打ち消されると読み上げ専用テキストが画面に現れてしまうため）。
+*/
+.appbox-sr-only,
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 印刷時に隠す要素の共通クラス。 */
+@media print {
+  .appbox-no-print {
+    display: none !important;
+  }
+}

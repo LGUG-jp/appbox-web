@@ -1,0 +1,176 @@
+/*
+  お役立ちアプリBOX 共通デザイントークン
+
+  このファイルは --appbox-* トークンの既定値だけを持ちます。
+  実際のツールごとの色は appbox-themes.css が上書きします。
+
+  共通CSS（appbox-base.css / appbox-chrome.css / appbox-components.css /
+  appbox-help.css）は
+  色リテラルを一切書かず、必ずここで定義したトークンを参照します。
+
+  読み込み順:
+    appbox-tokens.css → appbox-themes.css → appbox-base.css
+    → appbox-chrome.css → appbox-components.css → 各ツールのCSS
+*/
+
+:root {
+  /* 文字 --------------------------------------------------------------- */
+  --appbox-font-sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic UI",
+    Meiryo,
+    sans-serif;
+
+  --appbox-font-mono:
+    Consolas,
+    "Courier New",
+    monospace;
+
+  /* 面と文字色（既定値は textdiff の配色） ------------------------------ */
+  --appbox-bg: #f7fbff;
+
+  /* ページ全体の背景（単色） ------------------------------------------ */
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eef6ff;
+  --appbox-text: #243247;
+  --appbox-muted: #6c7a8e;
+  --appbox-border: #d7e2ef;
+
+  /* ブランド色 ---------------------------------------------------------- */
+  --appbox-primary: #3f6fae;
+  --appbox-primary-rgb: 63, 111, 174;
+  --appbox-primary-hover: #315e98;
+  --appbox-primary-soft: #dcecff;
+  /* 主ボタンの影。primary の RGB を使った色付きの影で、値ごと差し替える。 */
+  --appbox-primary-shadow: 0 8px 18px rgba(63, 111, 174, 0.18);
+
+  /* 状態色 -------------------------------------------------------------- */
+  --appbox-success: #3d7b62;
+  --appbox-danger: #b25161;
+  --appbox-warning: #8f6412;
+
+  /* 影 ------------------------------------------------------------------ */
+  --appbox-shadow: 0 14px 36px rgba(57, 91, 130, 0.1);
+
+  /* フォーカスリング ---------------------------------------------------- */
+  --appbox-focus-ring: rgba(63, 111, 174, 0.28);
+  --appbox-focus-ring-width: 3px;
+  --appbox-focus-ring-offset: 2px;
+  /* イエロー×ブラックのフォーカスリング。適合性は各画面での表示・操作を含めて確認する。 */
+  --appbox-focus-ring-double: 0 0 0 2px #ffffff, 0 0 0 5px #eab308, 0 0 0 7px #1a1a1a;
+
+  /* DADS（デジタル庁デザインシステム）ニュートラル・状態トークン -------- */
+  --appbox-dads-white: #ffffff;
+  --appbox-dads-neutral-900: #1a1a1a;
+  --appbox-dads-neutral-800: #333333;
+  --appbox-dads-neutral-700: #4d4d4d;
+  --appbox-dads-neutral-600: #666666;
+  --appbox-dads-neutral-400: #999999;
+  --appbox-dads-neutral-300: #d9d9d9;
+  --appbox-dads-neutral-200: #e5e5e5;
+  --appbox-dads-neutral-100: #f5f5f5;
+  --appbox-dads-neutral-50: #fafafa;
+  --appbox-dads-error: #c9171e;
+  --appbox-dads-error-bg: #fdf2f4;
+  --appbox-dads-error-border: #f8cad2;
+  --appbox-dads-success: #007a3d;
+  --appbox-dads-success-bg: #f1f8f3;
+  --appbox-dads-success-border: #c8e6d2;
+  --appbox-dads-warning: #b54708;
+  --appbox-dads-warning-bg: #fffbeb;
+  --appbox-dads-warning-border: #fde68a;
+
+  /* 統一スリム白ヘッダーおよびカード部品トークン ------------------------ */
+  --appbox-header-bg: var(--appbox-dads-white);
+  --appbox-header-border: var(--appbox-dads-neutral-200);
+  --appbox-header-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  --appbox-logo-gradient: linear-gradient(135deg, #eee4fb 0%, #e3efff 100%);
+  --appbox-logo-border: #d3c1eb;
+  --appbox-logo-color: #5c388d;
+  --appbox-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+
+  /* ヘッダ部品（戻るボタン・ヘルプボタン）の形状 ------------------------ */
+  --appbox-chrome-height: 40px;
+  --appbox-chrome-padding: 0 13px;
+  --appbox-chrome-radius: 11px;
+  --appbox-chrome-weight: 800;
+  --appbox-chrome-size: 12px;
+  --appbox-chrome-bg: rgba(255, 255, 255, 0.82);
+  --appbox-chrome-shadow: 0 6px 16px rgba(57, 91, 130, 0.06);
+  --appbox-chrome-icon: 16px;
+
+  /* フッター ------------------------------------------------------------ */
+  --appbox-footer-color: #8a98a9;
+  --appbox-footer-size: 11px;
+
+  /* ヘルプページ -------------------------------------------------------- */
+  --appbox-panel-bg: rgba(255, 255, 255, 0.94);
+  --appbox-panel-radius: 24px;
+
+  --appbox-help-badge-border: #cfe0f2;
+  --appbox-help-nav-bg: #f8fbff;
+  --appbox-help-info-bg: #f4f9ff;
+  --appbox-help-thead-bg: #f7faff;
+  --appbox-help-tint: #fbfdff;
+
+  --appbox-warn-bg: #fffaf0;
+  --appbox-warn-border: #ecd9aa;
+  --appbox-warn-accent: #c28a1c;
+
+  --appbox-ok-bg: #f2fbf6;
+  --appbox-ok-border: #cdebd9;
+
+  /* 差分の色見本（既定値は textdiff.css:559-568） */
+  --appbox-legend-del-bg: #fff0f3;
+  --appbox-legend-del-border: #e0a6b0;
+  --appbox-legend-add-bg: #eaf4ff;
+  --appbox-legend-add-border: #a9cbed;
+
+  --appbox-kbd-bg: #f7f9fc;
+  --appbox-kbd-border: #b8c5d4;
+  --appbox-kbd-shadow: rgba(36, 50, 71, 0.08);
+
+  /* 共通コンポーネント -------------------------------------------------- */
+  --appbox-space-1: 4px;
+  --appbox-space-2: 8px;
+  --appbox-space-3: 12px;
+  --appbox-space-4: 16px;
+  --appbox-space-5: 24px;
+  --appbox-space-6: 32px;
+  --appbox-text-sm: 0.875rem;
+  --appbox-text-md: 1rem;
+  --appbox-text-lg: 1.25rem;
+  --appbox-weight-normal: 400;
+  --appbox-weight-bold: 700;
+  --appbox-line-height: 1.6;
+  --appbox-content-max-width: 1160px;
+  --appbox-control-height: 42px;
+  --appbox-control-radius: 10px;
+  --appbox-component-radius: 14px;
+  --appbox-component-border-width: 1px;
+  --appbox-component-transition: 160ms ease;
+  --appbox-z-overlay: 10;
+  --appbox-disabled-opacity: 0.55;
+  --appbox-on-primary: #ffffff;
+  --appbox-secondary-bg: #ffffff;
+  --appbox-secondary-hover: #eef6ff;
+  --appbox-danger-hover: #913f4d;
+  --appbox-field-bg: #ffffff;
+  --appbox-field-readonly-bg: #f3f6fa;
+  --appbox-placeholder: #7a8798;
+  --appbox-status-info-bg: #eef6ff;
+  --appbox-status-info-border: #bfd8f2;
+  --appbox-status-success-bg: #f2fbf6;
+  --appbox-status-success-border: #cdebd9;
+  --appbox-status-warning-bg: #fffaf0;
+  --appbox-status-warning-border: #ecd9aa;
+  --appbox-status-error-bg: #fff2f4;
+  --appbox-status-error-border: #efc6cd;
+  --appbox-overlay: rgba(255, 255, 255, 0.72);
+  --appbox-spinner-track: rgba(63, 111, 174, 0.22);
+}

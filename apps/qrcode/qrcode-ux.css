@@ -1,0 +1,378 @@
+/*
+ * QRコード作成 v1.4.1 UI拡張
+ * Issue #86: 作成 / プレビュー保存 / 詳細カスタマイズの3領域へ再構成する。
+ */
+
+.panel-inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.qr-main-grid {
+  align-items: stretch;
+}
+
+.create-panel,
+.preview-panel {
+  min-width: 0;
+}
+
+.primary-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--appbox-space-5);
+}
+
+.step-block {
+  margin: 0;
+}
+
+.step-label {
+  display: block;
+  margin: 0 0 var(--appbox-space-3);
+  color: var(--appbox-text);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.step-label .hint {
+  margin-left: var(--appbox-space-2);
+  font-size: 11px;
+  font-weight: var(--appbox-weight-bold);
+}
+
+.content-type-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.type-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--appbox-space-4) var(--appbox-space-5);
+}
+
+.type-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--appbox-space-2);
+  margin: 0;
+  color: var(--appbox-text);
+  font-size: 14px;
+  font-weight: var(--appbox-weight-bold);
+  cursor: pointer;
+}
+
+.type-radio input {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  margin: 0;
+  appearance: none;
+  background: var(--appbox-surface);
+  border: 2px solid var(--appbox-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--appbox-component-transition);
+}
+
+.type-radio input:hover {
+  border-color: var(--appbox-primary);
+}
+
+.type-radio input:checked {
+  background: var(--appbox-primary);
+  border-color: var(--appbox-primary);
+  box-shadow: inset 0 0 0 5px var(--appbox-surface);
+}
+
+.type-radio input:focus-visible {
+  outline: var(--appbox-focus-ring-width) solid var(--appbox-focus-ring);
+  outline-offset: var(--appbox-focus-ring-offset);
+}
+
+.type-radio span {
+  line-height: 1.5;
+}
+
+.primary-input-field {
+  margin: 0;
+}
+
+.primary-input-field textarea {
+  min-height: 150px;
+  background: var(--appbox-surface);
+}
+
+.primary-action-row {
+  margin-top: -2px;
+}
+
+.primary-action-row .btn-primary {
+  min-height: 52px;
+  font-size: 15px;
+}
+
+.primary-status {
+  min-height: 0;
+  margin-top: calc(var(--appbox-space-2) * -1);
+}
+
+.primary-status:empty {
+  display: none;
+}
+
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--appbox-space-4);
+}
+
+.read-check-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--appbox-space-2);
+  margin: 0;
+  padding: var(--appbox-space-2) var(--appbox-space-3);
+  color: var(--appbox-warning);
+  background: var(--appbox-status-warning-bg);
+  border: 2px solid var(--appbox-status-warning-border);
+  border-radius: var(--appbox-control-radius);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.read-check-notice[hidden] {
+  display: none;
+}
+
+.read-check-notice .notice-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.legacy-result-hooks {
+  display: none !important;
+}
+
+.preview-body {
+  flex: 0 0 auto;
+  padding-top: var(--appbox-space-2);
+  padding-bottom: var(--appbox-space-2);
+}
+
+.qr-stage {
+  width: min(100%, 240px);
+  padding: var(--appbox-space-3);
+  border-radius: 20px;
+}
+
+.qr-stage.is-transparent-preview {
+  background-color: var(--appbox-surface);
+  background-image:
+    linear-gradient(45deg, var(--appbox-surface-soft) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--appbox-surface-soft) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--appbox-surface-soft) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--appbox-surface-soft) 75%);
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}
+
+.save-file-field {
+  margin: 0 0 var(--appbox-space-3);
+}
+
+.save-file-field .text-input {
+  background: var(--appbox-surface);
+}
+
+.preview-foot {
+  padding-bottom: var(--appbox-space-5);
+}
+
+.preview-foot .download-row {
+  margin-top: 0;
+}
+
+.customization-section {
+  margin-top: var(--appbox-space-5);
+  background: var(--appbox-surface-soft);
+}
+
+.customization-panel-inner {
+  gap: var(--appbox-space-4);
+}
+
+.customization-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--appbox-space-4);
+}
+
+.customization-heading h2 {
+  margin: 0;
+}
+
+.customization-heading p {
+  margin: var(--appbox-space-2) 0 0;
+  color: var(--appbox-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.optional-badge {
+  flex: 0 0 auto;
+  padding: var(--appbox-space-1) var(--appbox-space-3);
+  color: var(--appbox-primary);
+  background: var(--appbox-surface-soft);
+  border: var(--appbox-component-border-width) solid var(--appbox-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: var(--appbox-weight-bold);
+}
+
+.customization-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--appbox-space-4);
+}
+
+.customization-grid > .field {
+  min-width: 0;
+  margin: 0;
+}
+
+.customization-grid .field-wide {
+  grid-column: 1 / -1;
+}
+
+.customization-section select,
+.customization-section .color-control,
+.customization-section .file-input,
+.customization-section .range-value,
+.customization-section .transparent-bg-button,
+.customization-section .btn-mini {
+  background: var(--appbox-surface);
+}
+
+.ec-label {
+  align-items: baseline;
+}
+
+.ec-label strong {
+  color: var(--appbox-primary);
+  font-size: 12px;
+}
+
+.background-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--appbox-space-2);
+  margin-top: var(--appbox-space-3);
+}
+
+.transparent-bg-button {
+  min-width: 150px;
+  justify-content: flex-start;
+}
+
+.transparent-bg-button::before {
+  width: 42px;
+  height: 24px;
+  flex: 0 0 auto;
+  content: "";
+  background-color: var(--appbox-border);
+  background-image: radial-gradient(
+    circle at 12px 50%,
+    var(--appbox-surface) 0 8px,
+    transparent 9px
+  );
+  border: var(--appbox-component-border-width) solid var(--appbox-border);
+  border-radius: 999px;
+  transition: var(--appbox-component-transition);
+}
+
+.transparent-bg-button[aria-pressed="true"] {
+  color: var(--appbox-primary);
+  background: var(--appbox-secondary-bg);
+  border-color: var(--appbox-primary);
+}
+
+.transparent-bg-button[aria-pressed="true"]::before {
+  background-color: var(--appbox-primary);
+  background-image: radial-gradient(
+    circle at 30px 50%,
+    var(--appbox-surface) 0 8px,
+    transparent 9px
+  );
+  border-color: var(--appbox-primary);
+}
+
+.color-control.is-disabled {
+  opacity: var(--appbox-disabled-opacity);
+}
+
+.color-control.is-disabled input {
+  cursor: not-allowed;
+}
+
+@media (max-width: 860px) {
+  .customization-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customization-grid .field-wide {
+    grid-column: auto;
+  }
+
+  .preview-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .type-radio-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--appbox-space-3);
+  }
+
+  .primary-action-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .primary-action-row .btn,
+  .read-check-notice {
+    width: 100%;
+  }
+
+  .customization-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 430px) {
+  .type-radio-group {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,13 @@
+REFERENCE / NOTICE
+
+Reference project:
+  CSV Diff Browser
+  Author / repository owner: SaurabhBaranawal
+  https://github.com/SaurabhBaranawal/csv-diff-browser
+
+The upstream README states that CSV Diff Browser is available under the MIT License.
+
+This package does not bundle the upstream project's source files or third-party
+runtime libraries. The application files were independently implemented
+for the internal "お役立ちアプリBOX" use case while taking inspiration from the
+upstream project's functionality and UX concepts.

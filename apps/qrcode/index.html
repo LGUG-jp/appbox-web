@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="qrcode">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>QRコード作成 | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=1.4.1">
+  <link rel="stylesheet" href="./qrcode.css?v=1.4.1">
+  <link rel="stylesheet" href="./qrcode-ux.css?v=1.4.1">
+</head>
+
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+            <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 19v2"></path>
+          </svg>
+        </div>
+
+        <div class="brand-copy">
+          <p class="brand-name">お役立ちアプリBOX</p>
+          <h1 class="app-name">QRコード作成</h1>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="QRコード作成のヘルプを新しいタブで開く">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1-1.4 2.1"></path>
+            <path d="M12 17h.01"></path>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+
+        <a class="back-button appbox-back-button" href="../../" aria-label="お役立ちアプリBOXに戻る">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+          お役立ちBOXに戻る
+        </a>
+      </div>
+    </header>
+
+    <div class="main-grid qr-main-grid">
+      <section class="panel create-panel" aria-labelledby="inputTitle">
+        <div class="panel-inner">
+          <h2 id="inputTitle" class="appbox-sr-only">QRコードを作る</h2>
+
+          <div class="primary-flow">
+            <div class="step-block">
+              <p class="step-label" id="contentTypeLegend">以下から一つ選んでください</p>
+
+              <div class="type-radio-group" role="radiogroup" aria-labelledby="contentTypeLegend">
+                <label class="type-radio">
+                  <input type="radio" name="contentTypeChoice" value="url" checked>
+                  <span>URL</span>
+                </label>
+                <label class="type-radio">
+                  <input type="radio" name="contentTypeChoice" value="email">
+                  <span>メール</span>
+                </label>
+                <label class="type-radio">
+                  <input type="radio" name="contentTypeChoice" value="phone">
+                  <span>電話</span>
+                </label>
+                <label class="type-radio">
+                  <input type="radio" name="contentTypeChoice" value="text">
+                  <span>テキスト</span>
+                </label>
+              </div>
+
+              <select id="contentType" class="content-type-select" aria-hidden="true" tabindex="-1">
+                <option value="url" selected>WebサイトURL</option>
+                <option value="email">メールアドレス</option>
+                <option value="phone">電話番号</option>
+                <option value="text">文章・任意の文字列</option>
+              </select>
+
+              <p class="field-note" id="contentTypeHelp">URLを入力してください。全角記号、空白、改行などを確認します。</p>
+            </div>
+
+            <div class="field primary-input-field">
+              <label class="step-label" for="qrText">
+                <span>QRコードにしたい内容</span>
+                <span class="hint"><span id="charCount">0</span>文字 / UTF-8約<span id="byteCount">0</span>バイト</span>
+              </label>
+
+              <textarea id="qrText" maxlength="700" spellcheck="false" autocomplete="off" aria-describedby="inputHelp inputWarning" placeholder="例: https://www.example.jp/"></textarea>
+
+              <p class="field-note" id="inputHelp">
+                最大700文字です。実際に格納できる量は文字種と誤り訂正レベルによって変わります。
+                長い文章は、掲載ページのURLをQRコードにすることをおすすめします。
+              </p>
+
+              <div id="inputWarning" class="inline-warning" role="status" aria-live="polite" hidden></div>
+            </div>
+
+            <div class="button-row primary-action-row">
+              <button class="btn btn-primary appbox-button appbox-button--primary" id="generateBtn" type="button">QRコードを作成</button>
+              <button class="btn btn-secondary appbox-button appbox-button--secondary" id="clearBtn" type="button">すべて初期化</button>
+            </div>
+
+            <div id="status" class="status primary-status" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel preview-panel" aria-labelledby="previewTitle">
+        <div class="preview-head">
+          <h2 id="previewTitle">プレビュー</h2>
+          <p class="read-check-notice appbox-status appbox-status--warning" id="readCheckNotice" role="status" hidden>
+            <span class="notice-icon" aria-hidden="true">⚠</span>
+            <span>QRコードは読み取り確認をしてください！</span>
+          </p>
+        </div>
+
+        <div class="preview-body">
+          <div class="qr-stage" id="qrStage" aria-busy="false">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                  <path d="M14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 19v2"></path>
+                </svg>
+              </div>
+              <strong>ここにQRコードが表示されます</strong>
+              <span>左側に内容を入力してください。</span>
+            </div>
+
+            <div class="stage-processing" id="stageProcessing" role="status" aria-live="polite" hidden>
+              <span class="spinner" aria-hidden="true"></span>
+              QRコードを作成しています...
+            </div>
+
+            <div id="qrcode" role="img" aria-label="作成したQRコード" hidden></div>
+          </div>
+        </div>
+
+        <div class="preview-foot">
+          <section class="legacy-result-hooks" id="resultSummary" aria-hidden="true" hidden>
+            <span id="resultVersion">-</span>
+            <span id="resultModules">-</span>
+            <span id="resultPngSize">-</span>
+            <span id="resultModulePixels">-</span>
+            <span id="resultBytes">-</span>
+            <span id="resultEcLevel">-</span>
+            <div id="encodedDetails" hidden>
+              <pre id="encodedContent"></pre>
+              <button id="copyContentBtn" type="button">内容をコピー</button>
+            </div>
+          </section>
+
+          <div class="field save-file-field">
+            <label for="saveFileName">保存ファイル名</label>
+            <input class="text-input" id="saveFileName" type="text" value="qrcode" maxlength="80" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="download-row">
+            <button class="btn btn-download appbox-button appbox-button--primary" id="downloadPngBtn" type="button" disabled>PNGで保存</button>
+            <button class="btn btn-ghost appbox-button appbox-button--secondary" id="downloadSvgBtn" type="button" disabled>SVGで保存</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel customization-section" id="customizationPanel" aria-labelledby="customizationTitle">
+      <div class="panel-inner customization-panel-inner">
+        <div class="customization-heading">
+          <div>
+            <h2 id="customizationTitle">詳細カスタマイズ</h2>
+            <p>必要な場合だけ調整してください。通常は初期設定のままで利用できます。</p>
+          </div>
+          <span class="optional-badge">任意</span>
+        </div>
+
+        <div class="customization-grid">
+          <div class="field">
+            <label for="qrSize">PNG最大画像サイズ</label>
+            <select id="qrSize">
+              <option value="256">最大256px</option>
+              <option value="384">最大384px</option>
+              <option value="512">最大512px</option>
+              <option value="768" selected>最大768px</option>
+            </select>
+            <p class="field-note">SVGは拡大可能なベクター形式で出力します。</p>
+          </div>
+
+          <div class="field">
+            <label class="ec-label" for="ecLevel">
+              <span>誤り訂正レベル</span>
+              <strong id="ecLevelSummary">H（推奨）</strong>
+            </label>
+            <select id="ecLevel">
+              <option value="H" selected>H - 約30%（推奨）</option>
+              <option value="Q">Q - 約25%</option>
+              <option value="M">M - 約15%</option>
+            </select>
+            <p class="field-note" id="ecLevelNote">通常はHのままで利用してください。内容が長く、Hで作成できない場合のみQまたはMを検討してください。</p>
+          </div>
+
+          <div class="field field-wide">
+            <label>QRコードの色・背景</label>
+
+            <div class="color-grid">
+              <div class="color-control">
+                <input type="color" id="qrColor" value="#202020" aria-label="QRコード本体の色">
+                <span>QRコード<small id="qrColorText">#202020</small></span>
+              </div>
+
+              <div class="color-control" id="bgColorControl">
+                <input type="color" id="bgColor" value="#ffffff" aria-label="背景の色">
+                <span>背景<small id="bgColorText">#FFFFFF</small></span>
+              </div>
+            </div>
+
+            <div class="background-actions">
+              <button type="button" class="appbox-button appbox-button--secondary transparent-bg-button" id="transparentBgBtn" aria-pressed="false">背景透明</button>
+              <button type="button" class="btn-mini appbox-button appbox-button--secondary" id="resetColorsBtn">標準色に戻す</button>
+            </div>
+
+            <p class="field-note">背景透明はプレビューへ即時反映し、PNG・SVGの保存にも反映します。読み取りやすさを優先する場合は、濃いQRコードと明るい背景を使用してください。</p>
+          </div>
+
+          <fieldset class="field field-wide deco-box">
+            <legend class="appbox-sr-only">中央画像の設定</legend>
+
+            <label class="toggle-row" for="useLogo">
+              <input type="checkbox" id="useLogo" aria-expanded="false" aria-controls="decoOptions">
+              中央に画像を入れる
+            </label>
+
+            <p class="hint logo-warning">有効にすると誤り訂正レベルをHへ変更し、使用中はHに固定します。保存後は実際の端末や印刷物で読み取れることを必ず確認してください。</p>
+
+            <div class="deco-options" id="decoOptions" hidden>
+              <label for="logoFile">中央画像 <span class="hint">PNG / JPEG / WebP・最大5MB</span></label>
+              <div class="file-input"><input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp"></div>
+
+              <div id="logoProcessing" class="processing-note" role="status" aria-live="polite" hidden>中央画像を処理しています...</div>
+
+              <div class="range-row">
+                <div>
+                  <label for="logoSizeRange">中央エリアの大きさ</label>
+                  <input type="range" id="logoSizeRange" min="12" max="20" step="1" value="15">
+                </div>
+                <output class="range-value" id="logoSizeOutput" for="logoSizeRange"><span id="logoSizeValue">15</span>%</output>
+              </div>
+
+              <div class="range-row">
+                <div>
+                  <label for="logoZoomRange">画像倍率</label>
+                  <input type="range" id="logoZoomRange" min="60" max="160" step="5" value="100">
+                </div>
+                <output class="range-value" id="logoZoomOutput" for="logoZoomRange"><span id="logoZoomValue">100</span>%</output>
+              </div>
+
+              <div class="logo-preview-wrap">
+                <div class="logo-preview">
+                  <div class="logo-empty" id="logoEmpty">画像を選択すると表示されます</div>
+                  <img id="logoPreviewImg" alt="中央画像のプレビュー" hidden>
+                </div>
+                <p class="hint" id="logoMeta">画像は最大320pxへ縮小し、PNGへ変換してからQRコードへ合成します。保護枠は白色です。</p>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+    </section>
+
+    <section class="security-note" aria-labelledby="securityNoteTitle">
+      <h2 id="securityNoteTitle">利用上の注意</h2>
+      <p>
+        入力内容と中央画像はブラウザ内で処理し、外部APIや外部クラウドへ送信しません。
+        保存したQRコードには入力情報が含まれます。個人情報、非公開URL、認証情報、パスワードなどを安易にQRコード化しないでください。
+      </p>
+    </section>
+
+    <footer>
+      <span>お役立ちアプリBOX</span>
+      <span>「QRコード」は株式会社デンソーウェーブの登録商標です。</span>
+      <span>本ツールは株式会社デンソーウェーブが提供・保証するものではありません。</span>
+    </footer>
+  </main>
+
+  <script src="../../assets/appbox-utilities.js?v=1.4.1"></script>
+  <script src="./qr-core.js?v=1.4.1"></script>
+  <script src="./qrcode-app.js?v=1.4.1"></script>
+  <script src="./qrcode-ux.js?v=1.4.1"></script>
+</body>
+</html>

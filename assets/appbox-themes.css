@@ -1,0 +1,395 @@
+/*
+  お役立ちアプリBOX 系統色別テーマ
+
+  各ツールのブランド色の単一の置き場です。
+  ページ側は <html data-appbox-theme="blue"> のように系統色名で指定します。
+  （blue, green, red, purple, orange, cyan, yellow, portal）
+
+  ※移行期間中は既存アプリとの後方互換のため旧セレクタ（textdiff, csvdiff等）
+  をエイリアスとして維持しています。全アプリの移行完了後に削除予定です。
+*/
+
+/* ポータル ------------------------------------------------------------- */
+[data-appbox-theme="portal"] {
+  --appbox-bg: #fbfbfd;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #7557a6;
+  --appbox-primary-rgb: 117, 87, 166;
+  --appbox-primary-hover: #7557a6;
+  --appbox-primary-soft: #eee4fb;
+  --appbox-primary-shadow: none;
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eee4fb;
+  --appbox-text: #2f3440;
+  --appbox-muted: #747b87;
+  --appbox-border: #e4e7ec;
+
+  --appbox-success: #4d8961;
+
+  --appbox-shadow: 0 16px 44px rgba(47, 52, 64, 0.08);
+  --appbox-focus-ring: rgba(117, 87, 166, 0.28);
+  --appbox-focus-ring-offset: 4px;
+
+  --appbox-footer-color: #9399a2;
+  --appbox-footer-size: 10px;
+
+  --appbox-help-badge-border: #ddd0ef;
+  --appbox-help-nav-bg: #fbfbfd;
+  --appbox-help-info-bg: #f8f6fc;
+  --appbox-help-thead-bg: #fafafc;
+  --appbox-help-tint: #fdfdfe;
+}
+
+/* QRコード作成 --------------------------------------------------------- */
+[data-appbox-theme="qrcode"] {
+  --appbox-bg: #fbf9ff;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #7759a6;
+  --appbox-primary-rgb: 119, 89, 166;
+  --appbox-primary-hover: #674b93;
+  --appbox-primary-soft: #e9ddf8;
+  --appbox-primary-shadow: none;
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #f4efff;
+  --appbox-text: #302b3a;
+  --appbox-muted: #746d7f;
+  --appbox-border: #ddd5e8;
+
+  --appbox-success: #3f7a5f;
+
+  --appbox-shadow: 0 14px 36px rgba(86, 64, 112, 0.1);
+  --appbox-focus-ring: rgba(119, 89, 166, 0.28);
+
+  --appbox-footer-color: #91899c;
+  --appbox-footer-size: 10px;
+
+  --appbox-help-badge-border: #ddd0ef;
+  --appbox-help-nav-bg: #fbf9ff;
+  --appbox-help-info-bg: #f9f6ff;
+  --appbox-help-thead-bg: #faf7ff;
+  --appbox-help-tint: #fdfbff;
+}
+
+/* 庁内日程調整「調整くん」（orange） --------------------------------- */
+[data-appbox-theme="orange"],
+[data-appbox-theme="schedule"] {
+  --appbox-bg: #fffaf6;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #d97745;
+  --appbox-primary-rgb: 217, 119, 69;
+  --appbox-primary-hover: #c76535;
+  --appbox-primary-soft: #f9d8c7;
+  --appbox-primary-shadow: 0 8px 18px rgba(217, 119, 69, 0.2);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #fff1e8;
+  --appbox-text: #352d29;
+  --appbox-muted: #6f635d;
+  --appbox-border: #eadbd2;
+
+  --appbox-success: #3f785d;
+
+  --appbox-shadow: 0 14px 36px rgba(115, 77, 55, 0.1);
+  --appbox-focus-ring: rgba(37, 99, 235, 0.28);
+
+  --appbox-footer-color: #746861;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #f2d5c3;
+  --appbox-help-nav-bg: #fffaf6;
+  --appbox-help-info-bg: #fff6f0;
+  --appbox-help-thead-bg: #fffbf8;
+  --appbox-help-tint: #fffdfb;
+}
+
+/* 文章差分チェッカー（blue） ------------------------------------------- */
+[data-appbox-theme="blue"],
+[data-appbox-theme="textdiff"] {
+  --appbox-bg: #f7fbff;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #3f6fae;
+  --appbox-primary-rgb: 63, 111, 174;
+  --appbox-primary-hover: #315e98;
+
+  /* textdiff.css:49-56。Yu Gothic UI が Hiragino より先に来る並び。 */
+  --appbox-font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  --appbox-primary-soft: #dcecff;
+  --appbox-primary-shadow: 0 8px 18px rgba(63, 111, 174, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eef6ff;
+  --appbox-text: #243247;
+  --appbox-muted: #6c7a8e;
+  --appbox-border: #d7e2ef;
+
+  --appbox-success: #3d7b62;
+
+  --appbox-shadow: 0 14px 36px rgba(57, 91, 130, 0.1);
+  --appbox-focus-ring: rgba(63, 111, 174, 0.28);
+
+  --appbox-footer-color: #8a98a9;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #cfe0f2;
+  --appbox-help-nav-bg: #f8fbff;
+  --appbox-help-info-bg: #f4f9ff;
+  --appbox-help-thead-bg: #f7faff;
+  --appbox-help-tint: #fbfdff;
+}
+
+/* CSV差分チェッカー（green） ------------------------------------------- */
+[data-appbox-theme="green"],
+[data-appbox-theme="csvdiff"] {
+  --appbox-bg: #f8fcf9;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #4d8961;
+  --appbox-primary-rgb: 77, 137, 97;
+  --appbox-primary-hover: #3f7652;
+
+  /* apps/csvdiff/index.html:70。"Yu Gothic" を含む唯一のツール。 */
+  --appbox-font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+  --appbox-primary-soft: #e4f4e8;
+  --appbox-primary-shadow: 0 7px 18px rgba(77, 137, 97, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eef8f2;
+  --appbox-text: #29372f;
+  --appbox-muted: #6c7d73;
+  --appbox-border: #d7e6dc;
+
+  --appbox-success: #4d8961;
+
+  --appbox-shadow: 0 14px 36px rgba(57, 96, 72, 0.1);
+  --appbox-focus-ring: rgba(77, 137, 97, 0.28);
+
+  --appbox-footer-color: #6c7d73;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #cde3d5;
+  --appbox-help-nav-bg: #f8fcf9;
+  --appbox-help-info-bg: #f4faf6;
+  --appbox-help-thead-bg: #f7fbf8;
+  --appbox-help-tint: #fbfdfc;
+}
+
+/* フロー図メーカー（purple） ------------------------------------------- */
+/* flowchart は :root を持たないため、本体CSSの直値から拾っています。 */
+[data-appbox-theme="purple"],
+[data-appbox-theme="flowchart"] {
+  --appbox-bg: #ffffff;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #6f5aa8;
+  --appbox-primary-rgb: 111, 90, 168;
+  --appbox-primary-hover: #6f5aa8;
+
+  /* flow-app.css:91。pdfeditor と同じ並び。 */
+  --appbox-font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+  --appbox-primary-soft: #eee7f7;
+  --appbox-primary-shadow: none;
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #f7f3fc;
+  --appbox-text: #514960;
+  --appbox-muted: #6f6878;         /* （新規） */
+  --appbox-border: #d9d3e5;
+
+  --appbox-success: #3f7653;       /* （新規） */
+
+  --appbox-shadow: 0 12px 30px rgba(60, 38, 99, 0.09);
+  --appbox-focus-ring: rgba(111, 90, 168, 0.28);
+
+  --appbox-footer-color: #7a7288;  /* （新規） */
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #d5c9e8;
+  --appbox-help-nav-bg: #faf8fd;
+  --appbox-help-info-bg: #f7f4fc;
+  --appbox-help-thead-bg: #f9f7fd;
+  --appbox-help-tint: #fcfbfe;
+}
+
+/* PDFかんたん編集（red） ------------------------------------------------ */
+[data-appbox-theme="red"],
+[data-appbox-theme="pdfeditor"] {
+  --appbox-bg: #f5f6f8;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #c83d4e;
+  --appbox-primary-rgb: 200, 61, 78;
+  --appbox-primary-hover: #a82c3c;
+
+  /* app.css:42。Hiragino を含まない。 */
+  --appbox-font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Yu Gothic UI", "Yu Gothic", Meiryo, sans-serif;
+  --appbox-primary-soft: #fdecef;
+  --appbox-primary-shadow: 0 5px 14px rgba(200, 61, 78, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #fff6f7;
+  --appbox-text: #20252b;
+  --appbox-muted: #69717a;
+  --appbox-border: #dde1e6;
+
+  --appbox-success: #3f7653;       /* （新規） */
+
+  --appbox-shadow: 0 14px 36px rgba(30, 35, 40, 0.1);
+  --appbox-focus-ring: rgba(20, 115, 230, 0.28);
+
+  --appbox-footer-color: #69717a;  /* （新規） */
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #f2ccd2;
+  --appbox-help-nav-bg: #fdf8f9;
+  --appbox-help-info-bg: #fff6f7;
+  --appbox-help-thead-bg: #fdf9fa;
+  --appbox-help-tint: #fffcfd;
+}
+
+/* 画像かんたん加工 ----------------------------------------------------- */
+[data-appbox-theme="imageedit"] {
+  --appbox-bg: #fbfbfd;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #705aa1;
+  --appbox-primary-rgb: 112, 90, 161;
+  --appbox-primary-hover: #705aa1;
+  --appbox-primary-soft: #eee4fb;
+  --appbox-primary-shadow: 0 10px 22px rgba(112, 90, 161, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eee4fb;
+  --appbox-text: #2f3440;
+  --appbox-muted: #737b87;
+  --appbox-border: #e5e7ec;
+
+  --appbox-success: #4d8961;
+
+  --appbox-shadow: 0 16px 44px rgba(47, 52, 64, 0.08);
+  --appbox-focus-ring: rgba(168, 120, 24, 0.28);
+
+  --appbox-footer-color: #969ba3;
+  --appbox-footer-size: 10px;
+
+  --appbox-help-badge-border: #ddd3ee;
+  --appbox-help-nav-bg: #fbfafd;
+  --appbox-help-info-bg: #f8f6fc;
+  --appbox-help-thead-bg: #faf9fd;
+  --appbox-help-tint: #fdfcfe;
+}
+
+/* 相続関係図（ジェノグラム）作成ツール --------------------------------- */
+[data-appbox-theme="kakeizu"] {
+  --appbox-bg: #f7f5fb;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #7557a6;
+  --appbox-primary-rgb: 117, 87, 166;
+  --appbox-primary-hover: #654990;
+
+  /* kakeizu.css:76。textdiff と同じ並び。 */
+  --appbox-font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  --appbox-primary-soft: #eee4fb;
+  --appbox-primary-shadow: none;
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #faf8fd;
+  --appbox-text: #2f3440;
+  --appbox-muted: #68707c;
+  --appbox-border: #ddd8e5;
+
+  --appbox-success: #3f7653;
+
+  --appbox-shadow: 0 12px 30px rgba(62, 48, 80, 0.09);
+  --appbox-focus-ring: rgba(117, 87, 166, 0.22);
+
+  --appbox-footer-color: #817988;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #d8cae8;
+  --appbox-help-nav-bg: #faf8fd;
+  --appbox-help-info-bg: #f7f4fb;
+  --appbox-help-thead-bg: #f9f7fc;
+  --appbox-help-tint: #fdfcfe;
+}
+
+/* シアン（cyan / 補助・追加） ------------------------------------------ */
+[data-appbox-theme="cyan"] {
+  --appbox-bg: #f6fcfc;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #3f7f86;
+  --appbox-primary-rgb: 63, 127, 134;
+  --appbox-primary-hover: #33696f;
+  --appbox-primary-soft: #e4f6f7;
+  --appbox-primary-shadow: 0 8px 18px rgba(63, 127, 134, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #eef9fa;
+  --appbox-text: #203336;
+  --appbox-muted: #68797c;
+  --appbox-border: #d3e7e9;
+
+  --appbox-success: #3d7b62;
+
+  --appbox-shadow: 0 14px 36px rgba(50, 90, 95, 0.1);
+  --appbox-focus-ring: rgba(63, 127, 134, 0.28);
+
+  --appbox-footer-color: #86979a;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #cce5e7;
+  --appbox-help-nav-bg: #f6fcfc;
+  --appbox-help-info-bg: #f2f9fa;
+  --appbox-help-thead-bg: #f5fbfc;
+  --appbox-help-tint: #fafdfe;
+}
+
+/* 黄（yellow / 補助・加工） -------------------------------------------- */
+[data-appbox-theme="yellow"] {
+  --appbox-bg: #fffdf7;
+  --appbox-page-bg: var(--appbox-bg);
+
+  --appbox-primary: #9a721b;
+  --appbox-primary-rgb: 154, 114, 27;
+  --appbox-primary-hover: #856014;
+  --appbox-primary-soft: #fff5d8;
+  --appbox-primary-shadow: 0 8px 18px rgba(154, 114, 27, 0.18);
+
+  --appbox-surface: #ffffff;
+  --appbox-surface-soft: #fffbf0;
+  --appbox-text: #363020;
+  --appbox-muted: #7c7668;
+  --appbox-border: #eadebe;
+
+  --appbox-success: #4d8961;
+
+  --appbox-shadow: 0 14px 36px rgba(110, 85, 30, 0.1);
+  --appbox-focus-ring: rgba(154, 114, 27, 0.28);
+
+  --appbox-footer-color: #9a9386;
+  --appbox-footer-size: 11px;
+
+  --appbox-help-badge-border: #ebdcb5;
+  --appbox-help-nav-bg: #fffdf7;
+  --appbox-help-info-bg: #fffcf4;
+  --appbox-help-thead-bg: #fffdf8;
+  --appbox-help-tint: #fffefc;
+}
+

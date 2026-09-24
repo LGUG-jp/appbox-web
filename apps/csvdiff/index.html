@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="green">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>CSV差分チェッカー | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <!-- 共通アセット。以下のアプリ固有CSSより前に読み込むこと。 -->
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=1.4.1">
+
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=1.4.1">
+  <link rel="stylesheet" href="./csvdiff.css?v=1.2.2">
+
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="CSV差分チェッカーのヘルプを新しいタブで開く">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+            <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+        <a class="appbox-back-button" href="../../">&lt; ポータルに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell csvdiff-shell" id="mainContent">
+    <div class="appbox-app-intro">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+            <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+            <path d="M4 8h16M9 8v13M15 8v13M4 14h16"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">CSV差分チェッカー</h1>
+      </div>
+      <p class="appbox-app-desc">左に旧、右に新のCSVファイルを読み込んでください。</p>
+    </div>
+
+    <noscript>
+      <p class="appbox-status appbox-status--warning">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
+    </noscript>
+
+    <section class="main-card appbox-panel appbox-panel--accent">
+      <div class="section-head">
+        <div class="section-head-copy">
+          <h2>CSVファイルを選択</h2>
+          <p>CSVはブラウザ内で読み込みます。1行目を見出しとして扱います。</p>
+        </div>
+        <div class="file-actions" aria-label="CSV選択の補助操作">
+          <button class="appbox-button appbox-button--secondary csvdiff-file-action csvdiff-file-action--sample" id="sampleBtn" type="button">
+            <svg class="csvdiff-file-action__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <path d="M9 3h6"></path>
+              <path d="M10 3v5l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"></path>
+              <path d="M8 14h8"></path>
+            </svg>
+            <span>サンプルで試す</span>
+          </button>
+          <button class="appbox-button appbox-button--secondary csvdiff-file-action csvdiff-file-action--clear" id="clearBtn" type="button">
+            <svg class="csvdiff-file-action__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <path d="M4 7h16"></path>
+              <path d="M9 7V4h6v3"></path>
+              <path d="M7 7l1 13h8l1-13"></path>
+              <path d="M10 11v5M14 11v5"></path>
+            </svg>
+            <span>すべてクリア</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="upload-grid">
+        <div class="drop" id="oldDrop">
+          <span class="side-label">旧 CSV</span>
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 16V4m0 0L7 9m5-5 5 5"/>
+              <path d="M5 15v4h14v-4"/>
+            </svg>
+          </div>
+          <strong id="oldDropTitle">旧CSVを選択</strong>
+          <small id="oldDropHint">クリック または ドラッグ＆ドロップ</small>
+          <div class="file-meta" id="oldMeta"></div>
+          <input id="oldFile" type="file" accept=".csv,text/csv" aria-label="旧CSVを選択">
+        </div>
+
+        <div class="drop" id="newDrop">
+          <span class="side-label">新 CSV</span>
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M12 16V4m0 0L7 9m5-5 5 5"/>
+              <path d="M5 15v4h14v-4"/>
+            </svg>
+          </div>
+          <strong id="newDropTitle">新CSVを選択</strong>
+          <small id="newDropHint">クリック または ドラッグ＆ドロップ</small>
+          <div class="file-meta" id="newMeta"></div>
+          <input id="newFile" type="file" accept=".csv,text/csv" aria-label="新CSVを選択">
+        </div>
+      </div>
+
+      <div class="setup">
+        <div class="workflow-heading">
+          <div class="workflow-heading__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2>比較設定</h2>
+            <p>行を対応付けるキー列を選び、必要に応じて読み込み方法や比較条件を調整します。</p>
+          </div>
+        </div>
+
+        <div class="setup-row">
+          <div class="field appbox-field">
+            <label class="appbox-field__label" for="keySelect">キー列</label>
+            <p class="appbox-field__help" id="keySelectHelp">同じ行を識別する列を選択します。</p>
+            <select class="appbox-input" id="keySelect" aria-describedby="keySelectHelp" disabled><option value="">CSVを2つ選択してください</option></select>
+          </div>
+          <div class="field appbox-field">
+            <label class="appbox-field__label" for="encodingSelect">文字コード</label>
+            <p class="appbox-field__help" id="encodingSelectHelp">読み込み時の文字コードを指定します。</p>
+            <select class="appbox-input" id="encodingSelect" aria-describedby="encodingSelectHelp">
+              <option value="auto">自動判定</option>
+              <option value="utf-8">UTF-8</option>
+              <option value="shift_jis">Shift_JIS</option>
+            </select>
+          </div>
+          <div class="field appbox-field">
+            <label class="appbox-field__label" for="delimiterSelect">区切り文字</label>
+            <p class="appbox-field__help" id="delimiterSelectHelp">CSVの区切り文字を指定します。</p>
+            <select class="appbox-input" id="delimiterSelect" aria-describedby="delimiterSelectHelp">
+              <option value="auto">自動判定</option>
+              <option value=",">カンマ</option>
+              <option value="tab">タブ</option>
+              <option value=";">セミコロン</option>
+            </select>
+          </div>
+          <div class="actions compare-actions">
+            <button class="appbox-button appbox-button--primary" id="compareBtn" type="button" disabled>
+              <svg class="compare-action__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <path d="M7 7h10"></path>
+                <path d="m14 4 3 3-3 3"></path>
+                <path d="M17 17H7"></path>
+                <path d="m10 14-3 3 3 3"></path>
+              </svg>
+              <span>差分を比較</span>
+            </button>
+          </div>
+        </div>
+
+        <details class="panel" id="columnsDetails">
+          <summary>
+            <span class="panel-summary__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+                <path d="M8 6h12M8 12h12M8 18h12"></path>
+                <path d="M4 6h.01M4 12h.01M4 18h.01"></path>
+              </svg>
+            </span>
+            <span class="panel-summary__label">比較する列を選ぶ</span>
+            <span class="panel-summary__status" id="columnSummary">（CSVを読み込むと選択できます）</span>
+            <svg class="panel-summary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </summary>
+          <div class="panel-body">
+            <div class="columns-tools">
+              <button class="mini" id="allCols" type="button">すべて選択</button>
+              <button class="mini" id="noCols" type="button">すべて解除</button>
+            </div>
+            <div class="checks" id="columnChecks"></div>
+          </div>
+        </details>
+
+        <details class="panel" id="normalizeDetails">
+          <summary>
+            <span class="panel-summary__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+                <path d="M4 5h16l-6 7v5l-4 2v-7L4 5Z"></path>
+              </svg>
+            </span>
+            <span class="panel-summary__label">比較条件</span>
+            <span class="panel-summary__status" id="normalizeSummary"></span>
+            <svg class="panel-summary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </summary>
+          <div class="panel-body">
+            <div class="checks">
+              <label class="check"><input id="normTrim" type="checkbox"><span>セルの先頭・末尾の空白を無視する</span></label>
+              <label class="check"><input id="normSpaces" type="checkbox"><span>連続するスペース・タブを1つとして扱う</span></label>
+              <label class="check"><input id="normCase" type="checkbox"><span>英字の大文字・小文字を同じ文字として扱う<small class="check-example">例：ABC と abc</small></span></label>
+              <label class="check"><input id="normWidth" type="checkbox"><span>全角英数字・記号・空白と半角の違いを同じ文字として扱う</span></label>
+              <label class="check"><input id="normNewline" type="checkbox"><span>セル内の改行の種類の違いを同じものとして扱う</span></label>
+              <label class="check"><input id="normDate" type="checkbox"><span>日付の書き方が違っても同じ日付として扱う<small class="check-example">例：2024/4/1 と 2024-04-01</small></span></label>
+              <label class="check"><input id="normNumber" type="checkbox"><span>数値の書き方が違っても同じ数値として扱う<small class="check-example">例：1,000 と 1000</small></span></label>
+            </div>
+            <p class="condition-note">
+              これらの条件は比較するときだけ使い、元のCSVデータは変更しません。
+              画面表示と差分CSVには、比較条件を適用する前の値を使用します。
+              ただし、差分CSVの保存時は安全対策のため、一部の値の先頭にアポストロフィが付く場合があります。
+              キー列の照合にも同じ条件を使います。日付・数値の条件は、日付・数値と判断できる値にだけ適用します。
+            </p>
+          </div>
+        </details>
+
+        <div class="message appbox-status appbox-status--error" id="errorBox" role="alert"></div>
+        <div class="message appbox-status appbox-status--warning" id="warnBox" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="results result-card" id="results" tabindex="-1" aria-labelledby="resultsTitle">
+      <div class="results-overview">
+        <div class="results-heading">
+          <div class="results-heading__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <path d="M4 19V9M10 19V5M16 19v-7M22 19V3"></path>
+            </svg>
+          </div>
+          <div class="results-heading__copy">
+            <h2 id="resultsTitle">比較結果</h2>
+            <p>まず差分の内訳を確認し、必要に応じて下の検索・絞り込みで対象を探せます。</p>
+          </div>
+          <div class="results-total" aria-label="比較対象件数">
+            <span>比較対象</span>
+            <strong id="totalCount">0</strong>
+            <span>件</span>
+          </div>
+        </div>
+
+        <div class="summary-grid" aria-label="比較結果の内訳">
+          <div class="stat add">
+            <span class="stat-icon" aria-hidden="true">＋</span>
+            <div><div class="num" id="addedCount">0</div><div class="label">追加（新のみ）</div></div>
+          </div>
+          <div class="stat remove">
+            <span class="stat-icon" aria-hidden="true">−</span>
+            <div><div class="num" id="removedCount">0</div><div class="label">削除（旧のみ）</div></div>
+          </div>
+          <div class="stat mod">
+            <span class="stat-icon" aria-hidden="true">✎</span>
+            <div><div class="num" id="modifiedCount">0</div><div class="label">変更</div></div>
+          </div>
+          <div class="stat same">
+            <span class="stat-icon" aria-hidden="true">＝</span>
+            <div><div class="num" id="unchangedCount">0</div><div class="label">一致</div></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="column-stats" aria-labelledby="columnStatsTitle">
+        <h2 id="columnStatsTitle">列ごとの差分件数</h2>
+        <div class="column-stat-list" id="columnStatList"></div>
+      </section>
+
+      <section class="result-controls" aria-labelledby="resultControlsTitle">
+        <div class="result-controls__heading">
+          <div>
+            <h3 id="resultControlsTitle">結果を絞り込む</h3>
+            <p>検索や状態、変更列で表示対象を絞り込めます。</p>
+          </div>
+        </div>
+        <div class="toolbar">
+        <div class="field appbox-field">
+            <label class="appbox-field__label" for="searchBox">検索</label>
+          <input class="appbox-input" id="searchBox" type="search" placeholder="キー・値・行番号を検索">
+        </div>
+        <div class="field appbox-field">
+            <label class="appbox-field__label" for="statusFilter">状態</label>
+          <select class="appbox-input" id="statusFilter">
+            <option value="diff">差分のみ</option>
+            <option value="all">すべて</option>
+            <option value="added">追加のみ</option>
+            <option value="removed">削除のみ</option>
+            <option value="modified">変更のみ</option>
+            <option value="unchanged">一致のみ</option>
+          </select>
+        </div>
+        <div class="field appbox-field">
+            <label class="appbox-field__label" for="columnFilter">変更列</label>
+          <select class="appbox-input" id="columnFilter"><option value="">すべての列</option></select>
+        </div>
+        <div class="field appbox-field">
+            <label class="appbox-field__label" for="sortSelect">並べ替え</label>
+          <select class="appbox-input" id="sortSelect">
+            <option value="source">元の順序</option>
+            <option value="diff">差分を先頭</option>
+            <option value="keyAsc">キー昇順</option>
+            <option value="keyDesc">キー降順</option>
+          </select>
+        </div>
+        <div class="actions result-actions">
+          <label class="view-options"><input id="changedOnlyCols" type="checkbox">変更箇所だけ表示</label>
+          <div class="export-action">
+            <button class="appbox-button appbox-button--secondary export-button" id="exportBtn" type="button">
+              <svg class="export-button__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                <path d="M12 3v11"></path>
+                <path d="m8 10 4 4 4-4"></path>
+                <path d="M5 17v3h14v-3"></path>
+              </svg>
+              <span>差分CSVを保存</span>
+            </button>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <p class="table-scroll-hint" id="tableScrollHint" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+          <path d="M4 12h16"></path>
+          <path d="m8 8-4 4 4 4M16 8l4 4-4 4"></path>
+        </svg>
+        <span>列が多い場合は、表を左右にスクロールして旧・新の値を確認できます。</span>
+      </p>
+
+      <div class="table-card">
+        <div class="table-wrap" id="tableWrap"></div>
+        <div class="pagination">
+          <div><span id="rangeLabel">0件</span></div>
+          <div class="page-controls">
+            <label for="pageSize">1ページ</label>
+            <select class="appbox-input" id="pageSize"><option>25</option><option selected>50</option><option>100</option><option>200</option></select>
+            <button class="page-btn" id="prevBtn" type="button">前へ</button>
+            <span id="pageLabel">1 / 1</span>
+            <button class="page-btn" id="nextBtn" type="button">次へ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">読み込んだCSVはブラウザ内で処理し、サーバーへのアップロードや外部通信は行いません。</p>
+    <footer class="appbox-footer">お役立ちアプリBOX / CSV差分チェッカー Version 1.2.2</footer>
+  </main>
+
+  <div class="loading" id="loading" role="status" aria-live="polite" aria-hidden="true">
+    <div class="loading-box">CSVを処理しています…</div>
+  </div>
+
+  <script src="./csvdiff.js?v=1.2.2"></script>
+
+</body>
+</html>

@@ -1,0 +1,364 @@
+/*
+  お役立ちアプリBOX 共通ヘッダ部品
+
+  ページ外枠の共通パーツ（戻るボタン / ヘルプボタン / 庁内バッジ / フッター）。
+  形状は現行8ツールの多数派に合わせています。
+    角丸 11px / 高さ 40px / padding 0 13px / font-weight 800 / font-size 12px
+    背景 rgba(255,255,255,.82) / 影 0 6px 16px
+
+  色は appbox-theme トークン経由なので、このファイルに色リテラルはありません。
+
+  appbox-base.css と同じく @layer appbox で包んでいるため、
+  各ツールのCSS（レイヤーなし）が常に優先されます。
+  HTML にクラスを併記した時点では見た目は変わらず、
+  ツールCSS側の旧ルールを削除した時点で共通定義に切り替わります。
+*/
+
+@layer appbox {
+  /* 統一スリム白ヘッダー（非固定・通常配置基本） ----------------------- */
+
+  .appbox-header {
+    background: var(--appbox-header-bg);
+    border-bottom: 1px solid var(--appbox-header-border);
+    box-shadow: var(--appbox-header-shadow);
+    position: relative;
+    z-index: 10;
+  }
+
+  .appbox-header__inner {
+    width: min(var(--appbox-content-max-width, 1160px), calc(100% - 32px));
+    height: 60px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .appbox-header__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--appbox-dads-neutral-900);
+    border-radius: 6px;
+    padding: 4px 6px;
+    margin-left: -6px;
+    transition: background-color 0.15s ease;
+  }
+
+  a.appbox-header__brand:hover {
+    background-color: var(--appbox-dads-neutral-100);
+  }
+
+  a.appbox-header__brand:focus-visible {
+    outline: none;
+    box-shadow: var(--appbox-focus-ring-double);
+  }
+
+  .appbox-header__logo {
+    width: 36px;
+    height: 36px;
+    background: var(--appbox-logo-gradient);
+    border: 1px solid var(--appbox-logo-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(var(--appbox-primary-rgb), 0.05);
+    flex-shrink: 0;
+  }
+
+  .appbox-header__logo svg {
+    width: 20px;
+    height: 20px;
+    color: var(--appbox-logo-color);
+  }
+
+  .appbox-header__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    color: var(--appbox-dads-neutral-800);
+  }
+
+  .appbox-header__subtitle {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #7b748c;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  @media (max-width: 620px) {
+    .appbox-header__subtitle {
+      display: none;
+    }
+  }
+
+  .appbox-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .appbox-help-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    min-height: 40px;
+    background: var(--appbox-surface);
+    color: var(--appbox-dads-neutral-700);
+    border: 1px solid var(--appbox-dads-neutral-300);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .appbox-help-link:hover {
+    background: var(--appbox-dads-neutral-100);
+    color: var(--appbox-dads-neutral-900);
+    border-color: var(--appbox-dads-neutral-400);
+  }
+
+  .appbox-help-link:focus-visible {
+    outline: none;
+    box-shadow: var(--appbox-focus-ring-double);
+  }
+
+  .appbox-help-link svg {
+    width: 16px;
+    height: 16px;
+    color: var(--appbox-dads-neutral-600);
+    flex-shrink: 0;
+  }
+
+  .appbox-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--appbox-primary);
+    text-decoration: underline;
+    padding: 6px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .appbox-back-link:hover {
+    text-decoration: none;
+    background: var(--appbox-dads-neutral-100);
+  }
+
+  .appbox-back-link:focus-visible {
+    outline: none;
+    box-shadow: var(--appbox-focus-ring-double);
+  }
+
+  @media (forced-colors: active) {
+    a.appbox-header__brand:focus-visible,
+    .appbox-help-link:focus-visible,
+    .appbox-back-link:focus-visible {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+  }
+
+  /* アプリ導入・見出し部共通クラス -------------------------------------- */
+
+  .appbox-app-intro {
+    margin-bottom: 24px;
+  }
+
+  .appbox-app-title-group {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .appbox-app-icon {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: var(--appbox-surface-soft);
+    border: 1px solid var(--appbox-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--appbox-primary);
+    box-shadow: 0 1px 2px rgba(var(--appbox-primary-rgb), 0.04);
+  }
+
+  .appbox-app-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .appbox-app-h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--appbox-dads-neutral-900);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .appbox-app-desc {
+    font-size: 15px;
+    color: var(--appbox-dads-neutral-700);
+    margin: 0 0 0 58px;
+    line-height: 1.65;
+  }
+
+  @media (max-width: 640px) {
+    .appbox-app-desc {
+      margin-left: 0;
+      margin-top: 8px;
+    }
+  }
+
+  /* ヘッダ右側の操作エリア ---------------------------------------------- */
+
+  .appbox-top-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* 戻るボタン / ヘルプボタン ------------------------------------------ */
+
+  .appbox-back-button,
+  .appbox-help-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 1px solid var(--appbox-dads-neutral-300);
+    border-radius: 6px;
+    color: var(--appbox-dads-neutral-700);
+    background: var(--appbox-surface);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+
+  .appbox-back-button:hover,
+  .appbox-help-button:hover {
+    background: var(--appbox-dads-neutral-100);
+    color: var(--appbox-dads-neutral-900);
+    border-color: var(--appbox-dads-neutral-400);
+  }
+
+  .appbox-back-button svg {
+    flex: 0 0 auto;
+    width: var(--appbox-chrome-icon);
+    height: var(--appbox-chrome-icon);
+  }
+
+  .appbox-help-button svg {
+    flex: 0 0 auto;
+    width: 17px;
+    height: 17px;
+  }
+
+  /*
+    折りたたみボタン ---------------------------------------------------
+
+    戻る・ヘルプと同じ形状にしています。
+    各ツールのCSSに既存のボタン指定があれば、そちらが優先されるため
+    ツールの見た目に馴染みます。
+
+    開閉する要素を実際に隠すCSSは各ツールのCSSへ書きます。
+    ツールごとに display の値が異なり、共通CSS（レイヤー内）からは
+    確実に打ち消せないためです。
+  */
+  .appbox-collapse-toggle {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: var(--appbox-chrome-height);
+    padding: var(--appbox-chrome-padding);
+    border: 1px solid var(--appbox-border);
+    border-radius: var(--appbox-chrome-radius);
+    color: var(--appbox-primary);
+    background: var(--appbox-chrome-bg);
+    box-shadow: var(--appbox-chrome-shadow);
+    font-size: var(--appbox-chrome-size);
+    font-weight: var(--appbox-chrome-weight);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .appbox-collapse-toggle:hover {
+    background: var(--appbox-surface-soft);
+  }
+
+  .appbox-collapse-toggle svg {
+    flex: 0 0 auto;
+    width: var(--appbox-chrome-icon);
+    height: var(--appbox-chrome-icon);
+    transition: transform 0.15s ease;
+  }
+
+  /* 閉じているときは山かたちを右向きにして状態を示します。 */
+  .appbox-collapse-toggle[aria-expanded="false"] svg {
+    transform: rotate(-90deg);
+  }
+
+  /* フッター ------------------------------------------------------------ */
+
+  .appbox-footer {
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--appbox-border);
+    color: var(--appbox-footer-color);
+    font-size: var(--appbox-footer-size);
+    text-align: center;
+  }
+
+  /*
+    狭い画面ではラベルを隠してアイコンだけにする逃げ道。
+    そのため HTML 側ではラベルを <span> で包んでおくこと。
+  */
+  @media (max-width: 480px) {
+    .appbox-help-button span {
+      display: none;
+    }
+
+    .appbox-help-button {
+      padding: 0 10px;
+    }
+  }
+}
+
+/* 印刷時はナビゲーション類を出さない。 */
+@media print {
+  .appbox-header,
+  .appbox-back-button,
+  .appbox-help-button,
+  .appbox-collapse-toggle,
+  .appbox-help-link,
+  .appbox-back-link {
+    display: none !important;
+  }
+}

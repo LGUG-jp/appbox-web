@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="textdiff">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <meta
+    http-equiv="Cache-Control"
+    content="no-store, no-cache, must-revalidate"
+  >
+  <meta
+    http-equiv="Pragma"
+    content="no-cache"
+  >
+  <meta
+    http-equiv="Expires"
+    content="0"
+  >
+  <meta
+    name="color-scheme"
+    content="light"
+  >
+  <title>文章差分チェッカー ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=1.4.1">
+</head>
+
+<body>
+  <main class="app-shell help-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div
+          class="brand-mark"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1-1.4 2.1"></path>
+            <path d="M12 17h.01"></path>
+          </svg>
+        </div>
+
+        <div>
+          <p class="brand-name">
+            お役立ちアプリBOX
+          </p>
+          <h1 class="app-name">
+            文章差分チェッカー ヘルプ
+          </h1>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <a
+          class="appbox-back-button"
+          href="./index.html"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+          比較画面へ戻る
+        </a>
+      </div>
+    </header>
+
+    <section
+      class="panel help-panel"
+      aria-labelledby="helpTitle"
+    >
+      <div class="panel-inner help-inner">
+        <div class="help-heading">
+          <div>
+            <h2 id="helpTitle">
+              使い方
+            </h2>
+            <p class="lead">
+              文章差分チェッカーの基本操作と、比較方式の選び方を説明します。
+            </p>
+          </div>
+
+          <span class="version-badge">
+            Version 1.4.0
+          </span>
+        </div>
+
+        <nav
+          class="help-nav"
+          aria-label="ヘルプ目次"
+        >
+          <a href="#quick-start">基本的な使い方</a>
+          <a href="#modes">比較方式</a>
+          <a href="#options">詳細カスタマイズ</a>
+          <a href="#results">結果の見方</a>
+          <a href="#operations">便利な操作</a>
+          <a href="#cautions">利用上の注意</a>
+          <a href="#privacy">プライバシー</a>
+          <a href="#faq">よくある質問</a>
+        </nav>
+
+        <section
+          class="help-section"
+          id="quick-start"
+        >
+          <h3>基本的な使い方</h3>
+
+          <ol class="help-steps">
+            <li>
+              左側の「旧・古い文章」へ、変更前の文章を入力または貼り付けます。
+            </li>
+            <li>
+              右側の「新・新しい文章」へ、変更後の文章を入力または貼り付けます。
+            </li>
+            <li>
+              「比較単位」を選択します。通常は「行内文字単位（推奨）」を使用します。
+            </li>
+            <li>
+              「差分を比較」を押します。
+            </li>
+            <li>
+              必要に応じて「詳細カスタマイズ」を変更します。
+              一度比較した後は、変更内容が比較結果へ自動で反映されます。
+            </li>
+            <li>
+              追加、削除、一致、差分箇所、一致率と、各比較結果を確認します。
+            </li>
+          </ol>
+
+          <div class="help-callout help-callout-info">
+            <strong>入力方向</strong>
+            <p>
+              左が旧・古い文章、右が新・新しい文章です。
+              「追加」は新しい文章に加わった部分、「削除」は古い文章からなくなった部分を示します。
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="help-section"
+          id="modes"
+        >
+          <h3>比較方式の選び方</h3>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">比較方式</th>
+                  <th scope="col">適した用途</th>
+                  <th scope="col">特徴</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">
+                    行内文字単位（推奨）
+                  </th>
+                  <td>
+                    条例、規則、通知文、議案、広報原稿など、通常の文書比較
+                  </td>
+                  <td>
+                    行を対応付けた後、変更された行の内部を文字単位で比較します。
+                    差分が別の行へ移る現象を抑えます。
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    全文文字単位
+                  </th>
+                  <td>
+                    改行を越えた文章全体の最短差分を確認したい場合
+                  </td>
+                  <td>
+                    改行を含む文章全体を1つの文字列として比較します。
+                    同じ文字列が複数行にある場合、差分位置が想定と異なることがあります。
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    行単位
+                  </th>
+                  <td>
+                    条文、段落、一覧、ログなどの行全体の追加・削除確認
+                  </td>
+                  <td>
+                    行内の一部だけが異なる場合も、行全体を削除・追加として扱います。
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section
+          class="help-section"
+          id="options"
+        >
+          <h3>詳細カスタマイズ</h3>
+
+          <p>
+            「詳細カスタマイズ」は「差分を比較」ボタンの下にあります。
+            通常は変更せず、そのまま比較できます。
+          </p>
+
+          <h4>比較ルール</h4>
+
+          <dl class="help-definition-list">
+            <div>
+              <dt>
+                連続する半角・全角空白、タブを1つの半角空白として比較
+              </dt>
+              <dd>
+                半角スペース、全角スペース、タブが連続している場合に、
+                1つの半角スペースへ変換して比較します。
+              </dd>
+            </div>
+
+            <div>
+              <dt>
+                全角英数字を半角英数字として比較
+              </dt>
+              <dd>
+                全角と半角の英字・数字を同一視します。
+                半角カナ、丸数字、ダッシュ、長音記号などは変換しません。
+              </dd>
+            </div>
+
+            <div>
+              <dt>
+                連続する改行を1つにまとめ、空行を無視して比較
+              </dt>
+              <dd>
+                2つ以上連続する改行を1つへ変換し、空行数の違いを比較対象から除きます。
+              </dd>
+            </div>
+
+          </dl>
+
+          <h4>表示・操作</h4>
+
+          <dl class="help-definition-list">
+            <div>
+              <dt>
+                空白・タブ・改行などの不可視文字を表示
+              </dt>
+              <dd>
+                半角空白を「·」、全角空白を「□」、タブを「→」、
+                改行を「↵」で表示します。比較結果の見た目だけが変わり、
+                件数や一致率には影響しません。
+              </dd>
+            </div>
+
+            <div>
+              <dt>
+                新旧の比較結果をおおよその位置で連動してスクロール
+              </dt>
+              <dd>
+                左右の結果をスクロール率で連動させます。
+                追加・削除量が異なる場合、対応位置が完全には揃わないことがあります。
+              </dd>
+            </div>
+          </dl>
+
+          <div class="help-callout help-callout-warning">
+            <strong>比較ルール利用時の注意</strong>
+            <p>
+              空白、全角英数字または連続改行に関する比較ルールを有効にすると、
+              選んだルールに合わせて文章を整えてから比較し、結果にも整えた文章を表示します。
+              入力欄の原文自体は変更されません。
+            </p>
+            <p>
+              正式文書の最終確認では、比較結果だけでなく入力欄の原文も確認してください。
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="help-section"
+          id="results"
+        >
+          <h3>結果の見方</h3>
+
+          <div class="help-result-legend">
+            <div>
+              <span
+                class="legend-swatch del"
+                aria-hidden="true"
+              ></span>
+              <strong>削除</strong>
+              <span>
+                古い文章からなくなった部分
+              </span>
+            </div>
+
+            <div>
+              <span
+                class="legend-swatch add"
+                aria-hidden="true"
+              ></span>
+              <strong>追加</strong>
+              <span>
+                新しい文章に加わった部分
+              </span>
+            </div>
+          </div>
+
+          <ul>
+            <li>
+              「追加」「削除」「一致」は、文字単位比較では文字数、行単位比較では行数です。
+            </li>
+            <li>
+              「差分箇所」は、連続する追加・削除のまとまりを1か所として数えた概算です。
+            </li>
+            <li>
+              「一致率」は、一致数を新旧の長い方の要素数で割った概算値です。
+            </li>
+            <li>
+              一致率は文章の意味的な類似度を示すものではありません。
+            </li>
+            <li>
+              「統合表示」では、削除と追加を1つの流れで確認できます。
+            </li>
+          </ul>
+        </section>
+
+        <section
+          class="help-section"
+          id="operations"
+        >
+          <h3>便利な操作</h3>
+
+          <div class="help-card-grid">
+            <article class="help-card">
+              <h4>前・次の差分</h4>
+              <p>
+                差分箇所を順番に移動します。選択中の差分は黄色い枠で強調されます。
+                最後の差分から次へ進むと、最初の差分へ戻ります。
+              </p>
+            </article>
+
+            <article class="help-card">
+              <h4>左右を入れ替え</h4>
+              <p>
+                旧文章と新文章を交換します。入れ替え後は再比較してください。
+              </p>
+            </article>
+
+            <article class="help-card">
+              <h4>Word向けにコピー</h4>
+              <p>
+                統合表示の本文を、追加は青文字、削除は赤文字と取り消し線、変更なしは黒文字でコピーします。
+                見出し、集計、差分の説明ラベル、不可視文字を示す記号は含めません。
+                正規化を有効にしている場合は、正規化後の文章をコピーします。
+                Wordでは「元の書式を保持」を選択して貼り付けてください。
+              </p>
+              <p>
+                自動コピーできない場合は「コピー用表示」が開きます。
+                本文を選択し、Ctrl+C（Macは⌘C）または右クリックでコピーしてください。
+                「コピー用表示」ボタンからも開けます。
+              </p>
+              <p>
+                Wordの「変更履歴」を作成する機能ではありません。
+                「テキストのみ保持」で貼り付けると、色と取り消し線は反映されず、追加・削除の両方の本文が残ります。
+              </p>
+            </article>
+
+            <article class="help-card">
+              <h4>比較レポートをコピー</h4>
+              <p>
+                比較条件、集計、新旧の文章、統合表示をテキスト形式でコピーします。
+                追加・削除を示す文字や行頭記号を含み、文字色は付きません。
+                ブラウザの設定により自動コピーできない場合があります。
+              </p>
+            </article>
+
+            <article class="help-card">
+              <h4>印刷</h4>
+              <p>
+                入力欄や操作ボタンを除き、比較条件、集計、凡例、比較結果を印刷します。
+                差分の背景色には、印刷設定の「背景のグラフィックス」が必要な場合があります。
+              </p>
+            </article>
+          </div>
+
+          <h4 class="help-subheading">
+            キーボードショートカット
+          </h4>
+
+          <div class="help-table-wrap">
+            <table class="help-table help-shortcut-table">
+              <thead>
+                <tr>
+                  <th scope="col">操作</th>
+                  <th scope="col">ショートカット</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>差分を比較</td>
+                  <td>
+                    <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+                  </td>
+                </tr>
+                <tr>
+                  <td>前の差分</td>
+                  <td>
+                    <kbd>Alt</kbd> + <kbd>←</kbd>
+                  </td>
+                </tr>
+                <tr>
+                  <td>次の差分</td>
+                  <td>
+                    <kbd>Alt</kbd> + <kbd>→</kbd>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section
+          class="help-section"
+          id="cautions"
+        >
+          <h3>利用上の注意</h3>
+
+          <ul>
+            <li>
+              本ツールは文字または行の機械的な比較であり、同義語、文章の意味、
+              文法上の同一性は判定しません。
+            </li>
+            <li>
+              行内文字単位では行対応を推定するため、内容が似た行が多数ある場合、
+              想定と異なる行が対応することがあります。
+            </li>
+            <li>
+              繰り返し文字がある場合、人が想定する位置とは異なる差分位置が選ばれることがあります。
+            </li>
+            <li>
+              結合文字や複合絵文字は、見た目上の1文字が複数の比較要素として扱われることがあります。
+            </li>
+            <li>
+              非常に長い文章は、章、条、項などの単位へ分割して比較してください。
+            </li>
+            <li>
+              比較結果のファイル保存、履歴保存、行番号表示には対応していません。
+            </li>
+            <li>
+              正式文書の確認では、差分結果だけでなく新旧の原文も確認してください。
+            </li>
+          </ul>
+        </section>
+
+        <section
+          class="help-section"
+          id="privacy"
+        >
+          <h3>セキュリティとプライバシー</h3>
+
+          <div class="help-callout help-callout-security">
+            <strong>入力内容はブラウザ内で処理します</strong>
+            <p>
+              本ツールには、入力内容を外部API、外部クラウド、
+              データベースなどへ送信または保存する処理はありません。
+            </p>
+          </div>
+
+          <p>
+            次の情報は、端末またはサーバーに残る可能性があります。
+          </p>
+
+          <ul>
+            <li>クリップボードへコピーした内容</li>
+            <li>ブラウザまたはOSの一時データ</li>
+            <li>IISの通常アクセスログ</li>
+            <li>利用者が保存した文書やスクリーンショット</li>
+          </ul>
+
+          <p>
+            個人情報、機密情報、未公開情報などを扱う場合は、
+            所属組織の情報セキュリティポリシーに従ってください。
+          </p>
+        </section>
+
+        <section
+          class="help-section"
+          id="faq"
+        >
+          <h3>よくある質問</h3>
+
+          <details>
+            <summary>
+              通常はどの比較方式を使えばよいですか？
+            </summary>
+            <p>
+              通常は「行内文字単位（推奨）」を使用してください。
+              行全体の追加・削除だけを確認するときは「行単位」、
+              改行を越えた最短差分が必要な場合は「全文文字単位」が適しています。
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              比較結果が入力した原文と異なります。
+            </summary>
+            <p>
+              「詳細カスタマイズ」の比較ルールが有効になっている可能性があります。
+              比較ルールを有効にした場合、結果にはルールに合わせて整えた文章が表示されます。
+              入力欄の原文は変更されません。
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              設定を変更したら比較結果が消えました。
+            </summary>
+            <p>
+              文章または比較方式を変更すると、古い比較結果を無効にします。
+              「差分を比較」を再度押してください。
+              「詳細カスタマイズ」は、一度比較した後であれば変更内容が自動で反映されます。
+              自動再比較で上限エラーになった場合も、文章や比較方式を変えずに比較ルールを戻すと再試行します。
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              左右のスクロール位置が完全に揃いません。
+            </summary>
+            <p>
+              スクロール連動は、おおよその位置を合わせる簡易的な比率同期です。
+              追加・削除量が大きく異なる場合は完全に揃いません。
+              「前の差分」「次の差分」または統合表示を併用してください。
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              コピーできません。
+            </summary>
+            <p>
+              ブラウザの権限、通信方式、端末のセキュリティ設定により、
+              自動コピーできない場合があります。
+              Wordへ書式付きでコピーしたい場合は、統合表示の「コピー用表示」を開き、
+              「本文をすべて選択」を押してCtrl+C（Macは⌘C）または右クリックでコピーしてください。
+              Wordでは「元の書式を保持」で貼り付けてください。
+              貼り付け先のアプリや設定によって、色、取り消し線、空白の見え方が異なる場合があります。
+            </p>
+          </details>
+
+          <details>
+            <summary>
+              長い文章を比較できません。
+            </summary>
+            <p>
+              ブラウザ停止を防ぐため、文字数、行数、処理時間などに上限があります。
+              章、条、項などの単位へ文章を分割するか、行単位比較を使用してください。
+            </p>
+          </details>
+        </section>
+
+        <div class="help-footer-actions">
+          <a
+            class="btn btn-primary help-primary-link"
+            href="./index.html"
+          >
+            比較画面へ戻る
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      お役立ちアプリBOX / 文章差分チェッカー Version 1.4.0
+    </footer>
+  </main>
+</body>
+</html>
