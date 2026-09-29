@@ -1,0 +1,1357 @@
+/**
+ * 期限・日数かんたん計算 スタイルシート
+ * カレンダー主役型インタラクティブUI
+ */
+
+:root {
+  color: var(--appbox-text);
+  background: var(--appbox-page-bg);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+
+
+/* モード案内バー -------------------------------------------------- */
+.calc-mode-bar {
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  background: var(--appbox-surface-soft, #f9fafb);
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: var(--appbox-panel-radius, 8px);
+}
+
+.calc-mode-group[hidden] {
+  display: none !important;
+}
+
+.calc-mode-tip {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--appbox-muted, #4b5563);
+}
+
+.calc-mode-tip::before {
+  content: "💡 ";
+  margin-right: 4px;
+}
+
+/* 2カラムメインレイアウト ----------------------------------------- */
+.calc-main-layout {
+  display: grid;
+  grid-template-columns: minmax(460px, 1.35fr) minmax(340px, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .calc-main-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .calc-calendar-column,
+  .calc-control-column {
+    min-width: 0;
+  }
+}
+
+/* 左カラム：カレンダー主役エリア ----------------------------------- */
+.calc-calendar-column {
+  display: flex;
+  flex-direction: column;
+  background: var(--appbox-panel-bg, #ffffff);
+  border: 1px solid var(--appbox-border, #d1d5db);
+  border-top: 3px solid var(--appbox-primary, #4d8961);
+  border-radius: var(--appbox-panel-radius, 8px);
+  padding: 16px;
+  box-shadow: var(--appbox-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.calc-grid-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-calendar-grid {
+  flex: 1;
+}
+
+.calc-cal-header {
+  margin-bottom: 12px;
+}
+
+.calc-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calc-cal-selects {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calc-select-year {
+  width: 165px;
+  min-width: 165px;
+  padding: 6px 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.calc-select-month {
+  width: 76px;
+  padding: 6px 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.calc-btn-nav {
+  padding: 6px 12px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+/* 月間サマリバー -------------------------------------------------- */
+.calc-month-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--appbox-bg, #f3f4f6);
+  border-radius: 6px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.calc-summary-title {
+  font-weight: 700;
+  color: var(--appbox-text, #1f2937);
+  margin-right: 4px;
+}
+
+.calc-summary-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.calc-summary-badge.badge-business {
+  background: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+}
+
+.calc-summary-badge.badge-closed {
+  background: #ffebee;
+  color: #b71c1c;
+  border: 1px solid #ffcdd2;
+}
+
+.calc-summary-note {
+  color: var(--appbox-muted, #6b7280);
+  font-size: 12px;
+}
+
+/* カレンダーグリッド ---------------------------------------------- */
+.calc-grid-wrapper {
+  overflow-x: auto;
+}
+
+.calc-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  min-width: 420px;
+}
+
+/* 曜日ヘッダー */
+.calc-dow {
+  padding: 8px 4px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+  background: var(--appbox-bg, #f9fafb);
+  border-radius: 4px;
+  color: var(--appbox-text, #374151);
+}
+
+.calc-dow--sun {
+  color: #c62828;
+  background: #fff5f5;
+}
+
+.calc-dow--sat {
+  color: #1565c0;
+  background: #f0f7ff;
+}
+
+/* 日付セル */
+.calc-day-cell {
+  position: relative;
+  min-height: 68px;
+  padding: 4px 6px;
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transition: background-color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+  user-select: none;
+  text-align: left;
+}
+
+.calc-day-cell:hover {
+  border-color: var(--appbox-accent, #2e7d32);
+  box-shadow: 0 0 0 1px var(--appbox-accent, #2e7d32);
+  z-index: 2;
+}
+
+.calc-day-cell:focus-visible {
+  outline: 2px solid var(--appbox-accent, #2e7d32);
+  outline-offset: 1px;
+  z-index: 3;
+}
+
+/* セルヘッダー（日付数字） */
+.calc-day-number {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* 土日セルの基本色 */
+.calc-day-cell.is-saturday {
+  background: #f8fbff;
+}
+.calc-day-cell.is-saturday .calc-day-number {
+  color: #1565c0;
+}
+
+.calc-day-cell.is-sunday {
+  background: #fffafa;
+}
+.calc-day-cell.is-sunday .calc-day-number {
+  color: #c62828;
+}
+
+/* 祝日・休庁日 */
+.calc-day-cell.is-holiday {
+  background: #fff5f5;
+}
+.calc-day-cell.is-holiday .calc-day-number {
+  color: #c62828;
+}
+
+/* 独自閉庁日 */
+.calc-day-cell.is-custom {
+  background: #fff8e1;
+}
+
+/* 当月外 */
+.calc-day-cell.is-other-month {
+  background: #fafafa;
+  opacity: 0.55;
+}
+.calc-day-cell.is-other-month .calc-day-number {
+  color: #9ca3af;
+}
+
+/* 当日 */
+.calc-day-cell.is-today::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--appbox-accent, #2e7d32);
+}
+
+/* セル内の祝日・休庁バッジ */
+.cal-cell-badge {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.2;
+  padding: 1px 3px;
+  border-radius: 2px;
+  white-space: normal;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cal-cell-badge.badge-holiday {
+  background: #ffcdd2;
+  color: #b71c1c;
+  font-weight: 600;
+}
+
+.cal-cell-badge.badge-year-end {
+  background: #e1bee7;
+  color: #4a148c;
+}
+
+.cal-cell-badge.badge-custom-closed {
+  background: #ffe082;
+  color: #795548;
+}
+
+/* 基準日ハイライト（ピン） */
+.calc-day-cell.is-base {
+  border-color: #1976d2 !important;
+  background: #e3f2fd !important;
+  box-shadow: 0 0 0 2px #1976d2;
+  z-index: 4;
+}
+.calc-day-cell.is-base .calc-day-number {
+  color: #0d47a1 !important;
+}
+.calc-day-cell.is-base::before {
+  content: "基準日";
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  background: #1976d2;
+  color: #ffffff;
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-bottom: 1px;
+}
+
+/* 期限日・結果日ハイライト */
+.calc-day-cell.is-target {
+  border-color: #2e7d32 !important;
+  background: #e8f5e9 !important;
+  box-shadow: 0 0 0 2px #2e7d32;
+  z-index: 4;
+}
+.calc-day-cell.is-target .calc-day-number {
+  color: #1b5e20 !important;
+}
+.calc-day-cell.is-target::before {
+  content: "★期限日";
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  background: #2e7d32;
+  color: #ffffff;
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-bottom: 1px;
+}
+
+/* 期間ハイライト（帯） */
+.calc-day-cell.is-in-range {
+  background: #e0f2fe;
+  border-color: #93c5fd;
+}
+.calc-day-cell.is-in-range.is-holiday {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* 終了日選択時に開始日より前の日付を無効表示 */
+.calc-day-cell.is-disabled-target {
+  opacity: 0.38;
+  cursor: not-allowed;
+  background-color: var(--appbox-bg, #f3f4f6);
+}
+.calc-day-cell.is-disabled-target:hover {
+  border-color: var(--appbox-border, #e5e7eb) !important;
+  box-shadow: none !important;
+}
+
+/* 凡例 */
+.calc-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--appbox-border, #e5e7eb);
+  font-size: 12px;
+  color: var(--appbox-muted, #4b5563);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-box {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #ccc;
+}
+
+.is-base-legend {
+  background: #e3f2fd;
+  border-color: #1976d2;
+}
+
+.is-target-legend {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+}
+
+.is-range-legend {
+  background: #e0f2fe;
+  border-color: #93c5fd;
+}
+
+.is-holiday-legend {
+  background: #ffebee;
+  border-color: #ef9a9a;
+}
+
+/* 祝日データメタ情報表示（収録期間・更新日） */
+.calc-holiday-meta-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  font-size: 11px;
+  color: var(--appbox-muted, #4b5563);
+  line-height: 1.4;
+}
+
+.calc-holiday-meta-note .meta-note-icon,
+.calc-yearly-meta-note .meta-note-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--appbox-primary, #1976d2);
+}
+
+.calc-yearly-meta-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -8px;
+  margin-bottom: 16px;
+  padding: 6px 12px;
+  background: var(--appbox-bg, #f3f4f6);
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--appbox-muted, #4b5563);
+  line-height: 1.4;
+}
+
+/* 右カラム：操作パネル ＆ 結果カード -------------------------------- */
+.calc-control-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.calc-panel-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--appbox-panel-bg, #ffffff);
+  border: 1px solid var(--appbox-border, #d1d5db);
+  border-top: 3px solid var(--appbox-primary, #4d8961);
+  border-radius: var(--appbox-panel-radius, 8px);
+  padding: 18px;
+  box-shadow: var(--appbox-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.calc-panel-card[hidden] {
+  display: none !important;
+}
+
+.calc-panel-card__title {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--appbox-accent-subtle, #e8f5e9);
+  color: var(--appbox-text, #1f2937);
+}
+
+.calc-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.calc-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--appbox-muted, #4b5563);
+}
+
+.calc-selected-date-text {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--appbox-text, #111827);
+  background: var(--appbox-surface-soft, #f3f4f6);
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.calc-btn-xs {
+  padding: 2px 8px;
+  font-size: 12px;
+  min-height: 28px;
+}
+
+/* ステッパーコントローラー ---------------------------------------- */
+.calc-stepper-wrap {
+  margin-bottom: 16px;
+  padding: 14px;
+  background: var(--appbox-surface-soft, #f9fafb);
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 8px;
+}
+
+.calc-stepper-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calc-dir-toggle {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.calc-dir-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.calc-stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.calc-btn-step {
+  padding: 6px 12px;
+  min-width: 44px;
+  min-height: 40px;
+  border: 1px solid var(--appbox-border, #d1d5db);
+  background: var(--appbox-surface, #ffffff);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--appbox-text, #374151);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.calc-btn-step:hover {
+  background: var(--appbox-primary-soft, #e8f5e9);
+  border-color: var(--appbox-primary, #4d8961);
+  color: var(--appbox-primary, #4d8961);
+}
+
+.calc-btn-step:active {
+  background: #e5e7eb;
+}
+
+.calc-step-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.calc-input-step {
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 6px 8px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.calc-unit {
+  font-size: 13px;
+  color: var(--appbox-muted, #4b5563);
+  white-space: nowrap;
+}
+
+/* クイック日数チップ */
+.calc-quick-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.calc-quick-chips__label {
+  font-size: 12px;
+  color: var(--appbox-muted, #6b7280);
+}
+
+.calc-chip {
+  padding: 4px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 1px solid var(--appbox-border, #d1d5db);
+  background: var(--appbox-surface, #ffffff);
+  border-radius: 9999px;
+  color: var(--appbox-text, #374151);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.calc-chip:hover {
+  border-color: var(--appbox-primary, #4d8961);
+  background: var(--appbox-primary-soft, #e8f5e9);
+  color: var(--appbox-primary, #4d8961);
+}
+
+.calc-chip.active {
+  background: var(--appbox-primary, #4d8961);
+  border-color: var(--appbox-primary, #4d8961);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* 詳細設定アコーディオン ------------------------------------------ */
+.calc-details-accordion {
+  margin-bottom: 16px;
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.calc-accordion-summary {
+  padding: 8px 12px;
+  background: var(--appbox-bg, #f9fafb);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--appbox-muted, #4b5563);
+  user-select: none;
+}
+
+.calc-accordion-summary:hover {
+  background: #f3f4f6;
+  color: var(--appbox-text, #111827);
+}
+
+.calc-accordion-content {
+  padding: 12px;
+  background: #ffffff;
+  border-top: 1px solid var(--appbox-border, #e5e7eb);
+}
+
+.calc-subfield {
+  margin-bottom: 10px;
+}
+.calc-subfield:last-child {
+  margin-bottom: 0;
+}
+
+.calc-subfield__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--appbox-text, #374151);
+  margin-bottom: 4px;
+}
+
+.calc-subfield .appbox-radio {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+/* 計算結果カード -------------------------------------------------- */
+.calc-result-box {
+  margin-top: auto;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-top: 3px solid var(--appbox-primary, #4d8961);
+  border-radius: 6px;
+}
+
+.calc-res-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.calc-res-caption {
+  font-size: 12px;
+  font-weight: 700;
+  color: #166534;
+  letter-spacing: 0.05em;
+}
+
+.calc-badge-closed-notice {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #fed7aa;
+  color: #9a3412;
+  font-weight: 600;
+}
+
+.calc-res-primary-date {
+  font-size: 22px;
+  font-weight: 800;
+  color: #14532d;
+  line-height: 1.3;
+}
+
+.calc-res-sub-date {
+  font-size: 13px;
+  color: #166534;
+  margin-bottom: 12px;
+}
+
+.calc-res-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px dashed #86efac;
+  border-bottom: 1px dashed #86efac;
+  margin-bottom: 12px;
+}
+
+.calc-res-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-lbl {
+  font-size: 11px;
+  color: #166534;
+}
+
+.metric-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #14532d;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: #4b5563;
+}
+
+.calc-adjust-msg {
+  padding: 6px 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+
+.calc-warning-box {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 4px;
+  color: #795548;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.calc-res-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+/* 期間計算用ピッカー ---------------------------------------------- */
+.calc-duration-pickers {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.calc-picker-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--appbox-bg, #f9fafb);
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+}
+
+.calc-picker-label-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.calc-picker-label-col .calc-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--appbox-text, #1f2937);
+  line-height: 1.2;
+}
+
+.calc-sub-label {
+  font-size: 10px;
+  color: var(--appbox-muted, #6b7280);
+  line-height: 1.2;
+}
+
+.calc-picker-block .calc-selected-date-text {
+  font-size: 13px;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+  text-align: center;
+  flex: 1;
+}
+
+.calc-btn-picker {
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  min-height: 30px;
+  min-width: 98px;
+  text-align: center;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.calc-btn-picker.is-active {
+  background: var(--appbox-primary, #4d8961) !important;
+  color: #ffffff !important;
+  border-color: var(--appbox-primary, #4d8961) !important;
+  box-shadow: 0 0 0 2px rgba(77, 137, 97, 0.25);
+}
+
+.calc-instruction-text {
+  font-size: 12px;
+  color: var(--appbox-muted, #6b7280);
+  margin-bottom: 12px;
+}
+
+.calc-res-period-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.calc-period-breakdown {
+  font-size: 12px;
+  color: #166534;
+  margin-bottom: 8px;
+}
+
+/* 年間ミニカレンダーセクション ----------------------------------- */
+.yearly-calendar-section {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.yearly-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.yearly-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--appbox-text, #1f2937);
+  margin: 0;
+}
+
+.yearly-calendar-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--appbox-muted, #4b5563);
+}
+
+.mini-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.mini-legend-circle {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.mini-legend-circle.is-holiday {
+  border: 1.5px solid #ef5350;
+  background: transparent;
+}
+
+.mini-legend-circle.is-custom {
+  border: 1.5px solid #f59e0b;
+  background: transparent;
+}
+
+.yearly-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1024px) {
+  .yearly-calendar-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .yearly-calendar-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 各月ミニカレンダーカード */
+.mini-cal-card {
+  background: #ffffff;
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+  padding: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.mini-cal-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--appbox-text, #1f2937);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--appbox-border, #f3f4f6);
+}
+
+.mini-cal-dows {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--appbox-muted, #6b7280);
+  margin-bottom: 4px;
+}
+
+.mini-dow-sun {
+  color: #c62828;
+}
+
+.mini-dow-sat {
+  color: #1565c0;
+}
+
+.mini-cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.mini-day-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--appbox-text, #1f2937);
+  position: relative;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.mini-day-cell.is-blank {
+  visibility: hidden;
+}
+
+.mini-day-cell.is-sat {
+  color: #1565c0;
+  font-weight: 600;
+}
+
+.mini-day-cell.is-sun {
+  color: #c62828;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+}
+
+.mini-day-cell.is-holiday {
+  color: #c62828 !important;
+  font-weight: 700;
+  border: 1.5px solid #ef5350;
+  background: #fee2e2 !important;
+  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  margin: 1px auto;
+  box-sizing: border-box;
+}
+
+.mini-day-cell.is-custom {
+  color: #b45309 !important;
+  font-weight: 700;
+  border: 1.5px solid #f59e0b;
+  background: #fef3c7 !important;
+  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  margin: 1px auto;
+  box-sizing: border-box;
+}
+
+.calc-yearly-table-section {
+  margin-top: 24px;
+}
+
+/* 年間早見表セクション -------------------------------------------- */
+.calc-yearly-view {
+  background: var(--appbox-panel-bg, #ffffff);
+  border: 1px solid var(--appbox-border, #d1d5db);
+  border-top: 3px solid var(--appbox-primary, #4d8961);
+  border-radius: var(--appbox-panel-radius, 8px);
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: var(--appbox-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+.calc-yearly-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.calc-yearly-sub {
+  font-size: 13px;
+  color: var(--appbox-muted, #4b5563);
+  margin: 4px 0 0;
+}
+
+.calc-yearly-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.calc-yearly-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calc-yearly-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--appbox-muted, #4b5563);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#yearly-select-year {
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  padding: 6px 24px 6px 8px;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.calc-btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.calc-yearly-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--appbox-bg, #f9fafb);
+  border-radius: 6px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.calc-yearly-table-wrap {
+  overflow-x: auto;
+}
+
+.calc-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  border: 1px solid var(--appbox-border, #e5e7eb);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.calc-table th, .calc-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--appbox-border, #e5e7eb);
+  border-right: 1px solid var(--appbox-border, #e5e7eb);
+  text-align: left;
+}
+
+.calc-table th:last-child, .calc-table td:last-child {
+  border-right: none;
+}
+
+.calc-table tr:last-child td {
+  border-bottom: none;
+}
+
+.calc-table th {
+  background: var(--appbox-surface-soft, #f3f4f6);
+  font-weight: 700;
+  color: var(--appbox-text, #111827);
+  border-bottom: 2px solid var(--appbox-border, #d1d5db);
+}
+
+.calc-table tbody tr:hover td {
+  background: var(--appbox-primary-soft, #f0fdf4);
+}
+
+/* コピートースト -------------------------------------------------- */
+.calc-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 10px 18px;
+  background: #1f2937;
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 印刷用スタイル -------------------------------------------------- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    font-size: 11px !important;
+    color: #000000 !important;
+  }
+
+
+
+  .appbox-app-intro {
+    margin-bottom: 6px !important;
+  }
+
+  .appbox-app-title-group {
+    margin-bottom: 0 !important;
+  }
+  .appbox-app-desc {
+    display: none !important;
+  }
+
+
+
+  .calc-yearly-panel {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .calc-yearly-header {
+    margin-bottom: 4px !important;
+  }
+
+  .calc-yearly-header h2 {
+    font-size: 15px !important;
+    margin: 0 !important;
+  }
+
+  .calc-yearly-sub {
+    display: none !important;
+  }
+
+  .calc-yearly-summary {
+    padding: 3px 6px !important;
+    margin-bottom: 6px !important;
+    font-size: 10px !important;
+    background: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  .yearly-calendar-section {
+    margin-top: 4px !important;
+    margin-bottom: 8px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .yearly-calendar-header {
+    margin-bottom: 4px !important;
+  }
+
+  .yearly-section-title {
+    font-size: 12px !important;
+  }
+
+  .yearly-calendar-legend {
+    font-size: 10px !important;
+    gap: 8px !important;
+  }
+
+  .mini-legend-circle {
+    width: 9px !important;
+    height: 9px !important;
+  }
+
+  .yearly-calendar-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .mini-cal-card {
+    padding: 3px !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: none !important;
+  }
+
+  .mini-cal-title {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  .mini-cal-dows {
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .mini-day-cell {
+    height: 14px !important;
+    font-size: 8.5px !important;
+  }
+
+  .mini-day-cell.is-sun {
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .mini-day-cell.is-holiday {
+    border: 1px solid #ef5350 !important;
+    background: transparent !important;
+    width: 13px !important;
+    height: 13px !important;
+    margin: 0 auto !important;
+  }
+
+  .mini-day-cell.is-custom {
+    border: 1px solid #f59e0b !important;
+    background: transparent !important;
+    width: 13px !important;
+    height: 13px !important;
+    margin: 0 auto !important;
+  }
+
+  .calc-yearly-table-section {
+    margin-top: 6px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .calc-yearly-table-wrap {
+    overflow: visible !important;
+  }
+
+  .calc-table {
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+    width: 100% !important;
+  }
+
+  .calc-table th, .calc-table td {
+    padding: 2px 4px !important;
+  }
+}

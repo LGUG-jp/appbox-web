@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="blue">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="今日の年を基準に西暦・和暦・年齢の早見表を表示。生年月日から満年齢・年度末年齢の計算もブラウザ内で行えます。">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>西暦・和暦・年齢早見表 | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <link rel="stylesheet" href="./datetools.css?v=1.2.5">
+  <link rel="stylesheet" href="./datetools-print.css?v=1.2.5">
+  <script src="../../assets/appbox-utilities.js?v=2.1.0" defer></script>
+  <script src="./date-core.js?v=1.2.3" defer></script>
+  <script src="./datetools.js?v=1.2.3" defer></script>
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="ヘルプ（新しいタブで開きます）">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+            <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+        <a class="appbox-back-button" href="../../">&lt; ポータルに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="appbox-app-intro appbox-app-intro--edge">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+            <path d="M16 3v4M8 3v4M3 10h18"></path>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">西暦・和暦・年齢早見表</h1>
+      </div>
+      <p class="appbox-app-desc">西暦・和暦・年齢の一覧と、生年月日からの年齢計算。</p>
+    </div>
+    <div class="appbox-shell">
+    <noscript><p class="notice">このツールを使うには、ブラウザのJavaScriptを有効にしてください。入力情報は送信されません。</p></noscript>
+    <div class="appbox-tabs appbox-print-hidden" role="tablist" aria-label="表示する機能">
+      <button class="appbox-tab is-active" type="button" role="tab" id="view-reference" aria-controls="panel-reference" aria-selected="true" tabindex="0">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        早見表
+      </button>
+      <button class="appbox-tab" type="button" role="tab" id="view-age" aria-controls="panel-age" aria-selected="false" tabindex="-1">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        生年月日から年齢計算
+      </button>
+    </div>
+
+    <section class="appbox-tab-panel tool-panel" role="tabpanel" id="panel-reference" aria-labelledby="view-reference">
+      <div class="reference-layout">
+        <div class="appbox-panel appbox-panel--accent reference-panel">
+          <div class="reference-heading">
+            <div><h2 id="reference-title">今年の早見表</h2><p class="reference-today">本日：<time id="reference-today">確認中</time></p></div>
+          </div>
+          <p class="reference-note" id="reference-note">年齢は<strong>今年の誕生日に迎える年齢</strong>です。誕生日前は1歳引いてください。</p>
+          <p class="error reference-error" id="error-reference" role="alert"></p>
+          <div class="reference-scroll" id="reference-scroll" role="region" aria-label="西暦・和暦・年齢の一覧">
+            <p class="appbox-sr-only" id="reference-caption">西暦・和暦・年齢早見表。各表を上から下へ、左の表から右の表へ読みます。</p>
+            <div class="reference-grid" id="reference-rows" aria-describedby="reference-caption"></div>
+          </div>
+        </div>
+
+        <aside class="reference-side-panel">
+          <div class="appbox-panel appbox-panel--accent reference-side-card">
+            <h3 class="side-card-title">早見表の操作・設定</h3>
+            <div class="side-card-section">
+              <button type="button" id="print-reference" class="appbox-button appbox-button--primary appbox-no-print side-print-btn" aria-label="早見表の印刷用ビューを開く">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                早見表を印刷（A4・1枚）
+              </button>
+            </div>
+            <div class="side-card-section">
+              <label class="reference-option-label" for="reference-previous-era"><input type="checkbox" id="reference-previous-era">改元年の旧元号も表示</label>
+              <p class="side-help-text">改元した年に旧元号を併記します（例：昭和64年／平成元年）。</p>
+            </div>
+          </div>
+
+          <div class="appbox-panel reference-side-card side-info-card">
+            <h3 class="side-card-title">早見表について</h3>
+            <div class="side-info-content">
+              <p class="reference-range" id="reference-range">改元した年は新元号の「元年」を表示します。「改元年の旧元号も表示」で併記できます。生年月日から年齢を調べる場合は「生年月日から年齢計算」をご利用ください。</p>
+              <p>年齢は「当年−生年」で計算しています。誕生日前の方は1歳引いてご覧ください。</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="appbox-tab-panel age-panel" role="tabpanel" id="panel-age" aria-labelledby="view-age" hidden>
+      <div class="workspace">
+        <form id="form-age" class="appbox-panel appbox-panel--accent age-input-card" autocomplete="off" novalidate>
+          <fieldset class="date-field reference-date-field">
+            <legend><span class="step-number" aria-hidden="true">1</span>基準日を選ぶ</legend>
+            <div id="reference-picker-wrap">
+              <label for="reference-date">計算基準日</label>
+              <input class="appbox-input" type="date" id="reference-date" min="1873-01-01" max="2099-12-31" aria-describedby="error-age">
+            </div>
+            <details id="reference-manual" class="date-manual">
+              <summary>和暦・年月日で入力</summary>
+              <fieldset class="date-field" data-date-field="reference"><legend class="appbox-sr-only">基準日</legend></fieldset>
+            </details>
+          </fieldset>
+          <fieldset class="date-field" data-date-field="birth">
+            <legend><span class="step-number" aria-hidden="true">2</span>生年月日を入力</legend>
+            <div class="date-options" role="radiogroup" aria-label="生年月日の入力方法">
+              <label><input type="radio" name="birth-format" id="birth-format-western" value="western" checked>西暦</label>
+              <label><input type="radio" name="birth-format" id="birth-format-japanese" value="japanese">和暦</label>
+            </div>
+          </fieldset>
+          <div class="form-actions"><button class="appbox-button appbox-button--primary" type="submit">年齢を計算する</button><button class="appbox-button appbox-button--secondary" type="button" id="clear-age">入力をクリア</button></div>
+          <p class="hint">基準日は過去・未来の日付も指定できます。</p>
+          <p class="error" id="error-age" role="alert"></p>
+        </form>
+        <section class="appbox-panel appbox-panel--accent age-result-card" aria-labelledby="age-result-title">
+          <h2 id="age-result-title"><span class="step-number" aria-hidden="true">3</span>確認結果</h2>
+          <div class="result-card" id="result-age" role="region" aria-label="年齢の結果" aria-live="polite" aria-atomic="true"><p class="empty-result">生年月日を入力して「年齢を計算する」を押してください。</p></div>
+        </section>
+      </div>
+      <p class="age-caution">誕生日当日に1歳加算します。2月29日生まれは、平年では3月1日に加算します。法令上の年齢到達時刻や、学齢・受給資格等の最終判定には対応していません。</p>
+    </section>
+    <div class="scope-note">
+      <p>入力・計算はブラウザ内で処理し、入力した情報を保存・送信しません。</p>
+      <p>日付：1873年1月1日〜2099年12月31日 ／ 年度：1873〜2098年度</p>
+      <p>明治（6年以降）・大正・昭和・平成・令和に対応。将来の日付は令和が続く前提です。</p>
+      <p>計算結果は事務処理を補助する参考表示です。法令等に特別な定めがある場合は、その規定を優先してください。</p>
+    </div>
+    <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+    <footer class="appbox-footer">お役立ちアプリBOX / 西暦・和暦・年齢早見表 v1.2.5</footer>
+    </div>
+  </main>
+  <dialog id="print-dialog" class="print-dialog" aria-labelledby="print-dialog-title" aria-describedby="print-dialog-description">
+    <div class="print-dialog-controls appbox-no-print">
+      <div class="print-dialog-heading"><h2 id="print-dialog-title">早見表の印刷用ビュー</h2><button class="appbox-button appbox-button--secondary" type="button" id="close-print">閉じる</button></div>
+      <p id="print-dialog-description">0〜34歳・35〜69歳・70〜100歳を3つの表に分けて、A4用紙1ページへ印刷します。</p>
+      <div class="print-options-row">
+        <fieldset class="print-style-options"><legend>デザイン</legend><div class="print-style-buttons">
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="normal" aria-pressed="true">通常モード</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="simple" aria-pressed="false">シンプルモード</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="cute" aria-pressed="false">かわいいモード</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="fluffy" aria-pressed="false">ふんわりポップ</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="wa-modern" aria-pressed="false">和モダン</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="business" aria-pressed="false">ビジネス</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-style="retro" aria-pressed="false">レトロ</button>
+        </div></fieldset>
+        <fieldset class="print-style-options"><legend>用紙の向き</legend><div class="print-style-buttons">
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-orientation="portrait" aria-pressed="true">縦向き（標準）</button>
+          <button class="appbox-button appbox-button--secondary" type="button" data-print-orientation="landscape" aria-pressed="false">横向き</button>
+        </div></fieldset>
+        <button type="button" class="appbox-button appbox-button--primary" id="confirm-print">この設定で印刷</button>
+      </div>
+      <p class="print-setting-note">印刷設定：A4・倍率100%・ヘッダーとフッターなし。年齢は青系で強調します。色を付ける場合は「背景のグラフィック」をオンにしてください。</p>
+    </div>
+    <div class="print-preview-area" id="print-preview-area">
+      <article class="print-sheet" id="print-sheet" data-print-style="normal" data-print-orientation="portrait" aria-label="印刷する早見表">
+        <header class="print-sheet-header"><h2><span class="print-year-badge" id="print-year">今年</span> 西暦・和暦・年齢早見表</h2><p id="print-date"></p></header>
+        <p class="print-sheet-note" id="print-sheet-note">年齢は<strong>今年の誕生日に迎える年齢</strong>です。誕生日前は1歳引いてください。</p>
+        <div class="print-grid" id="print-rows"></div>
+      </article>
+    </div>
+  </dialog>
+</body>
+</html>

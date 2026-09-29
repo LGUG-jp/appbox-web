@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="purple">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>フロー図メーカー ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=2.1.0">
+</head>
+<body class="appbox-help-theme-background">
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+    <div class="appbox-help-header-card">
+      <div>
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <rect x="3" y="4" width="7" height="5" rx="1"></rect>
+              <rect x="14" y="4" width="7" height="5" rx="1"></rect>
+              <rect x="8.5" y="15" width="7" height="5" rx="1"></rect>
+              <path d="M6.5 9v2.5H12M17.5 9v2.5H12M12 11.5V15"></path>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">フロー図メーカー</h1>
+        </div>
+        <p class="appbox-help-header-desc">業務フローや構成図を作り、編集可能な形式や画像で保存するまでの使い方を説明します。</p>
+      </div>
+      <span class="version-badge">Version 1.2.5</span>
+
+      <div class="help-callout help-callout-warning">
+        <strong>編集中の図があるときは、サンプルを読み込む前に保存してください</strong>
+        <p>サンプルへ置き換えた後、元に戻す操作で完全に元の図へ戻せない場合があります。重要な図は先に.excalidraw形式で保存してください。</p>
+      </div>
+    </div>
+
+    <div class="appbox-help-grid help-panel">
+      <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+        <p class="appbox-help-nav-title">目次</p>
+        <ul class="appbox-help-nav-list">
+          <li>
+            <a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#samples">サンプル図から始める</a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#mermaid">Mermaid記法からの作図</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#style">見た目とフォント</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#save">保存・読込み・出力</a></li>
+            </ul>
+          </li>
+          <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#other">その他</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#cautions">利用上の注意</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#privacy">セキュリティとプライバシー</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="appbox-help-content">
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+          <ol class="help-steps">
+                      <li>
+                        白紙から描き始めるか、画面幅に余裕があればアプリ情報の右側にある「サンプル図」から近いものを選びます。
+                      </li>
+                      <li>
+                        画面中央の作図領域で、図形、線、矢印、テキストを配置します。
+                      </li>
+                      <li>
+                        矢印の端を図形へ近づけると接続できます。接続後は図形を動かすと矢印が追従します。
+                      </li>
+                      <li>
+                        図形を選択して、色、線の太さ、フォントなどを調整します。
+                      </li>
+                      <li>
+                        .excalidraw形式で保存します。資料へ貼る場合はPNGなどの画像で出力します。
+                      </li>
+                    </ol>
+
+                    <h4 class="help-subheading">画面構成</h4>
+
+                    <div class="help-table-wrap">
+                      <table class="help-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">領域</th>
+                            <th scope="col">内容</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">共通ヘッダー</th>
+                            <td>お役立ちアプリBOXへの導線、ヘルプ、ポータルに戻る操作</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">アプリ情報とサンプル</th>
+                            <td>アプリ名の下に説明と保存・読込／画像出力の案内が続きます。幅が狭いときは折り返します。幅が広いときは右側にサンプル図の選択（業務フロー／システム構成図／申請手続き）が表示されます。</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">中央</th>
+                            <td>作図領域</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="samples">サンプル図から始める</h3>
+          <p>
+                      「業務フロー」「システム構成図」「申請手続き」の3種類を内蔵しています。
+                      画面が広いときは、アプリ情報の右側にある「サンプル図」から選べます。表示されない場合は、画面を広げてください。
+                    </p>
+
+                    <ul>
+                      <li>すでに図形がある状態でサンプルを選ぶと、置き換える前に確認メッセージが出ます。</li>
+                      <li>読込み中は、連続操作による競合を防ぐためサンプルボタンが一時的に無効になります。</li>
+                      <li>サンプルは読み込むたびに要素のIDを作り直すため、繰り返し読み込んでも重複しません。</li>
+                    </ul>
+        </section>
+
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+
+          <h3 class="appbox-help-subheading" id="mermaid">Mermaid記法からの作図</h3>
+          <p>
+                      Mermaid記法を書くと、図形へ変換して作図領域へ配置できます。
+                      生成した図形には業務向けの初期スタイルが適用され、
+                      矢印は図形へ接続された状態になるため、図形を動かすと追従します。
+                    </p>
+
+                    <p>
+                      <code>&lt;br&gt;</code> や <code>&lt;br/&gt;</code> は実際の改行へ変換します。
+                    </p>
+
+                    <div class="help-callout help-callout-info">
+                      <strong>Mermaidを使うときの注意</strong>
+                      <p>
+                        初回利用時に追加のプログラムが読み込まれる場合があります。
+                        いずれも庁内のサーバーから読み込まれ、外部への通信は行いません。
+                      </p>
+                      <p>
+                        記法や変換結果は、同梱しているMermaidのバージョンの仕様に依存します。
+                        複雑な図や大量のノードは、変換や表示に時間がかかる場合があります。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="style">見た目とフォント</h3>
+          <p>
+                      新規作図時とMermaidからの作図時は、手書き風ではなく業務資料向けの
+                      初期スタイルを設定しています。
+                    </p>
+
+                    <div class="help-table-wrap">
+                      <table class="help-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">項目</th>
+                            <th scope="col">初期値</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">線のラフさ</th>
+                            <td>0（手書き風にしない）</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">線種</th>
+                            <td>実線</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">塗り</th>
+                            <td>ベタ塗り</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">図形の角・矢印</th>
+                            <td>シャープ</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">スナップ・矢印の接続</th>
+                            <td>有効</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <p>
+                      各スタイルは、図形ごとにプロパティから変更できます。
+                      既存の.excalidrawファイルを読み込んだ場合は、原則として
+                      各図形に保存されているスタイルを維持します。
+                    </p>
+
+                    <h4 class="appbox-help-subheading">フォント</h4>
+
+                    <p>
+                      BIZ UDゴシック、BIZ UDPゴシック、游ゴシック、游ゴシック UI、
+                      メイリオ、MS ゴシック、MS Pゴシック、MS 明朝、MS P明朝、
+                      Segoe UI、Arial、Times New Roman を選べます。
+                    </p>
+
+                    <div class="help-callout help-callout-warning">
+                      <strong>フォントは端末にインストールされたものを使います</strong>
+                      <p>
+                        フォントファイルをアプリへ同梱しているわけではありません。
+                        端末に選択したフォントがない場合は、代替フォントで表示されます。
+                        日本語の文字は、文字種や端末環境に応じて代替フォントが
+                        使われる場合があります。
+                      </p>
+                      <p>
+                        追加フォントは本アプリ独自の識別子を使っているため、
+                        公式のExcalidrawや本アプリ以外の環境でファイルを開くと、
+                        フォント名や見た目が一致しないことがあります。
+                        重要なファイルは、本アプリで再度読み込めることを確認してください。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="save">保存・読込み・出力</h3>
+          <ul>
+            <li><strong>.excalidraw形式で保存</strong>：編集を続けられる形式です。図を作り直せるよう、作業中はこの形式で保存してください。</li>
+            <li><strong>画像で出力</strong>：PNGなどの画像として出力できます。資料への貼付けに使います。</li>
+            <li><strong>SVGのファイルサイズ</strong>：安全性のための実行制限により、文字に使うフォントを小さくする処理（サブセット化）が利用できません。同梱フォントのファイルがそのまま埋め込まれ、日本語や手書き書体を含むSVGは数百KB〜数MBになる場合があります。共有先の容量制限を確認し、大きすぎる場合はPNGで出力してください。編集用には.excalidraw形式を保存してください。</li>
+            <li><strong>クリップボードへコピー</strong>：図をコピーして、他のアプリへ貼り付けられます。</li>
+            <li><strong>印刷</strong>：ブラウザの印刷機能で出力できます。</li>
+          </ul>
+
+                    <p>
+                      利用できる出力形式は、同梱しているバージョンと設定によって異なります。
+                    </p>
+
+                    <div class="help-callout help-callout-warning">
+                      <strong>庁外へ提供する前に確認してください</strong>
+                      <p>
+                        出力したファイルに次の情報が含まれていないか確認してください。
+                        個人情報、機密情報、庁内サーバー名、内部IPアドレス、庁内URL、
+                        ファイルパス、外部リンク、非公開のシステム構成、
+                        画像に含まれる非公開情報、編集用のデータやコメント。
+                      </p>
+                    </div>
+        </section>
+
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+          <details class="appbox-help-faq-item">
+                      <summary>
+                        手書き風の見た目にならないのはなぜですか？
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        業務資料で使いやすいように、線のラフさを0にした実線・ベタ塗り・
+                        シャープな角を初期スタイルにしています。
+                        図形ごとにプロパティから変更できます。
+                      </div>
+                    </details>
+
+                    <details class="appbox-help-faq-item">
+                      <summary>
+                        図形を動かしても矢印が付いてきません。
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        矢印の端が図形へ接続されていない可能性があります。
+                        矢印の端を図形へ近づけると接続できます。
+                        サンプル図の一部の矢印や、Mermaidから生成した矢印は、
+                        接続状態によって追従しない場合があります。
+                      </div>
+                    </details>
+
+                    <details class="appbox-help-faq-item">
+                      <summary>
+                        外部サイトへのリンクが開きません。
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        閉域環境で運用しているため、外部のHTTP／HTTPSリンクへの遷移は
+                        意図的に遮断しています。庁内の相対リンクは通常どおり利用できます。
+                      </div>
+                    </details>
+
+                    <details class="appbox-help-faq-item">
+                      <summary>
+                        他のPCで開いたらフォントが違って見えます。
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        フォントは端末にインストールされているものを使うため、
+                        端末に無いフォントは代替フォントで表示されます。
+                        また、追加フォントは本アプリ独自の識別子を使っているため、
+                        公式のExcalidrawなど別の環境では見た目が一致しないことがあります。
+                      </div>
+                    </details>
+
+                    <details class="appbox-help-faq-item">
+                      <summary>
+                        作った図を資料に貼りたいのですが。
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        PNGなどの画像として出力するか、クリップボードへコピーして
+                        貼り付けてください。あとから編集する可能性がある場合は、
+                        .excalidraw形式でも保存しておいてください。
+                      </div>
+                    </details>
+
+                    <details class="appbox-help-faq-item">
+                      <summary>
+                        動作が重くなりました。
+                      </summary>
+                      <div class="appbox-help-faq-answer">
+                        大きな画像や複雑な図では、端末の性能によって動作が遅くなります。
+                        図を分割するか、不要な要素を削除してください。
+                      </div>
+                    </details>
+        </section>
+
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+
+          <h3 class="appbox-help-subheading" id="cautions">利用上の注意</h3>
+          <h4>外部リンクは遮断されます</h4>
+
+                    <p>
+                      外部のHTTP／HTTPSリンクへの遷移は補助的に遮断し、
+                      操作された場合は画面遷移を止めて通知します。
+                      同一サーバー内の相対リンクは外部リンクとして扱わないため、
+                      「ポータルに戻る」ボタンやこのヘルプは通常どおり利用できます。
+                    </p>
+
+                    <p>
+                      図の中へリンクを設定できる場合は、庁内で許可されたURLだけを
+                      使用してください。
+                    </p>
+
+                    <h4 class="appbox-help-subheading">その他の制約</h4>
+
+                    <ul>
+                      <li>クラウド共有および共同編集の機能は使用できません。</li>
+                      <li>外部CDNやオンライン素材を前提とする機能は利用できません。</li>
+                      <li>サンプルの一部の矢印は、図形を移動しても追従しない場合があります。</li>
+                      <li>Mermaidから生成した矢印が追従するかどうかは、変換結果と接続状態に依存します。</li>
+                      <li>サンプル図形の互換性は、同梱しているバージョンに依存します。</li>
+                      <li>端末に指定したフォントがない場合は、代替フォントで表示されます。</li>
+                      <li>サンプルへ置き換えた後、元に戻す操作で完全に元の図へ戻れない場合があります。</li>
+                      <li>大きな画像や複雑な図は、端末性能によって動作が遅くなる場合があります。</li>
+                      <li>通知領域が作られる前に通知が発生した場合、通知が表示されないことがあります。</li>
+                    </ul>
+
+                    <div class="help-callout help-callout-info">
+                      <strong>表示が古いままのとき</strong>
+                      <p>
+                        画面の表示が更新されない場合は、<kbd>Ctrl</kbd> + <kbd>F5</kbd> で
+                        再読込みしてください。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="privacy">セキュリティとプライバシー</h3>
+          <div class="help-callout help-callout-security">
+                      <strong>図の編集はブラウザ内で行います</strong>
+                      <p>
+                        外部CDNや外部APIを使わない構成で、クラウド保存、クラウド共有、
+                        共同編集の機能は使用しません。フォント、プログラム、CSS、画像は
+                        このアプリの配下から読み込みます。外部画像URLの貼付けと
+                        ライブラリの外部公開は使用できません。画像はファイルから読み込んでください。
+                      </p>
+                    </div>
+
+                    <div class="help-callout help-callout-warning">
+                      <strong>「サーバーへ送信しない」ことと「端末に残らない」ことは違います</strong>
+                      <p>
+                        ブラウザ内の処理であっても、編集中のデータや設定が
+                        ブラウザの保存領域、キャッシュ、ダウンロードフォルダー、
+                        クリップボードへ保存される場合があります。
+                      </p>
+                      <p>
+                        共用端末で使用する場合は、作業終了後に次の取扱いを確認してください。
+                        ダウンロードファイル、クリップボード、ブラウザの保存領域、
+                        最近使用したファイル、印刷履歴、一時ファイル。
+                      </p>
+                    </div>
+
+                    <p>
+                      外部リンク、外部画像の取得、データ送信を制限しています。
+                      配布元を変更した場合は、配置先でも外部通信が発生しないことを確認してください。
+                    </p>
+
+                    <p>
+                      個人情報、機密情報、庁内ネットワーク構成などを扱う場合は、
+                      所属組織の情報セキュリティポリシー、端末運用基準、
+                      データ取扱規程に従ってください。
+                    </p>
+        </section>
+
+        <div class="help-footer-actions">
+          <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="appbox-footer">
+      お役立ちアプリBOX / フロー図メーカー Version 1.2.5
+    </footer>
+  </main>
+
+  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+</body>
+</html>

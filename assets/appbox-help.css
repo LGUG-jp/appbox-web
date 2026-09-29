@@ -361,6 +361,7 @@ footer {
 /* 表 ------------------------------------------------------------------- */
 
 .help-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--appbox-border);
   border-radius: 14px;
@@ -580,6 +581,11 @@ kbd {
   flex-wrap: wrap;
 }
 
+.appbox-help-header-card .help-callout {
+  width: 100%;
+  margin-top: 18px;
+}
+
 .appbox-help-header-card__info {
   flex: 1;
   min-width: 260px;
@@ -643,19 +649,9 @@ kbd {
 
 .appbox-help-grid {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 28px;
   align-items: start;
-}
-
-@media (max-width: 820px) {
-  .appbox-help-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .appbox-help-nav-card {
-    position: static;
-  }
 }
 
 /* 左カラム: 220px スリム目次 ------------------------------------------ */
@@ -677,6 +673,17 @@ kbd {
   border-radius: 10px;
   padding: 18px 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 820px) {
+  .appbox-help-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .appbox-help-sidebar,
+  .appbox-help-nav-card {
+    position: static;
+  }
 }
 
 .appbox-help-nav-title {
@@ -728,9 +735,37 @@ kbd {
   box-shadow: var(--appbox-focus-ring-double, 0 0 0 2px #ffffff, 0 0 0 5px #eab308, 0 0 0 7px #1a1a1a);
 }
 
+.appbox-help-nav-sublist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 4px 12px;
+  padding: 0;
+}
+
+.appbox-help-nav-link--sub {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 5px 10px;
+  color: var(--appbox-muted);
+}
+
+.appbox-help-nav-link--sub:hover {
+  color: var(--appbox-primary);
+}
+
+.appbox-help-nav-link--sub.is-active {
+  color: var(--appbox-primary);
+  font-weight: 700;
+  border-left-width: 2px;
+  padding-left: 8px;
+}
+
 /* 右カラム: メイン記事 ------------------------------------------------- */
 
 .appbox-help-content {
+  min-width: 0;
   background: var(--appbox-surface, #ffffff);
   border: 1px solid var(--appbox-border);
   border-radius: 12px;

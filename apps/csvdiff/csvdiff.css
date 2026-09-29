@@ -33,16 +33,6 @@ body {
   margin: 0;
 }
 
-.csvdiff-shell {
-  width: min(1460px, calc(100% - 36px));
-  max-width: none;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-.csvdiff-shell {
-  margin-top: var(--appbox-space-5);
-}
 
 /* CSVファイル選択領域 */
 
@@ -1195,9 +1185,6 @@ tr.unchanged td {
 }
 
 @media (max-width: 900px) {
-  .csvdiff-shell {
-    width: min(100% - 20px, 1460px);
-  }
 
   .section-head {
     flex-direction: column;

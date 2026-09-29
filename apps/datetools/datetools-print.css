@@ -1,0 +1,157 @@
+/* 印刷用ビューと用紙のデザイン。共通assetsの色を基準に本アプリ内だけへ適用する。 */
+.print-dialog { width: min(1180px, calc(100% - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--appbox-border); border-radius: 16px; color: var(--appbox-text); background: var(--appbox-surface); }
+.print-dialog::backdrop { background: rgb(20 31 48 / 50%); }
+.print-dialog-controls { padding: 16px 20px 12px; }
+.print-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.print-dialog-heading h2 { font-size: 20px; }
+.print-dialog-controls p { margin: 8px 0; font-size: 14px; line-height: 1.6; }
+.print-options-row { display: flex; align-items: end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.print-style-options { border: 0; margin: 0; padding: 0; min-width: 0; }
+.print-style-options legend { padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 700; }
+.print-style-buttons { display: flex; flex-wrap: wrap; gap: 6px; }
+.print-style-buttons button { display: inline-flex; align-items: center; gap: 7px; }
+.print-style-buttons button::before { content: ""; width: 13px; height: 13px; border: 1px solid rgb(36 54 75 / 25%); border-radius: 50%; background: #e9f1f8; }
+.print-style-buttons [data-print-style="simple"]::before { border-color: #777; background: #fff; }
+.print-style-buttons [data-print-style="cute"]::before { background: #f5cfe0; }
+.print-style-buttons [data-print-style="fluffy"]::before { background: linear-gradient(135deg, #cfeeff 0 34%, #f7d7e8 34% 67%, #fff0b8 67%); }
+.print-style-buttons [data-print-style="wa-modern"]::before { background: linear-gradient(90deg, #283f68 0 65%, #ae504b 65%); }
+.print-style-buttons [data-print-style="business"]::before { background: #334a68; }
+.print-style-buttons [data-print-style="retro"]::before { background: #c97843; }
+.print-style-buttons [data-print-orientation]::before { border-radius: 2px; }
+.print-style-buttons [aria-pressed="true"] { border-color: var(--appbox-primary); background: var(--appbox-primary-soft); color: var(--appbox-primary-hover); }
+.print-preview-area { overflow: auto; padding: 12px; background: var(--appbox-surface-soft); }
+
+.print-sheet {
+  --appbox-print-ink: #24364b;
+  --appbox-print-accent: #315d87;
+  --appbox-print-border: #acbfd0;
+  --appbox-print-head: #e9f1f8;
+  --appbox-print-stripe: #f4f8fb;
+  --appbox-print-age: #1f5f99;
+  --appbox-print-side-padding: 4mm;
+  --appbox-print-top-padding: 4mm;
+  position: relative; overflow: hidden;
+  width: 198mm; min-height: 285mm; margin: 0 auto; padding: var(--appbox-print-top-padding) var(--appbox-print-side-padding) 3mm;
+  box-sizing: border-box; background: #fff; color: var(--appbox-print-ink);
+  box-shadow: 0 2px 14px rgb(20 31 48 / 12%);
+  font-family: var(--appbox-font-sans); font-variant-numeric: tabular-nums;
+  zoom: var(--appbox-print-preview-zoom, 1);
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.print-sheet[data-print-orientation="landscape"] {
+  width: 283mm; min-height: 196mm;
+  --appbox-print-side-padding: 6mm;
+  --appbox-print-top-padding: 3mm;
+}
+.print-sheet-header, .print-sheet-note, .print-grid { position: relative; z-index: 1; }
+.print-sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 2mm; min-height: 9mm; padding: .6mm 1mm; border-bottom: .35mm solid var(--appbox-print-accent); }
+.print-sheet-header h2 { margin: 0; font-size: 14pt; line-height: 1.1; white-space: nowrap; }
+.print-sheet-header p { margin: 0; font-size: 7.5pt; line-height: 1.1; white-space: nowrap; }
+.print-year-badge { display: inline-block; vertical-align: middle; padding: .8mm 1.5mm; margin-right: .6mm; border-radius: 1mm; font-size: 9pt; line-height: 1; color: var(--appbox-print-accent); background: var(--appbox-print-head); }
+.print-sheet-note { margin: .8mm 0 1mm; padding: .4mm .6mm; font-size: 8pt; line-height: 1.1; }
+.print-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4mm; align-items: stretch; }
+.print-sheet[data-print-orientation="landscape"] .print-grid { gap: 2.2mm; }
+.print-block { min-width: 0; border: .2mm solid var(--appbox-print-border); }
+.print-block h3 { margin: 0; padding: .7mm .5mm; font-size: 8.5pt; line-height: 1.05; text-align: center; font-weight: 800; background: var(--appbox-print-head); color: var(--appbox-print-accent); border-bottom: .2mm solid var(--appbox-print-border); }
+.print-sheet[data-print-orientation="landscape"] .print-block h3 { padding: .4mm .5mm; font-size: 8pt; }
+.print-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.2pt; line-height: 1; }
+.print-table th, .print-table td { height: 6.25mm; padding: 0 .18mm; border-bottom: .12mm solid var(--appbox-print-border); text-align: center; white-space: nowrap; }
+.print-sheet[data-print-orientation="landscape"] .print-table th,
+.print-sheet[data-print-orientation="landscape"] .print-table td { height: 4.45mm; font-size: 8.6pt; }
+.print-table th:first-child { width: 30%; }
+.print-table th:last-child { width: 22%; }
+.print-table .era-combined-cell { padding: 0 .1mm; }
+.print-table .era-combined { display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 6.8pt; line-height: 1.05; }
+.print-table .era-combined .era-sep { display: none; }
+.print-table .era-combined .era-part { white-space: nowrap; }
+.print-sheet[data-print-orientation="landscape"] .print-table .era-combined { flex-direction: row; gap: .8mm; font-size: 7.4pt; line-height: 1; }
+.print-sheet[data-print-orientation="landscape"] .print-table .era-combined .era-sep { display: inline; font-size: 6.5pt; }
+.print-table thead th { height: 4.6mm; background: var(--appbox-print-head); color: var(--appbox-print-ink); font-size: 7.8pt; }
+.print-sheet[data-print-orientation="landscape"] .print-table thead th { height: 3.8mm; font-size: 7.4pt; }
+.print-table tbody th { font-weight: 500; }
+.print-table .print-age { color: var(--appbox-print-age); font-weight: 800; }
+.print-table tbody tr:nth-child(even) { background: var(--appbox-print-stripe); }
+.print-table .print-decade > * { border-top: .22mm solid var(--appbox-print-accent); }
+
+/* シンプル：色面を使わず、白黒の細い罫線を中心にする。年齢だけは青系で視線を固定する。 */
+.print-sheet[data-print-style="simple"] { --appbox-print-ink: #111; --appbox-print-accent: #111; --appbox-print-border: #aaa; --appbox-print-head: #fff; --appbox-print-stripe: #fff; }
+.print-sheet[data-print-style="simple"] .print-sheet-header { border-bottom-width: .25mm; }
+.print-sheet[data-print-style="simple"] .print-year-badge { border: .2mm solid var(--appbox-print-accent); border-radius: 0; }
+.print-sheet[data-print-style="simple"] .print-table thead th { border-bottom-color: #444; }
+
+/* かわいい：3つの年齢帯を淡い色で分け、見出しに丸みを付ける。 */
+.print-sheet[data-print-style="cute"] { --appbox-print-ink: #493b48; --appbox-print-accent: #925571; --appbox-print-border: #d4b3c3; --appbox-print-head: #fbeaf1; --appbox-print-stripe: #fff7fa; }
+.print-sheet[data-print-style="cute"] .print-sheet-header { background: #fff1f6; border-radius: 2mm; border: .3mm solid #dca8bd; }
+.print-sheet[data-print-style="cute"] .print-year-badge { background: #f5d3e2; border-radius: 4mm; }
+.print-sheet[data-print-style="cute"] .print-block { border-radius: 2mm; overflow: hidden; }
+.print-sheet[data-print-style="cute"] .print-block:nth-child(2) { --appbox-print-accent: #366959; --appbox-print-border: #a9caba; --appbox-print-head: #e4f3ec; --appbox-print-stripe: #f5faf7; }
+.print-sheet[data-print-style="cute"] .print-block:nth-child(3) { --appbox-print-accent: #7b6027; --appbox-print-border: #d7c592; --appbox-print-head: #fff3d2; --appbox-print-stripe: #fffaf0; }
+.print-sheet[data-print-style="cute"] .print-sheet-note strong { color: var(--appbox-print-accent); }
+
+/* ふんわりポップ：空・花・陽だまりの淡い色と、雲のような丸みを組み合わせる。 */
+.print-sheet[data-print-style="fluffy"] { --appbox-print-ink: #4a4a63; --appbox-print-accent: #5b6aa2; --appbox-print-border: #c6cbe6; --appbox-print-head: #edf0ff; --appbox-print-stripe: #fafaff; background: #fffefe; }
+.print-sheet[data-print-style="fluffy"] .print-sheet-header { border: 0; border-radius: 5mm; background: linear-gradient(90deg, #e2f5ff, #fbe7f1 52%, #fff5cf); box-shadow: 0 .7mm 2mm rgb(97 112 169 / 14%); }
+.print-sheet[data-print-style="fluffy"] .print-year-badge { border-radius: 6mm; background: #fff; box-shadow: 0 .4mm 1mm rgb(97 112 169 / 16%); }
+.print-sheet[data-print-style="fluffy"] .print-block { border-radius: 3mm; overflow: hidden; box-shadow: 0 .5mm 1.6mm rgb(97 112 169 / 12%); }
+.print-sheet[data-print-style="fluffy"] .print-block:nth-child(2) { --appbox-print-accent: #8b5672; --appbox-print-border: #e0bfd0; --appbox-print-head: #fbe9f2; --appbox-print-stripe: #fff8fb; }
+.print-sheet[data-print-style="fluffy"] .print-block:nth-child(3) { --appbox-print-accent: #826a31; --appbox-print-border: #e2d09d; --appbox-print-head: #fff3cf; --appbox-print-stripe: #fffbf0; }
+
+/* 和モダン：生成りに藍とえんじを合わせ、元号表らしい落ち着きを出す。 */
+.print-sheet[data-print-style="wa-modern"] { --appbox-print-ink: #252b35; --appbox-print-accent: #283f68; --appbox-print-border: #9ca6b3; --appbox-print-head: #edf0f2; --appbox-print-stripe: #f8f6f0; background: #fffdf6; font-family: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif; }
+.print-sheet[data-print-style="wa-modern"] .print-sheet-header { border-bottom: .8mm double #283f68; }
+.print-sheet[data-print-style="wa-modern"] .print-year-badge { border: .2mm solid #9f3f3a; border-radius: 0; color: #7d302d; background: #fff8ee; }
+.print-sheet[data-print-style="wa-modern"] .print-block h3 { letter-spacing: .1em; }
+.print-sheet[data-print-style="wa-modern"] .print-decade > * { border-top-color: #9f3f3a; }
+
+/* ビジネス：紺とグレー、直線的な見出しで資料に添付しやすくする。 */
+.print-sheet[data-print-style="business"] { --appbox-print-ink: #1d2938; --appbox-print-accent: #304763; --appbox-print-border: #aeb7c2; --appbox-print-head: #e8edf2; --appbox-print-stripe: #f4f6f8; }
+.print-sheet[data-print-style="business"] .print-sheet-header { color: #1d2938; background: #dfe6ed; border: 0; border-left: 1.5mm solid #304763; }
+.print-sheet[data-print-style="business"] .print-year-badge { border: .2mm solid #304763; border-radius: 0; color: #304763; background: #fff; }
+.print-sheet[data-print-style="business"] .print-block { border-radius: 0; }
+.print-sheet[data-print-style="business"] .print-block h3, .print-sheet[data-print-style="business"] .print-table thead th { color: #263b54; background: #dce4ec; border-bottom-color: #405a78; }
+
+/* レトロ：古い卓上カレンダーを思わせる生成り・茶・くすみオレンジ。 */
+.print-sheet[data-print-style="retro"] { --appbox-print-ink: #43362b; --appbox-print-accent: #8a4f2d; --appbox-print-border: #bba783; --appbox-print-head: #f3e4bd; --appbox-print-stripe: #fbf4df; background: #fff9e8; font-family: Georgia, "Yu Mincho", "YuMincho", serif; }
+.print-sheet[data-print-style="retro"] .print-sheet-header { border-top: .7mm solid #56705a; border-bottom: .7mm solid #c97843; }
+.print-sheet[data-print-style="retro"] .print-year-badge { border: .2mm solid #8a4f2d; border-radius: 50%; color: #6e4329; background: #f8d7a7; }
+.print-sheet[data-print-style="retro"] .print-block { box-shadow: inset 0 0 0 .25mm #e7d6ae; }
+.print-sheet[data-print-style="retro"] .print-block:nth-child(2) { --appbox-print-accent: #526b55; --appbox-print-border: #aab49a; --appbox-print-head: #e1e6ce; --appbox-print-stripe: #f4f6e9; }
+.print-sheet[data-print-style="retro"] .print-block:nth-child(3) { --appbox-print-accent: #7b5739; --appbox-print-border: #bda98c; --appbox-print-head: #ead7bd; --appbox-print-stripe: #f8efe3; }
+
+@media (max-width: 600px) {
+  .print-dialog-controls { padding: 12px; }
+  .print-dialog-heading h2 { font-size: 18px; }
+  .print-style-buttons button { padding: 8px 10px; font-size: 14px; }
+}
+
+@page { size: A4 portrait; margin: 5mm; }
+@page print-landscape { size: A4 landscape; margin: 7mm; }
+@page print-portrait { size: A4 portrait; margin: 5mm; }
+@media print {
+  body[data-print-orientation="landscape"],
+  body[data-print-orientation="landscape"] .print-dialog,
+  body[data-print-orientation="landscape"] .print-sheet {
+    page: print-landscape;
+  }
+  body[data-print-orientation="portrait"],
+  body[data-print-orientation="portrait"] .print-dialog,
+  body[data-print-orientation="portrait"] .print-sheet {
+    page: print-portrait;
+  }
+  .print-dialog { display: none; }
+  body[data-print-reference="true"] { margin: 0; padding: 0; min-height: 0; background: #fff; }
+  body[data-print-reference="true"] > #main-content { display: none; }
+  body[data-print-reference="true"] .print-dialog {
+    display: block; position: static; inset: auto; width: auto; max-width: none; height: auto; max-height: none;
+    margin: 0; padding: 0; border: 0; border-radius: 0; overflow: visible; background: #fff;
+  }
+  .print-dialog::backdrop { display: none; }
+  .print-dialog-controls { display: none; }
+  .print-preview-area { overflow: visible; margin: 0; padding: 0; background: #fff; }
+  .print-sheet { width: 100%; min-height: 285mm; margin: 0; padding: var(--appbox-print-top-padding) var(--appbox-print-side-padding) 0; box-shadow: none; zoom: 1; break-inside: avoid; }
+  body[data-print-orientation="landscape"] .print-sheet { min-height: 196mm; }
+  .print-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4mm; }
+  body[data-print-orientation="landscape"] .print-grid { gap: 2.2mm; }
+  .print-table thead { display: table-header-group; }
+  .print-table tr { break-inside: avoid; }
+}

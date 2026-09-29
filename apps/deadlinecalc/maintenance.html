@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self'; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>期限・日数かんたん計算 保守ツール | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <style>
+    :root {
+      color: var(--appbox-text);
+      background: var(--appbox-page-bg);
+    }
+    html {
+      scrollbar-gutter: stable;
+      overflow-y: scroll;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+    }
+    .app-shell {
+      width: min(var(--appbox-content-max-width, 1160px), calc(100% - 32px));
+      margin: var(--appbox-space-5, 24px) auto var(--appbox-space-6, 32px);
+    }
+    .app-sample-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--appbox-space-5, 20px);
+      align-items: stretch;
+    }
+    .app-sample-grid > .appbox-panel {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .app-sample-advanced {
+      margin-top: var(--appbox-space-5, 20px);
+    }
+    @media (max-width: 760px) {
+      .app-sample-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media print {
+      .app-shell {
+        width: 100%;
+        margin: 0;
+      }
+    }
+    .maint-panel-body {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .maint-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #fff;
+    }
+    .maint-table th, .maint-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--appbox-border);
+      text-align: left;
+      font-size: 14px;
+    }
+    .maint-table th {
+      background: var(--appbox-accent-subtle, #e8f5e9);
+    }
+    .maint-drop-zone {
+      margin-top: 12px;
+      padding: 24px;
+      border: 2px dashed var(--appbox-border);
+      border-radius: 6px;
+      text-align: center;
+      background: #fff;
+      cursor: pointer;
+    }
+    .maint-drop-zone.dragover {
+      border-color: var(--appbox-accent, #2e7d32);
+      background: var(--appbox-accent-subtle, #e8f5e9);
+    }
+    .maint-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 16px;
+      flex-wrap: wrap;
+    }
+    .maint-status {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .maint-status--success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+    .maint-status--error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ffcdd2;
+    }
+    .maint-inline-form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .maint-inline-form input {
+      padding: 6px 10px;
+      border: 1px solid var(--appbox-border);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell" id="main-content">
+    <div class="appbox-app-intro">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">期限・日数かんたん計算 保守ツール</h1>
+      </div>
+      <p class="appbox-app-desc">組織独自の閉庁日の設定ファイル出力、および内閣府祝日CSVからの辞書データ更新をブラウザ上で行います。サーバー通信は行わず、すべて安全にローカルで完結します。</p>
+    </div>
+
+    <!-- 左: 独自閉庁日設定 / 右: 内閣府祝日データ更新 -->
+    <div class="app-sample-grid">
+      <!-- 左のカード: 1. 組織独自閉庁日の設定（custom-closed-days.js 生成） -->
+      <section class="appbox-panel appbox-panel--accent" aria-labelledby="custom-closed-title">
+        <div class="appbox-panel__header">
+          <div>
+            <h2 class="appbox-panel__title" id="custom-closed-title">1. 組織独自閉庁日の設定（custom-closed-days.js 生成）</h2>
+            <p class="appbox-panel__desc">創立記念日や夏季一斉休庁日など、各自治体・組織が任意に設けている休庁日を設定します。設定後、ダウンロードしたファイルを本アプリのフォルダーへ配置してください。</p>
+          </div>
+        </div>
+
+        <div class="maint-panel-body">
+          <label for="custom-file-input"><strong>既存の設定ファイルを読み込む（編集する場合）:</strong></label>
+          <div style="margin-top: 6px;">
+            <input type="file" id="custom-file-input" accept=".js">
+          </div>
+
+          <h3 style="margin-top: 16px; font-size: 15px;">設定一覧</h3>
+          <div id="custom-empty-msg" style="margin-top: 8px; color: var(--appbox-muted);">設定されている独自閉庁日はありません。下記フォームから追加してください。</div>
+          <table class="maint-table" id="custom-table" hidden>
+            <thead>
+              <tr>
+                <th scope="col">日付</th>
+                <th scope="col">理由・名称</th>
+                <th scope="col" style="width: 80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="custom-tbody"></tbody>
+          </table>
+
+          <h3 style="margin-top: 16px; font-size: 15px;">新規追加</h3>
+          <form class="maint-inline-form" id="custom-add-form">
+            <label for="new-custom-date">日付:</label>
+            <input type="date" id="new-custom-date" required>
+            <label for="new-custom-reason">名称・理由:</label>
+            <input type="text" id="new-custom-reason" placeholder="例: 創立記念日" required style="width: 180px;">
+            <button class="appbox-button appbox-button--primary" type="submit" style="min-height: 36px; padding: 4px 16px;">追加</button>
+          </form>
+
+          <div class="maint-actions">
+            <button class="appbox-button appbox-button--primary" type="button" id="btn-download-custom">
+              custom-closed-days.js をダウンロード
+            </button>
+          </div>
+          <p id="custom-status" class="maint-status" hidden></p>
+        </div>
+      </section>
+
+      <!-- 右のカード: 2. 内閣府 祝日データの更新（holidays.js 生成） -->
+      <section class="appbox-panel appbox-panel--accent" aria-labelledby="holidays-update-title">
+        <div class="appbox-panel__header">
+          <div>
+            <h2 class="appbox-panel__title" id="holidays-update-title">2. 内閣府 祝日データの更新（holidays.js 生成）</h2>
+            <p class="appbox-panel__desc">内閣府が公表する「国民の祝日」CSV（<code>syukujitsu.csv</code>）を取り込み、最新の祝日辞書ファイル（<code>holidays.js</code>）を生成します。</p>
+          </div>
+        </div>
+
+        <div class="maint-panel-body">
+          <p style="font-size: 13px; color: var(--appbox-muted); margin-bottom: 12px;">
+            ※内閣府の公式祝日CSVは、内閣府ホームページ（「国民の祝日について」）よりダウンロードできます。
+          </p>
+
+          <div class="maint-drop-zone" id="csv-drop-zone">
+            <p>ここに内閣府の <strong>syukujitsu.csv</strong> をドラッグ＆ドロップ</p>
+            <p style="font-size: 13px; color: var(--appbox-muted); margin-top: 4px;">またはファイルを選択してください</p>
+            <input type="file" id="csv-file-input" accept=".csv,text/csv" style="margin-top: 8px;">
+          </div>
+
+          <div id="csv-preview-box" hidden style="margin-top: 16px;">
+            <h3 style="font-size: 15px;">解析結果プレビュー</h3>
+            <ul style="margin-top: 8px; font-size: 14px;">
+              <li>収録件数: <strong id="preview-count">-</strong> 件</li>
+              <li>収録期間: <strong id="preview-range">-</strong></li>
+              <li>データ取得日: <strong id="preview-updated">-</strong></li>
+            </ul>
+            <h4 style="margin-top: 12px; font-size: 14px;">最新の登録祝日（直近5件）:</h4>
+            <table class="maint-table">
+              <thead>
+                <tr>
+                  <th scope="col">日付</th>
+                  <th scope="col">祝日名</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody"></tbody>
+            </table>
+
+            <div class="maint-actions">
+              <button class="appbox-button appbox-button--primary" type="button" id="btn-download-holidays">
+                holidays.js をダウンロード
+              </button>
+            </div>
+          </div>
+          <p id="holiday-status" class="maint-status" hidden></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 下のカード: サーバーへの配置手順 -->
+    <section class="appbox-panel app-sample-advanced" aria-labelledby="deploy-guide-title">
+      <div class="appbox-panel__header">
+        <div>
+          <h2 class="appbox-panel__title" id="deploy-guide-title">サーバーへの配置手順</h2>
+          <p class="appbox-panel__desc">生成・ダウンロードした設定ファイルをサーバーへ適用する手順です。</p>
+        </div>
+      </div>
+      <ol style="margin-top: 8px; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+        <li>ダウンロードしたファイル（<code>custom-closed-days.js</code> または <code>holidays.js</code>）を、サーバー上の本ツールフォルダー（例: <code>apps/deadlinecalc/</code>）へ上書き配置してください。</li>
+        <li>ブラウザをリロード（再読み込み）すると、最新の祝日および独自閉庁日が全利用者に自動反映されます。※ブラウザキャッシュが残る環境では、<code>index.html</code> 内の <code>holidays.js?v=...</code> や <code>custom-closed-days.js?v=...</code> のバージョンクエリ（キャッシュキー）を更新することを推奨します。</li>
+      </ol>
+    </section>
+
+    <footer class="appbox-footer">
+      お役立ちアプリBOX / 期限・日数かんたん計算 Version 1.4.2
+    </footer>
+  </main>
+
+  <script src="../../assets/appbox-utilities.js?v=2.1.0"></script>
+  <script src="maintenance.js?v=1.4.0"></script>
+</body>
+</html>

@@ -94,6 +94,30 @@
   --appbox-logo-color: #5c388d;
   --appbox-card-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 
+
+  /* コンパクト共通ヘッダー（寸法・タイポグラフィ） -------------------- */
+  --appbox-header-height: 44px;
+  --appbox-header-padding-x: 24px;
+  --appbox-header-logo-size: 28px;
+  --appbox-header-logo-glyph-size: 16px;
+  --appbox-header-title-size: 14px;
+  --appbox-header-subtitle-size: 11px;
+  --appbox-header-actions-gap: 6px;
+  --appbox-header-action-height: 36px;
+  --appbox-header-action-font-size: 12px;
+  --appbox-header-action-icon-size: 14px;
+
+  /* コンパクト共通アプリ導入部（見出し・アイコン） -------------------- */
+  --appbox-app-intro-block-padding: 10px 24px;
+  --appbox-app-intro-margin-bottom: 12px;
+  --appbox-app-title-gap: 10px;
+  --appbox-app-intro-gap: 16px;
+  --appbox-app-icon-size: 32px;
+  --appbox-app-icon-radius: 9px;
+  --appbox-app-icon-glyph-size: 18px;
+  --appbox-app-title-size: 16px;
+  --appbox-app-desc-size: 13px;
+  --appbox-app-desc-indent: 42px;
   /* ヘッダ部品（戻るボタン・ヘルプボタン）の形状 ------------------------ */
   --appbox-chrome-height: 40px;
   --appbox-chrome-padding: 0 13px;
@@ -149,6 +173,8 @@
   --appbox-weight-bold: 700;
   --appbox-line-height: 1.6;
   --appbox-content-max-width: 1160px;
+  --appbox-shell-max-width: 1160px;
+  --appbox-shell-max-width-wide: 1460px;
   --appbox-control-height: 42px;
   --appbox-control-radius: 10px;
   --appbox-component-radius: 14px;

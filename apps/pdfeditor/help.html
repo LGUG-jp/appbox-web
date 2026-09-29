@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="red">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="color-scheme" content="light">
+  <title>PDFかんたん編集 ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=2.1.0">
+</head>
+
+<body class="appbox-help-theme-background">
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+    <div class="appbox-help-header-card">
+      <div class="appbox-help-header-card__info">
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <path d="M6 2h8l4 4v16H6z"></path>
+              <path d="M14 2v5h5"></path>
+              <path d="M8.5 12h7M8.5 16h5"></path>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">PDFかんたん編集</h1>
+        </div>
+        <p class="appbox-help-header-desc">PDFの結合、ページ操作、テキストや図形の追加、保存までを説明します。</p>
+      </div>
+      <span class="version-badge">Version 1.3.2</span>
+
+      <div class="help-callout help-callout-warning">
+                <strong>マスキング用途で使用しないでください（データは見えます）</strong>
+                <p>
+                  四角・丸やテキストは、元の文字や画像の上へ表示を重ねる機能です。
+                  重ねても、下にある元の文字、画像、データはPDF内に残ります。
+                </p>
+                <p>
+                  個人情報、機密情報、非公開情報の削除や非表示、黒塗り・
+                  マスキング、元データを復元不能にする処理には使用しないでください。
+                </p>
+                <p>
+                  個人情報や機密情報を削除する場合は、正式な墨消し機能を備えた
+                  承認済みのPDFソフトウェアを使用してください。
+                </p>
+              </div>
+    </div>
+
+    <div class="appbox-help-grid help-panel">
+      <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+        <p class="appbox-help-nav-title">目次</p>
+        <ul class="appbox-help-nav-list">
+          <li><a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#pages">ページ操作</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#comments">テキスト</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#shapes">四角と矢印</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#save">保存</a></li>
+            </ul>
+          </li>
+          <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#other">その他</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#cautions">利用上の注意</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#privacy">セキュリティとプライバシー</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="appbox-help-content">
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+          <ol class="help-steps">
+                      <li>
+                        画面中央の「PDFを選択」を押してPDFを選択します。
+                      </li>
+                      <li>
+                        別のPDFを結合する場合は「PDF追加」を押します。
+                      </li>
+                      <li>
+                        ページ一覧で対象のページを選択します。
+                      </li>
+                      <li>
+                        必要に応じてページの回転、並べ替え、削除を行います。
+                      </li>
+                      <li>
+                        各ページの「編集」で個別編集を開き、「テキスト」「四角」「丸」「矢印」「線」「マーカー」を使います。
+                      </li>
+                      <li>
+                        必要に応じて色、線幅、フォントなどを変更します。
+                      </li>
+                      <li>
+                        「保存」を押します。
+                      </li>
+                      <li>
+                        作業を破棄する場合は「閉じる」を押します。
+                      </li>
+                    </ol>
+          
+                    <div class="help-table-wrap">
+                      <table class="help-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">項目</th>
+                            <th scope="col">上限</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">1ファイル</th>
+                            <td>100MB以下</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">読み込むPDFの合計</th>
+                            <td>200MB以下</td>
+                          </tr>
+                          <tr>
+                            <th scope="row">総ページ数</th>
+                            <td>300ページ以下</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+          
+                    <p>
+                      複数のPDFを同時に選択する場合も、全ファイルの合計容量と
+                      総ページ数が上限以内である必要があります。
+                      実際のメモリ使用量は入力ファイルの容量より大きくなるため、
+                      端末の性能やPDFの内容によっては、上限以内でも処理が遅くなることがあります。
+                    </p>
+          
+                    <div class="help-callout help-callout-info">
+                      <strong>プレビューを広く使う</strong>
+                      <p>
+                        PDFを読み込むと、アプリ名・説明と画面上部の注意喚起を自動で閉じ、
+                        編集領域を縦に広く使える表示へ切り替わります。
+                        PDFを閉じると、案内と注意喚起は自動で再表示されます。
+                        読込み前に手動で閉じたい場合は、画面右上の「説明を閉じる」を使用できます。
+                      </p>
+                      <p>
+                        閉じた状態は保存しません。ページを開き直すと必ず表示された状態に戻ります。
+                        なお、四角・丸・テキストがある状態で保存すると、画面上の注意喚起が隠れていても
+                        マスキング用途に使用しない旨の確認メッセージを必ず表示します。
+                      </p>
+                    </div>
+        </section>
+
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+          <h3 class="appbox-help-subheading" id="pages">ページ操作</h3>
+          <ul>
+            <li>
+              <strong>ページ選択：</strong>
+              一覧のサムネイルをクリックして選択します。Ctrl＋クリックで追加・解除、Shift＋クリックで範囲選択できます。チェックボックスでも複数選択できます。「編集」で個別編集を開き、「一覧へ戻る」でページ操作へ戻ります。
+            </li>
+            <li>
+              <strong>並べ替え：</strong>
+              選択したサムネイルをドラッグし、移動先の前後に出る線へドロップします。複数ページもまとめて移動できます。
+              選択ページを「前へ」「後ろへ」ボタンで移動することもできます。
+            </li>
+            <li>
+              <strong>回転：</strong>
+              「左90度」で左へ90度、「右90度」で右へ90度回転します。
+            </li>
+            <li>
+              <strong>削除：</strong>
+              「削除」で選択ページを削除します。最後の1ページは削除できません。
+              文書全体を閉じる場合は「閉じる」を使用します。
+            </li>
+          </ul>
+          
+                    <p>
+                      回転・削除も選択ページすべてが対象です。並べ替え、回転、削除は元に戻せます。「抽出保存」は選択ページのみ、「保存」は全ページを書き出します。抽出しても作業中のページは減りません。
+                    </p>
+          
+                    <h4 class="help-subheading">表示倍率とスクロール</h4>
+          
+                    <div class="help-table-wrap">
+                      <table class="help-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">操作</th>
+                            <th scope="col">方法</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th scope="row">拡大・縮小</th>
+                            <td>
+                              ページ表示ツールバーの「－」「＋」を押します。
+                              25%から300%まで段階的に変わります。
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">倍率を直接指定</th>
+                            <td>
+                              「表示」の選択肢から選びます。
+                              「画面に合わせる」は幅と高さの両方に収め、
+                              「幅に合わせる」は幅に合わせて高さはスクロールします。
+                              A4縦の文書を読むときは「幅に合わせる」が見やすいです。
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">ホイールで拡大・縮小</th>
+                            <td>
+                              プレビューの上で <kbd>Ctrl</kbd> を押しながらホイールを回します。
+                            </td>
+                          </tr>
+                          <tr>
+                            <th scope="row">スクロール</th>
+                            <td>
+                              ホイールを回すと縦に、<kbd>Shift</kbd> を押しながら回すと横に
+                              スクロールします。倍率を上げてページがはみ出すと
+                              スクロールバーが表示されます。
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+          
+                    <div class="help-callout help-callout-info">
+                      <strong>プレビューの品質について</strong>
+                      <p>
+                        編集画面のプレビューは、表示サイズを保ったまま高い内部解像度で描画します。
+                        巨大なページや高倍率の表示では、Canvasの上限に収めるため
+                        内部の描画品質を自動的に下げる場合があります。
+                        これは編集画面の表示だけの調整で、保存するPDFの品質を
+                        意図的に下げるものではありません。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="comments">テキスト</h3>
+          <ol class="help-steps">
+                      <li>「テキスト」を選択します。</li>
+                      <li>PDF上の配置したい位置をクリックします。</li>
+                      <li>テキストを入力します。</li>
+                      <li>入力欄の外側をクリックして編集を終了します。</li>
+                    </ol>
+          
+                    <ul>
+                      <li>再編集は、選択ツールでテキストをダブルクリックします。</li>
+                      <li>移動は、選択ツールでドラッグします。</li>
+                      <li>枠のサイズ変更は、選択して右下のハンドルをドラッグします。</li>
+                      <li>何も入力せずに編集を終えたテキスト枠は削除されます。</li>
+                    </ul>
+          
+                    <h4 class="help-subheading">書式</h4>
+          
+                    <p>
+                      文字色、背景色、背景の透明化、フォント、文字サイズ、太字、白縁を設定できます。初期設定は赤文字・透明背景・白縁ありです。
+                      選べるフォントは、BIZ UDゴシック、BIZ UDPゴシック、游ゴシック、
+                      游ゴシック UI、メイリオ、MS ゴシック、MS Pゴシック、MS 明朝、
+                      MS P明朝、Segoe UI、Arial、Times New Roman です。
+                    </p>
+          
+                    <p>
+                      フォントメニューで選択肢にマウスポインターを重ねるか、
+                      キーボードフォーカスを移すと、選択中のテキストへプレビューを表示します。
+                      確定せずにメニューから離れると、元のフォントへ戻ります。
+                    </p>
+          
+                    <div class="help-callout help-callout-warning">
+                      <strong>フォントは端末にインストールされたものを使います</strong>
+                      <p>
+                        フォントファイルはアプリに同梱していません。実行PCにインストール
+                        されているローカルフォントを使用します。
+                        選択したフォントが端末にない場合は代替フォントを使うため、
+                        選択名と実際に使われるフォントが異なる場合があります。
+                      </p>
+                    </div>
+          
+                    <h4 class="help-subheading">フォントメニューのキーボード操作</h4>
+          
+                    <div class="help-table-wrap">
+                      <table class="help-table help-shortcut-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">操作</th>
+                            <th scope="col">キー</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>メニューを開く／次のフォントへ</td>
+                            <td><kbd>↓</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>メニューを開く／前のフォントへ</td>
+                            <td><kbd>↑</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>最初のフォントへ</td>
+                            <td><kbd>Home</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>最後のフォントへ</td>
+                            <td><kbd>End</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>選択を確定</td>
+                            <td><kbd>Enter</kbd> ／ <kbd>Space</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>確定せず閉じる</td>
+                            <td><kbd>Esc</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>閉じて次の操作要素へ</td>
+                            <td><kbd>Tab</kbd></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+          
+                    <h4 class="help-subheading">テキストの保存方式</h4>
+          
+                    <p>
+                      テキストは保存時にブラウザ内で高解像度のPNGへ変換し、
+                      PDFページへ画像として貼り付けます。これにより日本語テキストを保存でき、
+                      太字・文字色・背景色・ローカルフォントの見た目を保ちやすくなります。
+                      元のPDF本文全体を画像化することはなく、テキスト部分だけを画像化します。
+                    </p>
+          
+                    <div class="help-callout help-callout-warning">
+                      <strong>保存後のテキストは文字として扱われません</strong>
+                      <p>
+                        画像として貼り付けるため、保存後のテキストはテキスト検索、文字選択、
+                        コピーができず、スクリーンリーダーでも文字として読み上げられません。
+                        大きく拡大すると粗く見える場合があります。
+                      </p>
+                      <p>
+                        テキスト枠に収まらない文字は、保存時に末尾が表示されないことがあります。
+                        保存前に、テキストの全文が枠内に表示されていることを確認してください。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="shapes">図形とマーカー</h3>
+          <ul>
+            <li>四角・丸・矢印・線は、ツールを選んでPDF上をドラッグします。色や線幅を変更でき、四角と丸には塗りつぶしも設定できます。</li>
+            <li>テキストと矢印は初期状態で白縁が付きます。設定でオフにできます。</li>
+            <li>「選択」で図形を動かします。四角・丸・テキストは右下、線・矢印は端点のハンドルで大きさを変えます。</li>
+            <li>Shift＋クリック、または余白から囲むドラッグで複数の図形を選択し、まとめて移動・削除できます。</li>
+            <li>「コピー」「貼り付け」（Ctrl＋C／Ctrl＋V）で別ページにも複製できます。コピーはこのアプリ内でのみ有効で、PDFを閉じると消えます。</li>
+            <li>図形を選択して「削除」、DeleteまたはBackspaceで削除します。文字入力中は図形全体を削除しません。</li>
+          </ul>
+          <h4 class="help-subheading">PDFの文字に蛍光マーカーを付ける</h4>
+          <p>「マーカー」を選び、PDF本文の文字をドラッグして選択します。複数行は行ごとに色が付き、色と濃さを変更できます。画像だけのスキャンPDFなど、文字情報がないページでは使えません。OCR機能はありません。</p>
+          <h4 class="help-subheading">設定パネルの移動</h4>
+          <p>図形を選ぶと必要な設定が浮かんで表示されます。左上のつまみをドラッグすると、編集領域の四隅へ移動します。位置の選択欄、またはつまみにフォーカスして矢印キーでも移動できます。</p>
+          <p>図形とマーカーは保存時にPDFのページ内容へ描画します。保存したPDFを開き直しても、それらを図形として選択し直すことはできません。元の本文は残るため、墨消しには使えません。</p>
+
+                    <h4 class="help-subheading">元に戻す・やり直し</h4>
+          
+                    <p>
+                      PDF追加、ページの並べ替え・回転・削除、図形の追加・移動・サイズ変更・削除・
+                      書式変更、既存テキストの文字変更が対象です。履歴は最大40件です。
+                    </p>
+          
+                    <div class="help-table-wrap">
+                      <table class="help-table help-shortcut-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">操作</th>
+                            <th scope="col">ショートカット</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>元に戻す</td>
+                            <td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+                          </tr>
+                          <tr>
+                            <td>やり直す</td>
+                            <td><kbd>Ctrl</kbd> + <kbd>Y</kbd> ／ <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+          
+                    <p>
+                      テキスト入力欄や入力要素を操作している間は、
+                      アプリ全体の元に戻す・やり直しのショートカットは実行されません。
+                    </p>
+
+          <h3 class="appbox-help-subheading" id="save">保存</h3>
+          <p>
+                      保存したファイルはブラウザからダウンロードされます。
+                      ファイル名は、原則として出力の先頭ページの元ファイル名を基準に
+                      「元ファイル名_編集済.pdf」の形式で作成します。
+                      Windowsで使用できない文字や予約名は安全な名称へ置き換えます。
+                    </p>
+          
+                    <div class="help-callout help-callout-info">
+                      <strong>何も編集していない場合はファイルサイズが増えません</strong>
+                      <p>
+                        1つのPDFを開いただけで、ページ順、回転、図形を何も変更していない場合は、
+                        読み込んだ元PDFのデータをそのまま保存します。
+                        「編集していないのにファイルサイズが増える」現象を抑えるためです。
+                      </p>
+                    </div>
+          
+                    <p>
+                      保存時に四角・丸・テキストがある場合は、マスキング用途に使用しない旨の
+                      確認メッセージを表示します。
+                    </p>
+          
+                    <h4 class="help-subheading">保存後に維持されない場合がある機能</h4>
+          
+                    <p>
+                      編集した場合は、新しいPDFとして組み直すため、元PDFの高度な機能を
+                      完全に保持することを保証できません。次の機能や情報は、維持されない、
+                      または正常に動作しない場合があります。
+                    </p>
+          
+                    <ul>
+                      <li>電子署名と署名の有効性</li>
+                      <li>入力フォーム</li>
+                      <li>しおり、アウトライン</li>
+                      <li>ページ内リンク、外部リンク</li>
+                      <li>添付ファイル</li>
+                      <li>PDF注釈</li>
+                      <li>レイヤー</li>
+                      <li>JavaScript</li>
+                      <li>動画、音声などのマルチメディア</li>
+                      <li>アクセシビリティタグ、文書構造情報</li>
+                      <li>メタデータ</li>
+                      <li>特殊なページボックス、高度なインタラクティブ要素</li>
+                    </ul>
+          
+                    <div class="help-callout help-callout-warning">
+                      <strong>電子署名済みPDFは編集対象にしないでください</strong>
+                      <p>
+                        保存後のPDFを正式文書として使用する場合は、必要な機能や情報が
+                        維持されていることを必ず確認してください。
+                      </p>
+                    </div>
+        </section>
+
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+          <details class="appbox-help-faq-item">
+          <summary>
+          黒塗りで隠した文字は読めなくなりますか？
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          なりません。本ツールの四角・丸やテキストは表示を重ねるだけで、
+          下にある元の文字、画像、データはPDF内に残ります。
+          個人情報や機密情報を削除する場合は、正式な墨消し機能を備えた
+          承認済みのPDFソフトウェアを使用してください。
+          </p>
+          
+          </div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+          <summary>
+          PDFが開けません。
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          パスワード保護PDFと暗号化PDFは対象外です。
+          また、1ファイル100MB、合計200MB、総ページ数300ページの上限を
+          超える場合は読み込めません。壊れたPDFや仕様外のPDF、
+          必要な文字マップがバンドルにないPDFも表示できない場合があります。
+          </p>
+          
+          </div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+          <summary>
+          テキストの文字が途中で切れて保存されました。
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          テキスト枠に収まらない文字は、保存時に末尾が表示されないことがあります。
+          保存前に枠のサイズを広げ、全文が枠内に表示されていることを
+          確認してください。
+          </p>
+          
+          </div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+          <summary>
+          保存したPDFでテキストを検索できません。
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          テキストは保存時に画像として貼り付けるため、テキスト検索、文字選択、
+          コピーはできません。日本語やローカルフォントの見た目を保つための方式です。
+          </p>
+          
+          </div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+          <summary>
+          保存したらしおりやリンクが消えました。
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          編集した場合は新しいPDFとして組み直すため、しおり、リンク、
+          入力フォーム、電子署名、添付ファイルなどが維持されないことがあります。
+          正式文書として使用する場合は、必要な情報が残っているか確認してください。
+          電子署名済みPDFは編集対象にしないでください。
+          </p>
+          
+          </div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+          <summary>
+          編集画面の表示が粗く見えます。
+          </summary>
+          <div class="appbox-help-faq-answer">
+          <p>
+          巨大なページや高倍率の表示では、Canvasの上限に収めるために
+          内部の描画品質を自動的に下げる場合があります。
+          これは編集画面の表示だけの調整で、保存するPDFの品質には影響しません。
+          </p>
+          
+          </div>
+          </details>
+        </section>
+
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+          <h3 class="appbox-help-subheading" id="cautions">利用上の注意</h3>
+          <ul>
+                      <li>マスキング用途には使用しないでください。四角・丸やテキストを重ねても、元の内容はPDF内に残ります。</li>
+                      <li>パスワード保護PDF、暗号化PDFは対象外です。</li>
+                      <li>既存のPDF本文の文字列を直接編集することはできません。</li>
+                      <li>CropBox、MediaBox、回転情報などが特殊なPDFでは、図形の位置がずれる可能性があります。</li>
+                      <li>表示できても保存できないPDFがあります。壊れたPDFや仕様外のPDFは読み込めない場合があります。</li>
+                      <li>必要な文字マップがバンドルに含まれないPDFは表示できない場合があります。</li>
+                      <li>非常に大きいスキャンPDFは多くのメモリを使用します。</li>
+                      <li>保存処理を途中でキャンセルする機能はありません。</li>
+                      <li>作業内容の自動保存・復元機能はありません。</li>
+                      <li>ブラウザを閉じる、再読込みする、「閉じる」を押すと、未保存の内容は失われます。</li>
+                    </ul>
+          
+                    <div class="help-callout help-callout-info">
+                      <strong>「閉じる」の動作</strong>
+                      <p>
+                        現在読み込んでいるPDF、ページ編集の状態、図形、履歴を破棄します。
+                        未保存の編集内容は失われます。
+                      </p>
+                      <p>
+                        ページを削除しても、元に戻す・やり直しで復元できる間は、
+                        元のPDFデータがブラウザのメモリ内に残る場合があります。
+                        すべてを明示的に破棄する場合は「閉じる」を使用してください。
+                        なお、ブラウザやOSが実際にメモリを解放する時期は環境に依存します。
+                      </p>
+                    </div>
+
+          <h3 class="appbox-help-subheading" id="privacy">セキュリティとプライバシー</h3>
+          <div class="help-callout help-callout-security">
+                      <strong>PDFはブラウザ内で処理します</strong>
+                      <p>
+                        入力PDF、図形、編集済PDFを外部API、外部クラウド、外部CDN、
+                        サーバー、データベースへ送信または保存する処理はありません。
+                        localStorage、sessionStorage、Cookieへの保存もありません。
+                      </p>
+                    </div>
+          
+                    <p>
+                      PDFの表示と保存に使うライブラリと文字マップは、
+                      アプリに同梱したものを同一オリジンから読み込みます。
+                      外部スクリプト、外部スタイル、外部通信は制限されています。
+                    </p>
+          
+                    <div class="help-callout help-callout-warning">
+                      <strong>隠したい情報がある場合</strong>
+                      <p>
+                        四角・丸やテキストで覆っても、元の文字や画像はPDF内に残ります。
+                        PDFを庁外へ提供する場合や、個人情報・機密情報を含む場合は、
+                        正式な墨消し機能を備えたソフトウェアを使用してください。
+                      </p>
+                    </div>
+          
+                    <p>
+                      保存したPDFの管理は、所属組織の情報セキュリティポリシーに従ってください。
+                    </p>
+        </section>
+
+        <div class="help-footer-actions">
+          <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="appbox-footer">
+      お役立ちアプリBOX / PDFかんたん編集 Version 1.3.2
+    </footer>
+  </main>
+
+  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+</body>
+</html>
+

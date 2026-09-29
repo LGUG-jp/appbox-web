@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="yellow">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="color-scheme" content="light">
+  <title>画像かんたん加工 ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+</head>
+
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+    <div class="appbox-help-header-card">
+      <div class="appbox-help-header-card__info">
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+              <circle cx="8.5" cy="9" r="1.5"></circle>
+              <path d="m4 17 4.7-4.7 3.2 3.2 2.1-2.1 6 6"></path>
+              <path d="M18 2v4M16 4h4"></path>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">画像かんたん加工</h1>
+        </div>
+        <p class="appbox-help-header-desc">1枚ずつの加工と、複数画像の一括処理の手順を説明します。</p>
+      </div>
+      <span class="version-badge">Version 1.2.2</span>
+
+      <div class="help-callout help-callout-warning">
+        <strong>確実に隠す必要がある箇所は黒塗りを使ってください</strong>
+        <p>モザイクは対象や設定によって元の内容を推測できる場合があり、完全な秘匿を保証するものではありません。確実な秘匿が必要な箇所には、対象より十分に広い範囲を黒塗りし、保存後も目視確認してください。また、保存後はレイヤーが焼き込まれるため後から解除できません。</p>
+      </div>
+    </div>
+
+    <div class="appbox-help-grid help-panel">
+      <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+        <p class="appbox-help-nav-title">目次</p>
+        <ul class="appbox-help-nav-list">
+          <li><a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#mask">黒塗りとモザイク</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#layers">レイヤーと確認</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#trim">トリミング</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#size">サイズと容量</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#batch">一括処理</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#files">形式とファイル名</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#operations">履歴とキー操作</a></li>
+            </ul>
+          </li>
+          <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#other">その他</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#cautions">利用上の注意</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#privacy">プライバシー</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="appbox-help-content">
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+          <ol class="help-steps">
+            <li>
+              <strong>画像を選択</strong>
+              <p class="appbox-help-step-desc">対象画像を選択します。ドラッグ＆ドロップでも読み込めます。</p>
+            </li>
+            <li>
+              <strong>必要に応じて構図を調整</strong>
+              <p class="appbox-help-step-desc">必要に応じてトリミング、回転、反転、リサイズを行います。</p>
+            </li>
+            <li>
+              <strong>秘匿加工を適用</strong>
+              <p class="appbox-help-step-desc">黒塗りやモザイクで隠したい箇所を加工します。</p>
+            </li>
+            <li>
+              <strong>注釈を追加</strong>
+              <p class="appbox-help-step-desc">必要に応じて文字、四角形、楕円、矢印の注釈を追加します。</p>
+            </li>
+            <li>
+              <strong>加工結果を確認</strong>
+              <p class="appbox-help-step-desc">「読込み時と現在を比較」で加工漏れがないか確認します。</p>
+            </li>
+            <li>
+              <strong>出力条件を設定</strong>
+              <p class="appbox-help-step-desc">保存形式、目標容量、ファイル名を設定します。定型プリセットも使えます。</p>
+            </li>
+            <li>
+              <strong>画像を保存・目視確認</strong>
+              <p class="appbox-help-step-desc">保存ボタンを押して保存し、保存後の画像を目視で確認します。</p>
+            </li>
+          </ol>
+
+          <div class="help-callout help-callout-info">
+            <strong>定型プリセット</strong>
+            <p>
+              「Web掲載用」「メール添付用」「庁内文書貼付用」「サムネイル用」
+              「原寸・メタデータ除去」から選ぶと、出力形式、長辺、目標容量などが
+              まとめて設定されます。掲載先やメール環境の個別要件への適合を
+              保証するものではないため、要件は別途確認してください。
+            </p>
+          </div>
+        </section>
+
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+
+          <h3 class="appbox-help-subheading" id="mask">黒塗りとモザイク</h3>
+          <p>
+            確実な秘匿が必要な箇所には、対象より十分に広い範囲を黒塗りしてください。
+            黒塗りは保存画像へ黒色のピクセルとして焼き込まれます。
+          </p>
+          <p>
+            保存前と保存後の両方で画像を目視確認し、個人情報、車両番号、
+            文書内容などが判別できない状態になっていることを確認してください。
+          </p>
+
+          <ul>
+            <li>
+              <strong>範囲ツール：</strong>
+              対象範囲をドラッグして、長方形の加工レイヤーを作ります。
+            </li>
+            <li>
+              <strong>ブラシツール：</strong>
+              画像上を自由になぞって、ストローク単位の加工レイヤーを作ります。ブラシ幅は変更できます。
+            </li>
+            <li>
+              <strong>モザイク：</strong>
+              指定したブロックサイズで粗く表示します。ブロックサイズは保存前に変更できます。
+            </li>
+            <li>
+              <strong>注釈：</strong>
+              文字、四角形、楕円、矢印を追加できます。文字内容、色、文字サイズ、線幅を設定できます。
+            </li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="layers">レイヤーと確認</h3>
+          <p>
+            黒塗り、モザイク、ブラシ、文字、四角形、楕円、矢印は、
+            保存するまで編集可能なレイヤーとして扱われます。
+          </p>
+
+          <ul>
+            <li>画像上で選択して、ドラッグで移動できます。</li>
+            <li>選択枠の右下のハンドルでサイズを変更できます。</li>
+            <li>加工設定の変更、表示・非表示の切替、上下の順序変更、個別の削除ができます。</li>
+            <li>保存時は、表示中のレイヤーだけを画像へ焼き込みます。非表示のレイヤーは反映されません。</li>
+          </ul>
+
+          <div class="help-callout help-callout-info">
+            <strong>レイヤー情報は保存画像に残りません</strong>
+            <p>
+              レイヤーは本ツール内だけの編集情報です。保存したJPEG、PNG、WebPには
+              編集可能なレイヤー情報は残らないため、後から黒塗りを外すことはできません。
+            </p>
+            <p>
+              モザイクは元画像を基に生成します。レイヤーの上下順序を変えると
+              見た目の重なり順は変わりますが、下にある注釈や黒塗りを
+              モザイク化し直すものではありません。
+            </p>
+          </div>
+
+          <h4 class="help-subheading">比較プレビュー</h4>
+          <p>
+            「読込み時と現在を比較」を押すと、読込み時の元画像と現在の加工結果を
+            左右に並べて確認できます。現在の加工結果には、表示中のレイヤーを
+            合成した状態が反映されます。
+          </p>
+          <p>
+            トリミング、回転、リサイズを行った場合は、元画像と現在の画像で
+            構図や寸法が異なります。個人情報などを隠す場合は、
+            保存前にこの画面でも加工漏れがないことを確認してください。
+          </p>
+
+          <h3 class="appbox-help-subheading" id="trim">トリミング</h3>
+          <p>
+            トリミングツールを選ぶと、画像上に枠が表示され、画像の直下に
+            確定用の操作バーが出ます。範囲が決まったら
+            「この範囲で切り抜く」で確定します。
+          </p>
+
+          <ul>
+            <li>枠の内側をドラッグして移動します。</li>
+            <li>四隅のハンドルをドラッグしてサイズを変更します。</li>
+            <li>枠の外からドラッグすると新しい枠を作れます。</li>
+            <li>X、Y、横幅、高さを数値で指定できます。</li>
+            <li>枠を中央へ配置したり、初期の枠へ戻したりできます。</li>
+          </ul>
+
+          <p>
+            確定後は、元画像と各加工レイヤーの座標と範囲を、
+            新しい画像サイズに合わせて調整します。
+            トリミングの枠自体は一時的な操作情報で、加工レイヤーとしては保存しません。
+          </p>
+
+          <h4 class="help-subheading">比率</h4>
+          <p>
+            自由、1:1、4:3、16:9、3:4、35:45、読込み時の元画像比率から選べます。
+          </p>
+
+          <div class="help-callout help-callout-warning">
+            <strong>証明写真として使う場合</strong>
+            <p>
+              寸法、比率、画素数、背景、顔の位置などの要件は、手続きや提出先に
+              よって異なります。本ツールの比率の選択肢は作業補助のための例であり、
+              提出要件への適合を保証するものではありません。
+              必ず提出先の規定を確認してください。
+            </p>
+          </div>
+
+          <h3 class="appbox-help-subheading" id="size">サイズと容量</h3>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">項目</th>
+                  <th scope="col">1ファイル</th>
+                  <th scope="col">一括処理</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">最大容量</th>
+                  <td>25MB</td>
+                  <td>1ファイル25MB／合計150MB</td>
+                </tr>
+                <tr>
+                  <th scope="row">最大幅・高さ</th>
+                  <td>8,192px</td>
+                  <td>同じ</td>
+                </tr>
+                <tr>
+                  <th scope="row">最大総画素数</th>
+                  <td>36,000,000画素</td>
+                  <td>同じ</td>
+                </tr>
+                <tr>
+                  <th scope="row">最大枚数</th>
+                  <td>1枚</td>
+                  <td>30枚</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            上限を超える画像は読み込まないか、一括追加時にスキップします。
+            上限以内でも、寸法、枚数、圧縮形式、レイヤー数、端末性能によっては
+            処理に時間がかかります。
+          </p>
+
+          <h4 class="help-subheading">リサイズ</h4>
+          <ul>
+            <li>1枚ずつ加工する場合は、横幅と高さをピクセル単位で指定できます。「縦横比を維持」が有効なら、一方を変えると他方を自動計算します。</li>
+            <li>
+              一括処理では、長辺を指定ピクセル以下にする、最大横幅・最大高さの範囲に収める、
+              横幅を指定する、高さを指定する、リサイズしない、から選べます。
+            </li>
+            <li>「元画像より大きくしない」を有効にすると、元画像より小さい指定でない限り拡大しません。</li>
+          </ul>
+
+          <h4 class="help-subheading">目標容量の自動調整</h4>
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">形式</th>
+                  <th scope="col">調整方法</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">JPEG・WebP</th>
+                  <td>
+                    画質を段階的に調整します。最低画質でも目標容量を超える場合は、
+                    出力寸法を縮小します。
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">PNG</th>
+                  <td>
+                    画質による調整は行いません。目標容量を超える場合は出力寸法を縮小します。
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            最小の出力寸法まで調整しても達成できない場合は、画像を保存したうえで
+            「目標容量未達」として警告します。目標容量は必ず達成できるものではありません。
+          </p>
+
+          <h3 class="appbox-help-subheading" id="batch">一括処理</h3>
+          <p>
+            複数の画像へ共通の設定を適用し、画像と処理結果CSVをZIPファイルとして
+            保存します。共通のリサイズ、回転、形式変換、容量調整、文字透かし、
+            ファイル名の変更ができます。
+          </p>
+
+          <div class="help-callout help-callout-info">
+            <strong>一括処理でできないこと</strong>
+            <p>
+              トリミング、モザイク、黒塗り、図形注釈といった画像ごとの個別加工は
+              行いません。これらが必要な場合は「1枚ずつ加工」モードを使用してください。
+            </p>
+          </div>
+
+          <h4 class="help-subheading">文字透かし</h4>
+          <p>
+            透かし文字、配置位置（左上・右上・左下・右下・中央・中央斜め）、
+            透明度、文字サイズ、色を設定できます。
+            文字サイズは画像の短辺に対する割合で指定します。
+          </p>
+
+          <h4 class="help-subheading">ファイル名の変更</h4>
+          <p>
+            文字列の置換、接頭辞・接尾辞の追加、連番名への置換、
+            ZIP名の変更ができます。
+          </p>
+
+          <h4 class="help-subheading">処理の中止</h4>
+          <p>
+            「処理を中止」を押すと、現在処理中の画像が完了した後に停止します。
+            処理中のエンコードを直ちに強制終了するものではありません。
+            中止までに成功した画像と、全件の処理状況を記録したCSVをZIPとして保存します。
+          </p>
+
+          <h4 class="help-subheading">処理結果CSV</h4>
+          <p>
+            ZIPには「処理結果.csv」を含めます。元ファイル名、結果、出力ファイル名、
+            出力幅、出力高さ、出力容量、目標容量の達成、エラーを記録します。
+            結果は「成功」「成功（目標容量未達）」「失敗」「未処理」のいずれかです。
+          </p>
+          <p>
+            CSVはUTF-8のBOM付きで生成し、表計算ソフトで数式として解釈される
+            可能性がある先頭文字は無害化します。
+          </p>
+
+          <h4 class="help-subheading">ZIPファイル</h4>
+          <p>
+            JPEG、PNG、WebPはすでに圧縮された形式なので、ZIP内での追加圧縮は行わず
+            無圧縮で保存します。ZIP内のファイル名はUTF-8で保存し、
+            Windowsで使えない文字を置き換え、同名には連番を付けます。
+            ZIP生成では画像データをブラウザのメモリ上へ展開するため、
+            枚数や容量によっては時間がかかります。
+          </p>
+
+          <h3 class="appbox-help-subheading" id="files">形式とファイル名</h3>
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">区分</th>
+                  <th scope="col">対応</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">読み込み</th>
+                  <td>JPEG（.jpg / .jpeg）、PNG（.png）、WebP（.webp）</td>
+                </tr>
+                <tr>
+                  <th scope="row">保存</th>
+                  <td>JPEG、PNG、WebP</td>
+                </tr>
+                <tr>
+                  <th scope="row">一括処理の形式</th>
+                  <td>元画像と同じ形式／JPEGへ統一／PNGへ統一／WebPへ統一</td>
+                </tr>
+                <tr>
+                  <th scope="row">非対応</th>
+                  <td>HEIC / HEIF、GIF、BMP、TIFF、SVG、RAW画像、アニメーション画像</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            拡張子が対応形式でも、ファイルが破損している場合や、
+            実際の内容が対応画像ではない場合は読み込めません。
+            JPEGで保存する場合、透明部分は白または黒で合成します。
+          </p>
+
+          <h4 class="help-subheading">ファイル名</h4>
+          <p>
+            Windowsで使用できない文字やパスとして解釈される文字は、
+            無害な文字へ置き換えます。バックスラッシュ、スラッシュ、コロン、
+            アスタリスク、疑問符、ダブルクォート、山括弧、縦線、制御文字、
+            連続するピリオド、末尾のピリオドと空白、Windows予約名（CON、PRN、
+            AUX、NUL、COM1〜COM9、LPT1〜LPT9）が対象です。
+            そのため出力時にファイル名が変わる場合があります。
+          </p>
+
+          <h4 class="help-subheading">メタデータ</h4>
+          <div class="help-callout help-callout-security">
+            <strong>元画像のメタデータは引き継ぎません</strong>
+            <p>
+              保存時は現在の見た目を新しい画像として書き出すため、EXIF情報、
+              GPS位置情報、撮影日時、撮影機種、カメラ設定、元画像のサムネイルは
+              原則として引き継がれません。これは意図した設計です。
+            </p>
+            <p>
+              ただし、ブラウザや画像形式によって新しい画像の生成に必要な情報が
+              付加される可能性まで含めて、全種類のメタデータが存在しないことを
+              保証するものではありません。庁外公開などの重要な用途では、
+              保存後の画像を別の手段でも確認してください。
+            </p>
+          </div>
+
+          <h3 class="appbox-help-subheading" id="operations">履歴とキー操作</h3>
+          <p>
+            「1つ戻す」「やり直す」「読込み時の状態へ戻す」が使えます。
+            履歴はブラウザのメモリ内に保持し、ページを閉じると失われます。
+          </p>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">画像の画素数</th>
+                  <th scope="col">画像本体を含む履歴の上限</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">5,000,000画素以下</th>
+                  <td>最大8件</td>
+                </tr>
+                <tr>
+                  <th scope="row">5,000,000〜10,000,000画素</th>
+                  <td>最大4件</td>
+                </tr>
+                <tr>
+                  <th scope="row">10,000,000〜20,000,000画素</th>
+                  <td>最大2件</td>
+                </tr>
+                <tr>
+                  <th scope="row">20,000,000画素超</th>
+                  <td>最大1件</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            トリミング、リサイズ、回転、反転、読込み時の状態へ戻す操作は
+            画像本体を含む履歴です。レイヤーの追加、移動、サイズ変更、順序変更、
+            表示・非表示、設定変更、削除はレイヤーのみの履歴で、
+            全履歴は最大40件です。
+          </p>
+
+          <h4 class="help-subheading">キーボード操作</h4>
+          <ul>
+            <li>タブは左右の矢印キーで切り替えられます。<kbd>Home</kbd> と <kbd>End</kbd> でも移動できます。</li>
+            <li>比較ダイアログは <kbd>Esc</kbd> で閉じられます。</li>
+            <li>OSの「視覚効果を減らす」設定に対応しています。</li>
+          </ul>
+        </section>
+
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+
+          <details class="appbox-help-faq-item">
+            <summary>モザイクで隠せば安全ですか？</summary>
+            <div class="appbox-help-faq-answer">いいえ。モザイクは対象や設定によって元の内容を推測できる場合があります。確実に隠す必要がある箇所は、対象より十分に広い範囲を黒塗りしてください。保存後の画像も必ず目視で確認してください。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>画像が読み込めません。</summary>
+            <div class="appbox-help-faq-answer">HEIC、GIF、BMP、TIFF、SVG、RAW画像には対応していません。また、1ファイル25MB、幅・高さ8,192px、総画素数36,000,000画素の上限を超える画像は読み込めません。拡張子が対応形式でも、破損している場合は読み込めません。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>目標容量まで小さくなりません。</summary>
+            <div class="appbox-help-faq-answer">JPEGとWebPは画質を段階的に落とし、それでも超える場合は寸法を縮小します。PNGは画質調整を行わず寸法の縮小だけで対応します。最小の出力寸法まで調整しても達成できない場合は「目標容量未達」として警告したうえで保存します。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>一括処理でモザイクをかけたいのですが。</summary>
+            <div class="appbox-help-faq-answer">一括処理は共通設定の適用に限られるため、画像ごとの個別加工はできません。「1枚ずつ加工」モードを使用してください。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>保存した画像に位置情報は残りますか？</summary>
+            <div class="appbox-help-faq-answer">保存時は現在の見た目を新しい画像として書き出すため、EXIFやGPS情報は原則として引き継がれません。ただし全種類のメタデータが存在しないことを保証するものではないため、庁外公開などでは別の手段でも確認してください。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>保存した画像から黒塗りを外せますか？</summary>
+            <div class="appbox-help-faq-answer">外せません。保存時に表示中のレイヤーを画像へ焼き込むため、保存したJPEG、PNG、WebPには編集可能なレイヤー情報は残りません。加工前の画像が必要な場合は、元画像を別に保管してください。</div>
+          </details>
+        </section>
+
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+
+          <h3 class="appbox-help-subheading" id="cautions">利用上の注意</h3>
+          <ul>
+            <li>HEIC、HEIF、GIF、BMP、TIFF、SVG、RAW画像、アニメーション画像には対応していません。</li>
+            <li>一括処理では、個別のトリミング、モザイク、黒塗り、注釈はできません。</li>
+            <li>ZIPは無圧縮方式です。</li>
+            <li>一括処理の中止は、現在処理中の画像が終わった後に行われます。</li>
+            <li>目標容量を必ず達成できるとは限りません。</li>
+            <li>証明写真の物理寸法やDPIを保証するものではありません。</li>
+            <li>操作履歴はページを閉じると失われます。</li>
+            <li>保存画像には編集可能なレイヤー情報は残りません。</li>
+            <li>モザイク処理は、対象情報の完全な秘匿を保証するものではありません。</li>
+            <li>画像の内容や端末性能によっては、上限以内でも処理に時間がかかります。</li>
+            <li>ブラウザが選択した出力形式に対応していない場合は保存できません。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="privacy">セキュリティとプライバシー</h3>
+          <div class="help-callout help-callout-security">
+            <strong>画像はブラウザ内で処理します</strong>
+            <p>
+              画像をサーバーへアップロードしたり、外部サービスや外部APIへ送信したり、
+              クラウドへ自動保存したりする処理はありません。
+              画像データをWeb StorageやIndexedDBへ保存することもありません。
+            </p>
+          </div>
+          <p>
+            処理後の画像またはZIPは、利用者の操作によって端末へダウンロードされます。
+            ダウンロードしたファイル、ブラウザキャッシュ、OSの一時領域、
+            クリップボードの取扱いは、端末およびブラウザの設定に従います。
+          </p>
+          <p>
+            個人情報または機密情報を含む画像は、所属組織の情報セキュリティポリシーと
+            データ取扱規程に従って使用してください。
+          </p>
+        </section>
+
+        <div class="help-footer-actions">
+          <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="appbox-footer">お役立ちアプリBOX / 画像かんたん加工 Version 1.2.2</footer>
+  </main>
+  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+</body>
+</html>

@@ -2,10 +2,7 @@
   お役立ちアプリBOX 共通ヘッダ部品
 
   ページ外枠の共通パーツ（戻るボタン / ヘルプボタン / 庁内バッジ / フッター）。
-  形状は現行8ツールの多数派に合わせています。
-    角丸 11px / 高さ 40px / padding 0 13px / font-weight 800 / font-size 12px
-    背景 rgba(255,255,255,.82) / 影 0 6px 16px
-
+  共通トークン（--appbox-header-* / --appbox-app-*）に基づくコンパクト設計です。
   色は appbox-theme トークン経由なので、このファイルに色リテラルはありません。
 
   appbox-base.css と同じく @layer appbox で包んでいるため、
@@ -26,8 +23,10 @@
   }
 
   .appbox-header__inner {
-    width: min(var(--appbox-content-max-width, 1160px), calc(100% - 32px));
-    height: 60px;
+    width: 100%;
+    box-sizing: border-box;
+    height: var(--appbox-header-height);
+    padding: 0 var(--appbox-header-padding-x);
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -38,7 +37,7 @@
   .appbox-header__brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     text-decoration: none;
     color: var(--appbox-dads-neutral-900);
     border-radius: 6px;
@@ -57,11 +56,11 @@
   }
 
   .appbox-header__logo {
-    width: 36px;
-    height: 36px;
+    width: var(--appbox-header-logo-size);
+    height: var(--appbox-header-logo-size);
     background: var(--appbox-logo-gradient);
     border: 1px solid var(--appbox-logo-border);
-    border-radius: 8px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -70,14 +69,14 @@
   }
 
   .appbox-header__logo svg {
-    width: 20px;
-    height: 20px;
+    width: var(--appbox-header-logo-glyph-size);
+    height: var(--appbox-header-logo-glyph-size);
     color: var(--appbox-logo-color);
   }
 
   .appbox-header__title {
     margin: 0;
-    font-size: 18px;
+    font-size: var(--appbox-header-title-size);
     font-weight: 700;
     line-height: 1.3;
     letter-spacing: 0.02em;
@@ -85,12 +84,23 @@
   }
 
   .appbox-header__subtitle {
-    font-size: 11px;
+    font-size: var(--appbox-header-subtitle-size);
     font-weight: 700;
     letter-spacing: 0.04em;
     color: #7b748c;
     margin-left: 6px;
     vertical-align: middle;
+  }
+
+  @media (max-width: 640px) {
+    .appbox-header__inner {
+      height: auto;
+      min-height: 48px;
+      padding: 6px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+      --appbox-header-action-height: 38px;
+    }
   }
 
   @media (max-width: 620px) {
@@ -102,20 +112,20 @@
   .appbox-header__actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--appbox-header-actions-gap);
   }
 
   .appbox-help-link {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
-    min-height: 40px;
+    padding: 0 10px;
+    min-height: var(--appbox-header-action-height);
     background: var(--appbox-surface);
     color: var(--appbox-dads-neutral-700);
     border: 1px solid var(--appbox-dads-neutral-300);
     border-radius: 6px;
-    font-size: 14px;
+    font-size: var(--appbox-header-action-font-size);
     font-weight: 600;
     text-decoration: none;
     transition: all 0.15s ease;
@@ -134,8 +144,8 @@
   }
 
   .appbox-help-link svg {
-    width: 16px;
-    height: 16px;
+    width: var(--appbox-header-action-icon-size);
+    height: var(--appbox-header-action-icon-size);
     color: var(--appbox-dads-neutral-600);
     flex-shrink: 0;
   }
@@ -144,11 +154,12 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
+    font-size: var(--appbox-header-action-font-size);
+    padding: 4px 6px;
     font-weight: 600;
     color: var(--appbox-primary);
     text-decoration: underline;
-    padding: 6px 8px;
+
     border-radius: 4px;
     white-space: nowrap;
   }
@@ -173,26 +184,51 @@
     }
   }
 
+  .appbox-shell {
+    width: min(var(--appbox-shell-max-width), calc(100% - 32px));
+    margin: 24px auto 32px;
+  }
+
+  .appbox-shell--wide {
+    width: min(var(--appbox-shell-max-width-wide), calc(100% - 32px));
+  }
+
+  @media print {
+    .appbox-shell {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
   /* アプリ導入・見出し部共通クラス -------------------------------------- */
 
   .appbox-app-intro {
-    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px var(--appbox-app-intro-gap, 16px);
+    margin-bottom: var(--appbox-app-intro-margin-bottom);
+  }
+
+  .appbox-app-intro--edge {
+    padding: var(--appbox-app-intro-block-padding);
   }
 
   .appbox-app-title-group {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 8px;
+    gap: var(--appbox-app-title-gap);
+    margin-bottom: 0;
+    flex-shrink: 0;
   }
 
   .appbox-app-icon {
-    width: 44px;
-    height: 44px;
+    width: var(--appbox-app-icon-size);
+    height: var(--appbox-app-icon-size);
     flex-shrink: 0;
     background: var(--appbox-surface-soft);
     border: 1px solid var(--appbox-border);
-    border-radius: 12px;
+    border-radius: var(--appbox-app-icon-radius);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -201,30 +237,33 @@
   }
 
   .appbox-app-icon svg {
-    width: 24px;
-    height: 24px;
+    width: var(--appbox-app-icon-glyph-size);
+    height: var(--appbox-app-icon-glyph-size);
   }
 
   .appbox-app-h1 {
-    font-size: 26px;
+    font-size: var(--appbox-app-title-size);
     font-weight: 700;
     color: var(--appbox-dads-neutral-900);
     letter-spacing: -0.01em;
     line-height: 1.3;
     margin: 0;
+    white-space: nowrap;
   }
 
   .appbox-app-desc {
-    font-size: 15px;
+    font-size: var(--appbox-app-desc-size);
     color: var(--appbox-dads-neutral-700);
-    margin: 0 0 0 58px;
-    line-height: 1.65;
+    margin: 0;
+    line-height: 1.5;
   }
 
   @media (max-width: 640px) {
-    .appbox-app-desc {
-      margin-left: 0;
-      margin-top: 8px;
+    .appbox-app-intro {
+      gap: 6px 12px;
+    }
+    .appbox-app-intro--edge {
+      padding: 8px 16px;
     }
   }
 
@@ -246,14 +285,14 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-height: 40px;
-    padding: 6px 14px;
+    min-height: var(--appbox-header-action-height);
+    padding: 0 10px;
     border: 1px solid var(--appbox-dads-neutral-300);
     border-radius: 6px;
     color: var(--appbox-dads-neutral-700);
     background: var(--appbox-surface);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    font-size: 14px;
+    font-size: var(--appbox-header-action-font-size);
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -269,14 +308,14 @@
 
   .appbox-back-button svg {
     flex: 0 0 auto;
-    width: var(--appbox-chrome-icon);
-    height: var(--appbox-chrome-icon);
+    width: var(--appbox-header-action-icon-size);
+    height: var(--appbox-header-action-icon-size);
   }
 
   .appbox-help-button svg {
     flex: 0 0 auto;
-    width: 17px;
-    height: 17px;
+    width: var(--appbox-header-action-icon-size);
+    height: var(--appbox-header-action-icon-size);
   }
 
   /*
@@ -295,15 +334,15 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    min-height: var(--appbox-chrome-height);
-    padding: var(--appbox-chrome-padding);
+    gap: 6px;
+    min-height: var(--appbox-header-action-height);
+    padding: 0 10px;
     border: 1px solid var(--appbox-border);
-    border-radius: var(--appbox-chrome-radius);
+    border-radius: 6px;
     color: var(--appbox-primary);
     background: var(--appbox-chrome-bg);
     box-shadow: var(--appbox-chrome-shadow);
-    font-size: var(--appbox-chrome-size);
+    font-size: var(--appbox-header-action-font-size);
     font-weight: var(--appbox-chrome-weight);
     white-space: nowrap;
     cursor: pointer;
@@ -315,8 +354,8 @@
 
   .appbox-collapse-toggle svg {
     flex: 0 0 auto;
-    width: var(--appbox-chrome-icon);
-    height: var(--appbox-chrome-icon);
+    width: var(--appbox-header-action-icon-size);
+    height: var(--appbox-header-action-icon-size);
     transition: transform 0.15s ease;
   }
 
@@ -325,6 +364,15 @@
     transform: rotate(-90deg);
   }
 
+
+  @media (max-width: 640px) {
+    .appbox-help-link,
+    .appbox-back-button,
+    .appbox-help-button,
+    .appbox-collapse-toggle {
+      min-height: 38px;
+    }
+  }
   /* フッター ------------------------------------------------------------ */
 
   .appbox-footer {
@@ -346,7 +394,7 @@
     }
 
     .appbox-help-button {
-      padding: 0 10px;
+      padding: 0 12px;
     }
   }
 }

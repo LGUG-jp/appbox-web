@@ -4,9 +4,6 @@
   各ツールのブランド色の単一の置き場です。
   ページ側は <html data-appbox-theme="blue"> のように系統色名で指定します。
   （blue, green, red, purple, orange, cyan, yellow, portal）
-
-  ※移行期間中は既存アプリとの後方互換のため旧セレクタ（textdiff, csvdiff等）
-  をエイリアスとして維持しています。全アプリの移行完了後に削除予定です。
 */
 
 /* ポータル ------------------------------------------------------------- */
@@ -42,42 +39,9 @@
   --appbox-help-tint: #fdfdfe;
 }
 
-/* QRコード作成 --------------------------------------------------------- */
-[data-appbox-theme="qrcode"] {
-  --appbox-bg: #fbf9ff;
-  --appbox-page-bg: var(--appbox-bg);
-
-  --appbox-primary: #7759a6;
-  --appbox-primary-rgb: 119, 89, 166;
-  --appbox-primary-hover: #674b93;
-  --appbox-primary-soft: #e9ddf8;
-  --appbox-primary-shadow: none;
-
-  --appbox-surface: #ffffff;
-  --appbox-surface-soft: #f4efff;
-  --appbox-text: #302b3a;
-  --appbox-muted: #746d7f;
-  --appbox-border: #ddd5e8;
-
-  --appbox-success: #3f7a5f;
-
-  --appbox-shadow: 0 14px 36px rgba(86, 64, 112, 0.1);
-  --appbox-focus-ring: rgba(119, 89, 166, 0.28);
-
-  --appbox-footer-color: #91899c;
-  --appbox-footer-size: 10px;
-
-  --appbox-help-badge-border: #ddd0ef;
-  --appbox-help-nav-bg: #fbf9ff;
-  --appbox-help-info-bg: #f9f6ff;
-  --appbox-help-thead-bg: #faf7ff;
-  --appbox-help-tint: #fdfbff;
-}
-
 /* 庁内日程調整「調整くん」（orange） --------------------------------- */
-[data-appbox-theme="orange"],
-[data-appbox-theme="schedule"] {
-  --appbox-bg: #fffaf6;
+[data-appbox-theme="orange"] {
+  --appbox-bg: #fff7f2;
   --appbox-page-bg: var(--appbox-bg);
 
   --appbox-primary: #d97745;
@@ -108,8 +72,7 @@
 }
 
 /* 文章差分チェッカー（blue） ------------------------------------------- */
-[data-appbox-theme="blue"],
-[data-appbox-theme="textdiff"] {
+[data-appbox-theme="blue"] {
   --appbox-bg: #f7fbff;
   --appbox-page-bg: var(--appbox-bg);
 
@@ -146,8 +109,7 @@
 }
 
 /* CSV差分チェッカー（green） ------------------------------------------- */
-[data-appbox-theme="green"],
-[data-appbox-theme="csvdiff"] {
+[data-appbox-theme="green"] {
   --appbox-bg: #f8fcf9;
   --appbox-page-bg: var(--appbox-bg);
 
@@ -185,8 +147,7 @@
 
 /* フロー図メーカー（purple） ------------------------------------------- */
 /* flowchart は :root を持たないため、本体CSSの直値から拾っています。 */
-[data-appbox-theme="purple"],
-[data-appbox-theme="flowchart"] {
+[data-appbox-theme="purple"] {
   --appbox-bg: #ffffff;
   --appbox-page-bg: var(--appbox-bg);
 
@@ -223,8 +184,7 @@
 }
 
 /* PDFかんたん編集（red） ------------------------------------------------ */
-[data-appbox-theme="red"],
-[data-appbox-theme="pdfeditor"] {
+[data-appbox-theme="red"] {
   --appbox-bg: #f5f6f8;
   --appbox-page-bg: var(--appbox-bg);
 
@@ -258,75 +218,6 @@
   --appbox-help-info-bg: #fff6f7;
   --appbox-help-thead-bg: #fdf9fa;
   --appbox-help-tint: #fffcfd;
-}
-
-/* 画像かんたん加工 ----------------------------------------------------- */
-[data-appbox-theme="imageedit"] {
-  --appbox-bg: #fbfbfd;
-  --appbox-page-bg: var(--appbox-bg);
-
-  --appbox-primary: #705aa1;
-  --appbox-primary-rgb: 112, 90, 161;
-  --appbox-primary-hover: #705aa1;
-  --appbox-primary-soft: #eee4fb;
-  --appbox-primary-shadow: 0 10px 22px rgba(112, 90, 161, 0.18);
-
-  --appbox-surface: #ffffff;
-  --appbox-surface-soft: #eee4fb;
-  --appbox-text: #2f3440;
-  --appbox-muted: #737b87;
-  --appbox-border: #e5e7ec;
-
-  --appbox-success: #4d8961;
-
-  --appbox-shadow: 0 16px 44px rgba(47, 52, 64, 0.08);
-  --appbox-focus-ring: rgba(168, 120, 24, 0.28);
-
-  --appbox-footer-color: #969ba3;
-  --appbox-footer-size: 10px;
-
-  --appbox-help-badge-border: #ddd3ee;
-  --appbox-help-nav-bg: #fbfafd;
-  --appbox-help-info-bg: #f8f6fc;
-  --appbox-help-thead-bg: #faf9fd;
-  --appbox-help-tint: #fdfcfe;
-}
-
-/* 相続関係図（ジェノグラム）作成ツール --------------------------------- */
-[data-appbox-theme="kakeizu"] {
-  --appbox-bg: #f7f5fb;
-  --appbox-page-bg: var(--appbox-bg);
-
-  --appbox-primary: #7557a6;
-  --appbox-primary-rgb: 117, 87, 166;
-  --appbox-primary-hover: #654990;
-
-  /* kakeizu.css:76。textdiff と同じ並び。 */
-  --appbox-font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-  --appbox-primary-soft: #eee4fb;
-  --appbox-primary-shadow: none;
-
-  --appbox-surface: #ffffff;
-  --appbox-surface-soft: #faf8fd;
-  --appbox-text: #2f3440;
-  --appbox-muted: #68707c;
-  --appbox-border: #ddd8e5;
-
-  --appbox-success: #3f7653;
-
-  --appbox-shadow: 0 12px 30px rgba(62, 48, 80, 0.09);
-  --appbox-focus-ring: rgba(117, 87, 166, 0.22);
-
-  --appbox-footer-color: #817988;
-  --appbox-footer-size: 11px;
-
-  --appbox-help-badge-border: #d8cae8;
-  --appbox-help-nav-bg: #faf8fd;
-  --appbox-help-info-bg: #f7f4fb;
-  --appbox-help-thead-bg: #f9f7fc;
-  --appbox-help-tint: #fdfcfe;
 }
 
 /* シアン（cyan / 補助・追加） ------------------------------------------ */

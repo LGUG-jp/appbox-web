@@ -14,10 +14,10 @@ test("画面は作成・プレビュー保存・詳細カスタマイズの3領�
   const html = read("index.html");
 
   const mainGridStart = html.indexOf('class="main-grid qr-main-grid"');
-  const createPanel = html.indexOf('class="panel create-panel"');
-  const previewPanel = html.indexOf('class="panel preview-panel"');
-  const mainGridEnd = html.indexOf('</div>\n\n    <section class="panel customization-section"');
-  const customization = html.indexOf('class="panel customization-section"');
+  const createPanel = html.indexOf('class="panel create-panel appbox-panel--accent"');
+  const previewPanel = html.indexOf('class="panel preview-panel appbox-panel--accent"');
+  const mainGridEnd = html.indexOf('</div>\n\n    <section class="panel customization-section appbox-panel--accent"');
+  const customization = html.indexOf('class="panel customization-section appbox-panel--accent"');
 
   assert.ok(mainGridStart >= 0);
   assert.ok(createPanel > mainGridStart);
@@ -125,10 +125,11 @@ test("作成情報を表示せず、読み取り確認をプレビュー上部�
   assert.match(html, /appbox-status--warning/);
 });
 
-test("QRコード作成固有資源はv1.4.1、共通assetsは正本の版を参照する", () => {
+test("変更した固有CSSだけ版数を更新し、共通assetsは正本の版を参照する", () => {
   const html = read("index.html");
 
-  for (const file of ["qrcode.css", "qrcode-ux.css", "qr-core.js", "qrcode-app.js", "qrcode-ux.js"]) {
+  assert.match(html, /qrcode\.css\?v=1\.4\.4/);
+  for (const file of ["qrcode-ux.css", "qr-core.js", "qrcode-app.js", "qrcode-ux.js"]) {
     assert.match(html, new RegExp(`${file.replace(".", "\\.")}\\?v=1\\.4\\.1`), file);
   }
 
@@ -142,6 +143,28 @@ test("QRコード作成固有資源はv1.4.1、共通assetsは正本の版を参
   ]) {
     assert.ok(html.includes(`${file}?v=${commonAssetVersion()}`), file);
   }
+});
+
+test("新標準のヘッダーと導入部からヘルプ・ポータルへ移動できる", () => {
+  const html = read("index.html");
+  const help = read("help.html");
+  const css = read("qrcode.css");
+
+  assert.match(html, /data-appbox-theme="purple"/);
+  assert.match(help, /data-appbox-theme="purple"/);
+  assert.match(html, /<header class="appbox-header">/);
+  assert.match(html, /<main id="main-content">[\s\S]*class="appbox-app-intro appbox-app-intro--edge"[\s\S]*<div class="appbox-shell">/);
+  assert.match(html, /class="appbox-shell"/);
+  assert.match(html, /class="panel create-panel appbox-panel--accent"/);
+  assert.match(html, /href="\.\/help\.html" target="_blank" rel="noopener"/);
+  assert.match(html, /<footer class="appbox-footer">\s*お役立ちアプリBOX \/ QRコード作成 Version 1\.4\.4\s*<\/footer>/);
+  assert.match(html, /class="trademark-note"[^>]*>\s*「QRコード」は株式会社デンソーウェーブの登録商標です/);
+  assert.doesNotMatch(css, /\.qr-shell\s*\{/);
+  assert.match(css, /\.panel\s*\{[^}]*border-top:\s*4px solid var\(--primary\)/);
+  assert.match(help, /href="\.\/index\.html">&lt; アプリに戻る<\/a>/);
+  assert.match(help, /<div class="appbox-help-header-card">[\s\S]*class="help-callout help-callout-warning"[\s\S]*<\/div>\s*<div class="appbox-help-grid help-panel">/);
+  assert.match(help, /class="appbox-help-nav-sublist"/);
+  assert.match(help, /class="appbox-help-faq-item"/);
 });
 
 test("UX拡張スクリプトは構文エラーなく、透明保存後に既存保存可否を再評価する", () => {

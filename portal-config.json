@@ -1,24 +1,6 @@
 {
   "schemaVersion": 1,
   "apps": {
-    "datetools": {
-      "status": "hidden"
-    },
-    "deadlinecalc": {
-      "status": "hidden"
-    },
-    "flowchart": {
-      "status": "hidden"
-    },
-    "imageedit": {
-      "status": "hidden"
-    },
-    "kakeizu": {
-      "status": "hidden"
-    },
-    "pdfeditor": {
-      "status": "hidden"
-    },
     "schedule": {
       "status": "hidden"
     }

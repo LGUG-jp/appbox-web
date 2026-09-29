@@ -12,13 +12,13 @@
   <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
 
   <!-- 共通アセット。以下のアプリ固有CSSより前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=1.4.1">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=1.4.1">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=1.4.1">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=1.4.1">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=1.4.1">
-  <link rel="stylesheet" href="./csvdiff.css?v=1.2.2">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <link rel="stylesheet" href="./csvdiff.css?v=1.2.3">
 
 </head>
 <body>
@@ -49,8 +49,8 @@
     </div>
   </header>
 
-  <main class="app-shell csvdiff-shell" id="mainContent">
-    <div class="appbox-app-intro">
+  <main id="mainContent">
+    <div class="appbox-app-intro appbox-app-intro--edge">
       <div class="appbox-app-title-group">
         <div class="appbox-app-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
@@ -62,6 +62,7 @@
       </div>
       <p class="appbox-app-desc">左に旧、右に新のCSVファイルを読み込んでください。</p>
     </div>
+    <div class="appbox-shell appbox-shell--wide">
 
     <noscript>
       <p class="appbox-status appbox-status--warning">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
@@ -355,8 +356,8 @@
       </div>
     </section>
 
-    <p class="footer-note">読み込んだCSVはブラウザ内で処理し、サーバーへのアップロードや外部通信は行いません。</p>
-    <footer class="appbox-footer">お役立ちアプリBOX / CSV差分チェッカー Version 1.2.2</footer>
+    <footer class="appbox-footer">お役立ちアプリBOX / CSV差分チェッカー Version 1.2.3</footer>
+    </div>
   </main>
 
   <div class="loading" id="loading" role="status" aria-live="polite" aria-hidden="true">

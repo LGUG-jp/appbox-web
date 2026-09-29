@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="purple">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+  <meta
+    http-equiv="Cache-Control"
+    content="no-store, no-cache, must-revalidate"
+  >
+  <meta
+    http-equiv="Pragma"
+    content="no-cache"
+  >
+  <meta
+    http-equiv="Expires"
+    content="0"
+  >
+  <meta
+    name="color-scheme"
+    content="light"
+  >
+  <title>相続関係図（ジェノグラム）作成ツール ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+</head>
+
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+
+    <div class="appbox-help-header-card">
+      <div class="appbox-help-header-card__info">
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              focusable="false"
+            >
+              <circle cx="7.5" cy="5" r="2.5"></circle>
+              <rect x="14" y="2.5" width="5" height="5" rx=".5"></rect>
+              <path d="M10 5h4"></path>
+              <path d="M12 5v5"></path>
+              <path d="M6 10h12"></path>
+              <path d="M6 10v3.5"></path>
+              <path d="M12 10v3.5"></path>
+              <path d="M18 10v3.5"></path>
+              <circle cx="6" cy="16.5" r="2.5"></circle>
+              <rect x="9.5" y="14" width="5" height="5" rx=".5"></rect>
+              <circle cx="18" cy="16.5" r="2.5"></circle>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">相続関係図（ジェノグラム）作成ツール</h1>
+        </div>
+        <p class="appbox-help-header-desc">人物と関係を登録して相続関係図を作り、保存・出力するまでを説明します。</p>
+      </div>
+      <span class="version-badge">Version 1.3.1</span>
+      <div class="help-callout help-callout-warning">
+        <strong>本ツールは法的な判断を行うものではありません</strong>
+        <p>
+          法定相続人や法定相続分を自動で確定する機能はありません。
+          代襲相続や数次相続の自動判定、戸籍情報との照合、
+          相続放棄の効力の確認も行いません。
+        </p>
+        <p>
+          各項目へ入力しただけで、相続人、代表相続人、納税義務者、
+          納税管理人として法的・行政的に確定するものではありません。
+          業務上の整理用の図として使用してください。
+        </p>
+      </div>
+    </div>
+
+
+        <div class="appbox-help-grid help-panel">
+          <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+            <p class="appbox-help-nav-title">目次</p>
+            <ul class="appbox-help-nav-list">
+              <li>
+                <a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a>
+                <ul class="appbox-help-nav-sublist">
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#relations">関係の登録</a></li>
+                </ul>
+              </li>
+              <li>
+                <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+                <ul class="appbox-help-nav-sublist">
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#layout">配置と図形</a></li>
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#check">関係チェック</a></li>
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#save">保存と復元</a></li>
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#output">出力と印刷</a></li>
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#operations">ショートカット</a></li>
+                </ul>
+              </li>
+              <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+              <li>
+                <a class="appbox-help-nav-link" href="#other">その他</a>
+                <ul class="appbox-help-nav-sublist">
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#cautions">利用上の注意</a></li>
+                  <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#privacy">セキュリティとプライバシー</a></li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+          <div class="appbox-help-content">
+
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+
+          <ol class="help-steps">
+            <li>
+              初回起動時はサンプルデータが表示されます。実際の業務データを作る場合は
+              「全消去」を実行してから入力してください。
+            </li>
+            <li>
+              人物を追加し、氏名、性別、続柄、住所、生年月日などを登録します。
+              人物IDは「P001」の形式で自動採番されます。
+            </li>
+            <li>
+              配偶者関係と親子関係を登録します。夫婦間は二重線で表示されます。
+            </li>
+            <li>
+              相続放棄の確認状況、共有持分、代表相続人、納税義務者候補などの
+              業務情報を必要に応じて入力します。
+            </li>
+            <li>
+              「関係チェックを実行」して、関係データの矛盾がないか確認します。
+            </li>
+            <li>
+              配置を整え、必要に応じて図形や注釈を追加します。
+            </li>
+            <li>
+              JSONで保存し、必要に応じてSVG出力または印刷します。
+            </li>
+          </ol>
+
+          <h3 class="appbox-help-subheading">登録できる人物情報</h3>
+
+          <p>
+            ID、氏名、性別、続柄・関係、住所、生年月日、死亡年月日、
+            相続放棄の確認状況、共有持分、代表相続人、納税義務者候補、
+            納税管理人候補。
+          </p>
+          <p>旧JSONに含まれる備考は画面から編集できませんが、読み込み・保存時に保持します。</p>
+          <section id="relations" aria-labelledby="relations-title">
+            <h3 class="appbox-help-subheading" id="relations-title">関係の登録</h3>
+
+            <h4 class="appbox-help-subheading">登録方法</h4>
+            <ul>
+              <li><strong>関係タブ</strong>: 人物を選び、配偶者関係や親子関係を登録します。</li>
+              <li><strong>図上で登録</strong>: 関係の種類を選び、図上の人物を順番にクリックします。</li>
+              <li><strong>右クリック</strong>: 人物を右クリックし、新しい親族を追加します。</li>
+              <li><strong>一括編集</strong>: 表形式で人物情報、関係、業務情報をまとめて編集します。</li>
+            </ul>
+
+          <ul>
+            <li>親子関係は「1人の親と子」または「2人の親と子」で登録できます。</li>
+            <li>2人以上の親が登録されたfamilyは、配偶者・親ペアとして扱います。</li>
+            <li>配偶者IDを複数入力する場合は、カンマ区切りで指定します。</li>
+            <li>
+              一括編集では、存在しない人物ID、自分自身を親や配偶者に指定、
+              親1と親2に同じID、配偶者IDの重複、親IDと配偶者IDの重複を
+              反映前にチェックします。
+            </li>
+          </ul>
+
+            <h4 class="appbox-help-subheading">人物の矩形選択</h4>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">操作</th>
+                  <th scope="col">動作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">背景をドラッグ</th>
+                  <td>表示範囲を移動します。</td>
+                </tr>
+                <tr>
+                  <th scope="row"><kbd>Shift</kbd> + 背景ドラッグ</th>
+                  <td>矩形と交差する人物をまとめて選択します。</td>
+                </tr>
+                <tr>
+                  <th scope="row"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + 背景ドラッグ</th>
+                  <td>既存の人物選択へ追加します。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            矩形選択の対象は人物ノードだけで、図形・注釈は含まれません。
+            選択後に1人をドラッグすると、選択中の人物をまとめて移動できます。
+          </p>
+
+          <div class="help-callout help-callout-warning">
+            <strong>複雑な関係を登録したとき</strong>
+            <p>
+              再婚、養子縁組、代襲相続、数次相続などでは、複数のfamilyが作成される
+              場合があります。登録後は「関係チェック」と「関係一覧」で内容を確認してください。
+            </p>
+            <p>
+              一括編集の「関係」タブを反映すると、関係データは表の内容を基準に
+              作り直されます。反映前に入力内容を確認してください。
+            </p>
+          </div>
+            </section>
+        </section>
+
+
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+          <h3 class="appbox-help-subheading" id="layout">配置と図形</h3>
+
+          <dl class="help-definition-list">
+            <div>
+              <dt>選択人物の家族を整列</dt>
+              <dd>
+                選択した人物が所属するfamilyを整列します。親・配偶者を同じ行へ、
+                子をその下へ配置します。複数のfamilyに所属する場合は親側のfamilyを
+                優先します。人物付近の図形・注釈も可能な範囲で追従し、整列後は
+                「元に戻す」「やり直す」で位置を戻したりやり直したりできます。
+              </dd>
+            </div>
+
+            <div>
+              <dt>選択した人物を整列</dt>
+              <dd>
+                2人以上を選択して実行すると、選択中の人物だけを選択範囲に含まれる
+                関係に沿って整列します。未選択の人物は移動しません。選択範囲の
+                左上を基準に配置し、人物付近の図形・注釈も可能な範囲で追従します。
+                整列後は「元に戻す」「やり直す」で位置を戻したりやり直したりできます。
+              </dd>
+            </div>
+
+            <div>
+              <dt>全体を自動整列</dt>
+              <dd>
+                親子関係から世代を算出し、原点付近を基準に世代ごとに配置します。
+                配偶者を可能な範囲で隣接させ、同じfamilyに登録された子をまとめます。
+                家族グループ間に間隔を取り、家族関係が未設定の人物は登録済みの人物の下へ配置します。
+                整列前の座標に依存せず、同じ関係データには同じ配置を計算します。
+                人物付近の図形・注釈は可能な範囲で追従します。整列後は
+                「元に戻す」「やり直す」で位置を戻したりやり直したりできます。
+              </dd>
+            </div>
+
+            <div>
+              <dt>図を原点付近へ移動</dt>
+              <dd>
+                相対配置を保ったまま、図全体を原点付近へ平行移動します。
+                並べ直す機能ではありません。図がマイナス座標や原点から離れた位置に
+                あるときに使用します。
+              </dd>
+            </div>
+          </dl>
+
+          <h4 class="appbox-help-subheading">図形・注釈</h4>
+
+          <ul>
+            <li>テキスト、四角、丸・楕円、×印、矢印を追加できます。</li>
+            <li>テキストは配置位置をクリック、その他の図形は図上をドラッグして追加します。</li>
+            <li><kbd>Shift</kbd> を押しながらドラッグすると、形状や方向を固定できます。</li>
+            <li>色、背景色、線の太さ、文字サイズを編集できます。</li>
+            <li>複数選択して、左揃え・上揃え・均等配置ができます。</li>
+            <li>人物と重なる注釈は<kbd>Alt</kbd>（Macでは<kbd>Option</kbd>）を押しながらクリック・ドラッグ・右クリックします。テキストは同じキーを押しながらダブルクリックすると再編集できます。</li>
+            <li>図形は右クリックメニューで人物の前面・背面を切り替えられます。テキストは常に人物の前面です。「1段前面／背面」は同じ側の図形・注釈同士の重なり順を変更します。</li>
+            <li>矢印の端点を人物の近くへ移動すると、上・右・下・左のいずれかへ吸着します。吸着した矢印は人物の移動に追従します。</li>
+            <li>人物を削除した場合は、矢印は現在の座標を保ったまま吸着だけが解除されます。</li>
+          </ul>
+
+
+          <div class="help-callout help-callout-info">
+            <strong>図形のコピーについて</strong>
+            <p>
+              図形のコピー・貼り付けはアプリ内のメモリだけで行い、
+              OSのクリップボードへは送信しません。
+              ページを閉じるとコピー内容は失われます。
+            </p>
+          </div>
+
+        <section id="check" aria-labelledby="check-title">
+          <h3 class="appbox-help-subheading" id="check-title">関係チェック</h3>
+
+          <p>
+            「関係チェックを実行」すると、登録データについて次のような確認を行います。
+          </p>
+
+          <ul>
+            <li>存在しない親ID・配偶者ID、自分自身を親や配偶者に指定していないか</li>
+            <li>family内の親と子の重複、親ID・子IDの重複</li>
+            <li>親・配偶者が3人以上のfamily、親がないfamily、同じ親ペアの重複</li>
+            <li>同じ子が複数のfamilyへ登録されていないか</li>
+            <li>親子関係の循環（AがBの親、BがCの親、CがAの親、といった状態）</li>
+            <li>死亡者への代表相続人・納税義務者候補の設定</li>
+            <li>相続放棄済みの人物への業務設定</li>
+            <li>納税管理人候補の住所未入力</li>
+            <li>共有持分の入力形式</li>
+          </ul>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">区分</th>
+                  <th scope="col">意味</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">エラー</th>
+                  <td>修正を推奨する関係上の矛盾</td>
+                </tr>
+                <tr>
+                  <th scope="row">警告</th>
+                  <td>内容の確認が必要な項目</td>
+                </tr>
+                <tr>
+                  <th scope="row">注意</th>
+                  <td>入力内容を確認した方がよい項目</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="help-callout help-callout-warning">
+            <strong>「問題は見つかりませんでした」の意味</strong>
+            <p>
+              関係データ上の矛盾が見つからなかったという意味です。
+              法定相続人、相続順位、法定相続分、相続放棄の有効性、
+              戸籍上の関係を保証するものではありません。
+            </p>
+          </div>
+        </section>
+
+        <section id="save" aria-labelledby="save-title">
+          <h3 class="appbox-help-subheading" id="save-title">保存と復元</h3>
+
+          <h4>JSON保存</h4>
+
+          <p>
+            「データを保存」で、人物情報、family情報、図形・注釈、全体メモ、
+            選択状態、表示倍率、表示位置をJSONファイルとして保存します。
+            ファイル名の例は「相続関係図_20260903_1330.json」です。
+          </p>
+
+          <h4 class="appbox-help-subheading">JSON復元</h4>
+
+          <ul>
+            <li>復元すると、現在の画面の内容は置き換えられます。</li>
+            <li>復元前の状態は、操作履歴が残っていれば「元に戻す」で戻せます。</li>
+            <li>本ツールが出力したJSONファイルを使用してください。出所不明のファイルは読み込まないでください。</li>
+            <li>復元後は、人物・関係・図形の件数を確認してください。</li>
+            <li>保存データ形式v7より前のファイルには、図形・注釈が含まれない場合があります。</li>
+          </ul>
+
+          <h4 class="appbox-help-subheading">自動保存</h4>
+
+          <p>
+            自動保存は既定でOFFです。有効にすると、変更のおよそ5秒後に
+            作業中のデータをブラウザの保存領域へ保存します。
+            保存対象には氏名、住所、生年月日、親族関係、相続放棄状況、
+            共有持分、旧JSONに含まれる備考、全体メモ、図形・注釈が含まれます。
+          </p>
+
+          <div class="help-callout help-callout-warning">
+            <strong>共用端末では自動保存を使わないでください</strong>
+            <p>
+              自動保存データは、ブラウザを閉じても端末に残る可能性があります。
+            </p>
+            <p>
+              自動保存を使った場合は、作業終了時に次を実施してください。
+              1. 必要なデータをJSONファイルへ保存する。
+              2. 「自動保存データを削除」を実行する。
+              3. 自動保存をOFFにする。
+              4. 保存したJSONファイルを所定の保管場所へ移す。
+            </p>
+            <p>
+              ブラウザの保存容量を超えると自動保存に失敗します。失敗した場合は
+              自動保存をOFFにし、エラーを表示したうえでJSONによる手動保存を案内します。
+            </p>
+          </div>
+        </section>
+
+        <section id="output" aria-labelledby="output-title">
+          <h3 class="appbox-help-subheading" id="output-title">出力と印刷</h3>
+
+          <h4>SVG出力</h4>
+
+          <p>
+            人物、関係線、図形・注釈をSVGファイルとして保存します。
+            選択枠、サイズ変更ハンドル、矢印端点、作成中のプレビューなどの
+            一時表示は出力しません。
+          </p>
+
+          <p>
+            出力時には、script要素、foreignObject、iframe、object、embed、
+            audio、video要素、onで始まるイベント属性、外部への参照を取り除きます。
+            同一SVG内のID参照とdata:image形式の画像参照だけを残します。
+          </p>
+
+          <h4 class="appbox-help-subheading">印刷</h4>
+
+          <div class="help-table-wrap">
+            <table class="help-table">
+              <thead>
+                <tr>
+                  <th scope="col">設定</th>
+                  <th scope="col">選べる内容</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">用紙</th>
+                  <td>A4横、A4縦、A3横、A3縦</td>
+                </tr>
+                <tr>
+                  <th scope="row">印刷対象</th>
+                  <td>図全体、選択人物、現在の表示範囲</td>
+                </tr>
+                <tr>
+                  <th scope="row">その他</th>
+                  <td>余白、印刷倍率、凡例の表示、メモ欄の表示、図全体の自動フィット</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            印刷時は編集メニュー、ツールバー、右クリックメニューを隠し、
+            タイトル、対象者、作成日、図、凡例、メモ欄を出力します。
+            背景色を印刷するには、ブラウザの印刷設定で「背景のグラフィック」を
+            有効にする必要がある場合があります。
+          </p>
+        </section>
+
+        <section id="operations" aria-labelledby="operations-title">
+          <h3 class="appbox-help-subheading" id="operations-title">ショートカット</h3>
+
+          <div class="help-table-wrap">
+            <table class="help-table help-shortcut-table">
+              <thead>
+                <tr>
+                  <th scope="col">操作</th>
+                  <th scope="col">ショートカット</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>元に戻す</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+                </tr>
+                <tr>
+                  <td>やり直し</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>Y</kbd> ／ <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td>
+                </tr>
+                <tr>
+                  <td>複数選択</td>
+                  <td><kbd>Ctrl</kbd> または <kbd>Shift</kbd> + クリック</td>
+                </tr>
+                <tr>
+                  <td>図形をコピー</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>C</kbd></td>
+                </tr>
+                <tr>
+                  <td>図形を貼り付け</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>V</kbd></td>
+                </tr>
+                <tr>
+                  <td>図形を複製</td>
+                  <td><kbd>Ctrl</kbd> + <kbd>D</kbd></td>
+                </tr>
+                <tr>
+                  <td>図形を削除</td>
+                  <td><kbd>Delete</kbd> ／ <kbd>Backspace</kbd></td>
+                </tr>
+                <tr>
+                  <td>1段前面へ移動</td>
+                  <td><kbd>]</kbd></td>
+                </tr>
+                <tr>
+                  <td>1段背面へ移動</td>
+                  <td><kbd>[</kbd></td>
+                </tr>
+                <tr>
+                  <td>関係作成やメニューを閉じる</td>
+                  <td><kbd>Esc</kbd></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            操作履歴は最大50件です。ブラウザのメモリ内だけに保持され、
+            ページを閉じると失われます。
+            入力欄を編集している間は、ブラウザ標準の文字入力用の取り消しが優先されます。
+          </p>
+        </section>
+        </section>
+
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              法定相続分は自動で計算されますか？
+            </summary>
+            <p class="appbox-help-faq-answer">
+              計算されません。本ツールは関係を図として整理するためのもので、
+              法定相続人、相続順位、法定相続分を確定する機能はありません。
+              入力した業務情報も、法的・行政的な確定を意味するものではありません。
+            </p>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              図が画面に見当たりません。
+            </summary>
+            <p class="appbox-help-faq-answer">
+              人物や図形はマイナス座標へも移動できるため、表示範囲の外に出ている
+              可能性があります。「全体表示」「選択へ移動」または
+              「図を原点付近へ移動」を使用してください。
+            </p>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              全体自動整列の結果が思ったとおりになりません。
+            </summary>
+            <p class="appbox-help-faq-answer">
+              複雑な再婚、養子縁組、複数のfamilyがある場合は、規則どおりの配置が
+              業務上の見え方と一致しないことがあります。整列後に手動で調整してください。
+              図形・注釈の追従は整列前の最寄り人物から推定するため、
+              意図した人物に付いてこないことがあります。
+            </p>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              自動保存を使ってもよいですか？
+            </summary>
+            <p class="appbox-help-faq-answer">
+              共用端末では使用しないでください。自動保存データはブラウザを閉じても
+              端末に残る可能性があります。使用した場合は、作業終了時にJSONへ保存し、
+              自動保存データを削除して自動保存をOFFにしてください。
+            </p>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              自動保存に失敗しました。
+            </summary>
+            <p class="appbox-help-faq-answer">
+              ブラウザの保存容量を超えた可能性があります。自動保存は自動的にOFFになります。
+              「データを保存」からJSONファイルとして保存し、
+              ブラウザの保存容量と端末の利用状況を確認してください。
+            </p>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>
+              SVGを他のソフトで開くと見た目が変わります。
+            </summary>
+            <p class="appbox-help-faq-answer">
+              SVG内の文字表示は閲覧環境のフォントに依存し、矢印の先端も
+              閲覧ソフトによって表示差が生じます。配布前に、実際に使うソフトで
+              表示を確認してください。
+            </p>
+          </details>
+        </section>
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+          <section id="cautions" aria-labelledby="cautions-title">
+            <h3 class="appbox-help-subheading" id="cautions-title">利用上の注意</h3>
+
+          <ul>
+            <li>法定相続人、法定相続分、代襲相続、数次相続を自動で判定する機能はありません。</li>
+            <li>戸籍情報との照合、相続放棄の効力の確認は行いません。</li>
+            <li>関係チェックの結果だけで法的な判断を確定しないでください。</li>
+            <li>印刷物の縮尺や法的様式への適合を保証しません。</li>
+            <li>SVG内の文字表示は、閲覧環境のフォントに依存します。矢印の先端は閲覧ソフトによって表示差が出ることがあります。</li>
+            <li>全体・家族・選択人物の整列は、複雑な再婚、養子縁組、複数familyでは意図どおりにならない場合があります。整列後の手動調整が必要になることがあります。</li>
+            <li>整列時の図形・注釈追従は、整列前の最寄り人物などから推定するため、意図した人物に追従しないことがあります。</li>
+            <li>図形・注釈と人物やfamilyを明示的に関連付ける機能はありません。</li>
+            <li>矩形選択は、選択矩形と一部でも交差する人物を対象とします。</li>
+            <li>人物と図形・注釈は、マイナス座標へも移動できます。図が表示範囲の外にある場合は「全体表示」「選択へ移動」「図を原点付近へ移動」を使用してください。</li>
+            <li>自動保存の容量は、ブラウザの保存上限に依存します。</li>
+            <li>作図面での人物・関係線・図形の直接操作には、マウスまたはタッチ操作が必要な機能があります。キーボードだけでは全ての作図操作を完結できません。</li>
+            <li>タッチとペンの複数入力では、操作が競合する可能性があります。</li>
+          </ul>
+        </section>
+
+          <section id="privacy" aria-labelledby="privacy-title">
+            <h3 class="appbox-help-subheading" id="privacy-title">セキュリティとプライバシー</h3>
+
+          <div class="help-callout help-callout-security">
+            <strong>データはブラウザ内で処理します</strong>
+            <p>
+              サーバーへのアップロード、外部APIへの送信、外部クラウドへの保存、
+              外部CDNやWebフォントの利用はありません。
+              図形データをOSのクリップボードへ送信することもありません。
+            </p>
+          </div>
+
+          <p>
+            ただし、次の場所にはデータが残る可能性があります。
+          </p>
+
+          <ul>
+            <li>JSONファイルの保存先</li>
+            <li>SVGファイルの保存先</li>
+            <li>ブラウザのダウンロード履歴</li>
+            <li>自動保存の保存領域</li>
+            <li>ブラウザまたはOSの一時領域</li>
+            <li>印刷データおよびプリンターの履歴</li>
+            <li>PDFとして保存した場合の保存先</li>
+          </ul>
+
+          <div class="help-callout help-callout-warning">
+            <strong>JSONとSVGには個人情報が平文で含まれます</strong>
+            <p>
+              氏名、住所、生年月日、親族関係、相続放棄状況、共有持分などが
+              そのまま含まれます。JSONを保存するときは旧JSONの備考も保持されます。
+              保存先、共有先、メール添付、外部媒体への保存に注意してください。
+              SVGを庁外へ提供する場合は、内容を確認してください。
+            </p>
+            <p>
+              不要になったJSON、SVG、PDF、印刷物は、所属組織の情報セキュリティポリシー、
+              個人情報保護規程、文書管理規程に従って管理・廃棄してください。
+            </p>
+          </div>
+        </section>
+        </section>
+
+
+        <div class="help-footer-actions">
+          <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+        </div>
+        </div>
+        </div>
+
+    <footer class="appbox-footer">
+      お役立ちアプリBOX / 相続関係図（ジェノグラム）作成ツール Version 1.3.1
+    </footer>
+  </main>
+  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+</body>
+</html>

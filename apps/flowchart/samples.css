@@ -1,0 +1,205 @@
+@charset "UTF-8";
+
+/* =========================================================
+   サンプル図の操作グループ
+   ========================================================= */
+
+.oyakudachi-samples {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+
+  margin-top: 4px;
+  padding: 7px 9px;
+
+  border: 1px solid #d8d0e6;
+  border-top: 3px solid var(--appbox-primary);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+
+  box-shadow:
+    0 1px 4px rgba(60, 38, 99, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+  backdrop-filter: blur(5px);
+}
+
+/* グループ見出し */
+
+.oyakudachi-samples__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+
+  margin-right: 1px;
+  color: #5f5271;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.oyakudachi-samples__label svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: #7251a8;
+}
+
+/* ボタンをまとめる内側の領域 */
+
+.oyakudachi-samples__buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* =========================================================
+   サンプルボタン
+   ========================================================= */
+
+.oyakudachi-sample-btn {
+  appearance: none;
+
+  min-height: 32px;
+  padding: 7px 12px;
+
+  border: 1px solid #d8d0e6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #514960;
+
+  font:
+    800 12px/1.3
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    "Yu Gothic UI",
+    "Meiryo",
+    sans-serif;
+
+  cursor: pointer;
+
+  box-shadow: 0 1px 3px rgba(60, 38, 99, 0.07);
+
+  transition:
+    transform 0.08s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/*
+ * 丸いタグではなく角丸ボタンにし、
+ * 実行できる操作であることを明確にします。
+ */
+
+.oyakudachi-sample-btn--flow {
+  border-color: #c9dbf5;
+  background: #eef5ff;
+  color: #42678f;
+}
+
+.oyakudachi-sample-btn--system {
+  border-color: #cce7d2;
+  background: #eef9f1;
+  color: #407a51;
+}
+
+.oyakudachi-sample-btn--procedure {
+  border-color: #f0d0ac;
+  background: #fff2e8;
+  color: #8a5a25;
+}
+
+/* キーボード操作 */
+
+.oyakudachi-sample-btn:focus-visible {
+  outline: 3px solid #6f5aa8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(111, 90, 168, 0.18);
+}
+
+/* 押下 */
+
+.oyakudachi-sample-btn:active {
+  transform: none;
+}
+
+/* 読込み中 */
+
+.oyakudachi-sample-btn:disabled {
+  cursor: wait;
+  opacity: 0.58;
+  box-shadow: none;
+  transform: none;
+}
+
+/* マウス操作可能な環境だけホバーを適用 */
+
+@media (hover: hover) and (pointer: fine) {
+  .oyakudachi-sample-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(60, 38, 99, 0.13);
+  }
+}
+
+
+/* =========================================================
+   視覚効果を減らす設定
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .oyakudachi-sample-btn {
+    transition: none;
+  }
+
+  .oyakudachi-sample-btn:hover {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   サンプルをアプリ情報の右側に置きます。
+   ========================================================= */
+
+.flow-header {
+  height: auto;
+}
+
+.flow-header > .oyakudachi-samples {
+  grid-column: 2;
+  grid-row: 1;
+  width: auto;
+  max-width: 100%;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.flow-header > .oyakudachi-samples
+.oyakudachi-samples__buttons {
+  display: flex;
+  flex: 0 1 auto;
+}
+
+@media (max-width: 900px) {
+  .flow-header > .oyakudachi-samples {
+    display: none;
+  }
+}
+
+/* =========================================================
+   印刷
+   ========================================================= */
+
+@media print {
+  .oyakudachi-samples {
+    display: none !important;
+  }
+}
+

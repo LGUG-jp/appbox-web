@@ -1,0 +1,145 @@
+body { margin: 0; color: var(--appbox-text); background: var(--appbox-page-bg); min-height: 100vh; }
+h2 { margin: 0; font-size: 21px; }
+input, select { min-width: 0; }
+input[aria-invalid="true"] { border: 2px solid var(--appbox-danger); }
+label { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 700; }
+.reference-option-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: normal; margin: 0; cursor: pointer; white-space: nowrap; user-select: none; }
+.reference-option-label input[type="checkbox"] { width: auto; min-height: 0; margin: 0; cursor: pointer; }
+/* タブパネルには共通余白を付け、早見表の内部余白は各領域で管理します。 */
+.tool-panel { padding: var(--appbox-space-4); overflow: visible; background: var(--appbox-surface); }
+.appbox-tab[aria-selected="false"] { background: var(--appbox-surface); }
+.appbox-tab[aria-selected="false"]:hover { background: var(--appbox-secondary-hover); }
+/* 早見表2カラムレイアウト */
+.reference-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
+.reference-panel { width: 100%; margin: 0; padding: 0; overflow: visible; }
+.reference-side-panel { display: flex; flex-direction: column; gap: 16px; }
+.reference-side-card { padding: 18px 20px; border-radius: var(--appbox-component-radius, 8px); }
+.side-card-title { font-size: 15px; font-weight: 700; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--appbox-border); color: var(--appbox-text); }
+.side-card-section { margin-bottom: 14px; }
+.side-card-section:last-child { margin-bottom: 0; }
+.side-print-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 15px; font-weight: 700; }
+.side-help-text { margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--appbox-muted); }
+.side-info-card { background: var(--appbox-surface); border: 1px solid var(--appbox-border); }
+.side-info-content { font-size: 13px; line-height: 1.7; color: var(--appbox-text); }
+.side-info-content p { margin: 0 0 8px; }
+.side-info-content p:last-child { margin-bottom: 0; }
+.side-info-content .reference-range { padding: 0; font-size: 13px; line-height: 1.7; }
+.side-disclaimer { font-size: 11.5px; color: var(--appbox-muted); line-height: 1.6; }
+@media (max-width: 1024px) {
+  .reference-layout { grid-template-columns: 1fr; }
+  .reference-panel { width: min(100%, 50rem); margin-inline: auto; }
+}
+.reference-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px 0; }
+.reference-heading > div { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+.reference-today { font-size: 14px; margin: 0; }
+.reference-note { margin: 6px 20px 10px; font-size: 14px; line-height: 1.6; }
+.reference-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 0 20px 12px; }
+.reference-error { margin: 12px 24px; }
+.reference-scroll { max-height: none; min-height: 0; overflow: visible; border-top: 1px solid var(--appbox-border); border-bottom: 1px solid var(--appbox-border); }
+.reference-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 14.5rem)); justify-content: center; gap: 16px; align-items: start; padding: 6px 12px 10px; }
+.reference-table { width: 100%; max-width: none; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 14px; font-variant-numeric: tabular-nums; border: 1px solid var(--appbox-border); border-top: 0; border-radius: 0 0 8px 8px; }
+.reference-table caption { padding: 4px 8px; border: 1px solid var(--appbox-border); border-radius: 8px 8px 0 0; background: var(--appbox-surface); font-size: 13px; font-weight: 700; text-align: left; color: var(--appbox-primary); line-height: 1.3; }
+.reference-table th, .reference-table td { padding: 1px 4px; text-align: center; border-bottom: 1px solid var(--appbox-border); line-height: 1.22; white-space: nowrap; }
+.reference-table thead th { position: sticky; top: 0; z-index: 1; background: var(--appbox-surface-soft); color: var(--appbox-primary-hover); font-size: 12px; }
+.reference-table th:first-child { width: 4.25rem; }
+.reference-table th:last-child { width: 3.35rem; }
+.reference-table tbody tr:nth-child(even) { background: var(--appbox-surface-soft); }
+.reference-table tbody tr:hover { background: var(--appbox-primary-soft); }
+.reference-table .is-decade > * { border-top: 2px solid var(--appbox-border); }
+.reference-age { color: #1f5f99; font-weight: 800; }
+.era-label { display: inline-block; white-space: nowrap; }
+.reference-table .era-combined-cell { padding: 1px 2px; white-space: normal; }
+.reference-table .era-combined { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 3px; font-size: 12px; line-height: 1.25; }
+.reference-table .era-part { white-space: nowrap; }
+.reference-table .era-sep { color: var(--appbox-muted); font-size: 11px; }
+.reference-range { padding: 8px 20px 10px; margin: 0; font-size: 14px; line-height: 1.6; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.workspace form { min-width: 0; }
+.date-field { border: 0; padding: 0; margin: 0 0 28px; min-width: 0; }
+.date-field legend { padding: 0; margin-bottom: 12px; font-weight: 700; }
+.date-inputs { display: grid; grid-template-columns: 1.3fr 1.1fr .8fr .8fr; gap: 10px; }
+.date-inputs > div { min-width: 0; }
+.date-inputs--western { grid-template-columns: 1.5fr 1fr 1fr; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.hint { font-size: 12px; line-height: 1.8; margin: 14px 0; }
+.error { color: var(--appbox-danger); font-weight: 700; line-height: 1.7; margin: 15px 0 0; }
+.error:empty { display: none; }
+.result-card { padding-top: 16px; min-height: 230px; overflow-wrap: anywhere; }
+.empty-result { font-size: 14px; line-height: 1.8; margin: 0; }
+.notice { background: var(--appbox-warn-bg); border-left: 4px solid var(--appbox-warn-accent); padding: 14px 18px; margin: 0 28px 24px; font-size: 13px; line-height: 1.9; }
+noscript .notice { margin: 0 0 20px; }
+.scope-note { font-size: 12px; line-height: 1.8; margin-top: 20px; }
+.scope-note p { margin: 5px 0; }
+.copy-status { font-size: 13px; font-weight: 700; min-height: 20px; }
+.copy-manual { width: 100%; min-height: 180px; margin: 12px 0; padding: 10px; border: 1px solid var(--appbox-border); border-radius: 8px; color: var(--appbox-text); background: var(--appbox-surface); }
+[hidden] { display: none !important; }
+/* 年齢計算：入力手順と結果を独立したカードにする。 */
+.age-input-card, .age-result-card { min-width: 0; margin: 0; padding: 24px; }
+.date-field legend, .age-result-card h2 { font-size: 20px; line-height: 1.5; }
+.step-number { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; margin-right: 8px; border-radius: 50%; color: var(--appbox-on-primary); background: var(--appbox-primary); font-size: 18px; font-weight: 700; vertical-align: middle; }
+.date-options { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 12px; }
+.date-options label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; font-size: 16px; cursor: pointer; }
+.date-options input { width: 20px; height: 20px; min-height: 0; margin: 0; accent-color: var(--appbox-primary); }
+.date-manual { margin-top: 12px; }
+.date-manual summary { padding: 10px 0; color: var(--appbox-primary-hover); cursor: pointer; font-size: 14px; }
+.date-manual .date-field { margin: 12px 0 0; }
+#reference-date { max-width: 100%; min-height: 48px; font-size: 18px; }
+#reference-date[readonly] { background: var(--appbox-surface-soft); }
+.age-input-card .appbox-input, .age-input-card .appbox-select { min-height: 48px; font-size: 18px; }
+.form-actions .appbox-button--primary { flex: 1; min-height: 48px; }
+.result-date { margin: 0 0 12px; font-size: 13px; line-height: 1.7; color: var(--appbox-muted); }
+.age-highlight { padding: 18px; text-align: center; border-radius: 12px; background: var(--appbox-primary-soft); }
+.age-highlight h3 { margin: 0; font-size: 15px; color: var(--appbox-primary-hover); }
+.result-main { margin: 2px 0 0; font-size: clamp(48px, 5vw, 64px); font-weight: 800; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.age-unit { margin-left: 6px; font-size: 26px; }
+.age-result-list { margin: 16px 0; }
+.age-result-list > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr); gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid var(--appbox-border); }
+.age-result-list dt { font-size: 13px; line-height: 1.7; color: var(--appbox-muted); }
+.age-result-list dd { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.7; white-space: pre-line; }
+.copy-result { width: 100%; }
+.age-caution { margin: 16px 0; font-size: 13px; line-height: 1.8; }
+.age-reference-link { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 16px 20px; border: 1px solid var(--appbox-border); border-radius: 12px; background: var(--appbox-surface); }
+.age-reference-link p { margin: 0; font-weight: 700; }
+@media (max-width: 1000px) and (min-width: 761px) {
+  .age-input-card, .age-result-card { padding: 18px; }
+  .date-inputs:not(.date-inputs--western) { grid-template-columns: 1fr 1fr; }
+  .age-result-list > div { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: 1fr; gap: 16px; }
+  .notice { margin: 0 20px 20px; }
+  .result-card { min-height: 150px; }
+  .age-result-list > div { grid-template-columns: 1fr; gap: 4px; }
+  .reference-heading { padding: 16px 16px 0; align-items: flex-start; flex-wrap: wrap; }
+  .reference-heading > div { gap: 4px; flex-direction: column; }
+  .reference-note { margin: 6px 16px 10px; }
+  .reference-toolbar { padding: 0 16px; flex-wrap: wrap; gap: 8px; }
+  .reference-error { margin-left: 16px; margin-right: 16px; }
+  .reference-grid { grid-template-columns: repeat(2, minmax(0, 14.5rem)); justify-content: center; padding-right: 6px; padding-left: 6px; }
+  .reference-range { padding: 12px 16px; }
+}
+@media (max-width: 540px) {
+  .reference-grid { grid-template-columns: minmax(0, 14.5rem); justify-content: center; }
+}
+@media (max-width: 400px) {
+  .age-input-card, .age-result-card { padding: 16px; }
+  .date-inputs:not(.date-inputs--western) { grid-template-columns: 1fr 1fr; }
+  .appbox-tab { padding: 10px 12px; font-size: 14px; }
+  .reference-table { font-size: 14px; }
+  .reference-table th:first-child { width: 4.4rem; }
+  .reference-table th:last-child { width: 3.35rem; }
+}
+@media print {
+  .form-actions, .copy-status, .result-card button, .scope-note, .age-reference-link { display: none; }
+  body { background: var(--appbox-surface); }
+  .tool-panel { box-shadow: none; overflow: visible; }
+  .workspace { grid-template-columns: 1fr; }
+  .reference-scroll { max-height: none; min-height: 0; overflow: visible; }
+  .reference-grid { display: block; padding: 0; }
+  .reference-table { max-width: 28rem; font-size: 11pt; margin-bottom: 12pt; }
+  .reference-table thead { display: table-header-group; }
+  .reference-table thead th { position: static; }
+  .reference-table tr { break-inside: avoid; }
+  .reference-table th, .reference-table td { padding: 2px 6px; }
+  .reference-heading, .reference-note, .reference-toolbar { break-inside: avoid; }
+}

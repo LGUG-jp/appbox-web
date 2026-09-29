@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja" data-appbox-theme="red">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    http-equiv="Cache-Control"
+    content="no-store, no-cache, must-revalidate"
+  >
+
+  <meta
+    http-equiv="Pragma"
+    content="no-cache"
+  >
+
+  <meta
+    http-equiv="Expires"
+    content="0"
+  >
+
+  <meta
+    name="color-scheme"
+    content="light"
+  >
+
+  <title>
+    PDFかんたん編集 | お役立ちアプリBOX
+  </title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+
+  <!-- 共通アセット。app.css より前に読み込むこと。 -->
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+
+  <link
+    rel="stylesheet"
+    href="./app.css?v=1.3.2"
+  >
+</head>
+
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <button
+          type="button"
+          class="appbox-collapse-toggle"
+          aria-expanded="true"
+          aria-controls="pdfBrand pdfNotice"
+          data-appbox-collapse="pdfBrand pdfNotice"
+          data-appbox-collapse-label-expanded="アプリ名と注意を閉じてプレビューを広くする"
+          data-appbox-collapse-label-collapsed="アプリ名と注意を表示する"
+          data-appbox-collapse-text-expanded="説明を閉じる"
+          data-appbox-collapse-text-collapsed="説明を表示"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+            <path d="m6 15 6-6 6 6"></path>
+          </svg>
+          <span data-appbox-collapse-text>説明を閉じる</span>
+        </button>
+        <a
+          class="appbox-help-button"
+          href="./help.html"
+          target="_blank"
+          rel="noopener"
+          aria-label="PDFかんたん編集のヘルプを新しいタブで開く"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+            <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+        <a class="appbox-back-button" href="../../">&lt; ポータルに戻る</a>
+        <input
+          id="pdfInput"
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          hidden
+        >
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="pdf-app-main">
+    <div class="appbox-app-intro appbox-app-intro--edge" id="pdfBrand">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+            <path d="M6 2h8l4 4v16H6z"></path>
+            <path d="M14 2v5h5"></path>
+            <path d="M8.5 12h7M8.5 16h5"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">PDFかんたん編集</h1>
+      </div>
+      <p class="appbox-app-desc">PDFの結合・ページ回転・並べ替え・テキスト・四角・丸・矢印をブラウザ内で編集できます。</p>
+    </div>
+
+    <div class="appbox-shell appbox-shell--wide pdfeditor-shell">
+    <section
+      id="emptyState"
+      class="empty-state"
+      aria-labelledby="dropTitle"
+    >
+      <div class="empty-card">
+        <aside
+          class="redaction-notice"
+          id="pdfNotice"
+          role="note"
+          aria-label="マスキングに関する重要な注意"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+
+          <div>
+            <strong>マスキング用途で使用しないでください（データは見えます）</strong>
+
+            <span>
+              四角・丸やテキストを重ねても、元の文字や画像はPDF内に残ります。
+              個人情報・機密情報の削除や非表示には使用しないでください。
+            </span>
+          </div>
+        </aside>
+      <div
+        id="dropZone"
+        class="drop-zone"
+        tabindex="0"
+        role="button"
+        aria-label="PDFファイルを選択またはドロップ"
+        aria-describedby="dropDescription fileLimits"
+      >
+        <div
+          class="drop-icon"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+          >
+            <path d="M12 16V4"></path>
+            <path d="m12 4-4.5 4.5"></path>
+            <path d="m12 4 4.5 4.5"></path>
+            <path d="M5 15v4h14v-4"></path>
+          </svg>
+        </div>
+
+        <h2 id="dropTitle">
+          PDFをここにドロップ
+        </h2>
+
+        <p id="dropDescription">
+          またはクリックしてPDFを選択してください。
+          複数選択すると、その順番で結合します。
+        </p>
+
+        <span
+          class="drop-button appbox-button appbox-button--primary"
+          aria-hidden="true"
+        >
+          PDFを選択
+        </span>
+
+        <p
+          id="fileLimits"
+          class="file-limits"
+        >
+          1ファイル100MB以下・合計200MB以下・最大300ページ
+        </p>
+      </div>
+
+      <div
+        class="feature-row"
+        aria-label="主な機能"
+      >
+        <span>PDF結合</span>
+        <span>ページ回転</span>
+        <span>並べ替え</span>
+        <span>テキスト</span>
+        <span>四角・丸</span>
+        <span>矢印</span>
+      </div>
+      </div>
+
+
+    </section>
+
+    <section
+      id="editor"
+      class="editor hidden"
+      data-mode="overview"
+      aria-label="PDF編集画面"
+      aria-busy="false"
+    >
+      <div class="page-toolbar" role="toolbar" aria-label="PDF編集操作">
+        <button id="backToPagesBtn" class="tool-action edit-only" type="button">← 一覧へ戻る</button>
+        <div class="toolbar-group overview-only" role="group" aria-label="PDF操作">
+          <button id="appendPdfBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">+</span>
+            <span>PDF追加</span>
+          </button>
+          <button id="closePdfBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">×</span>
+            <span>閉じる</span>
+          </button>
+        </div>
+        <div class="toolbar-group overview-only" role="group" aria-label="選択ページの操作">
+          <button id="extractBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">⇩</span>
+            <span>抽出保存</span>
+          </button>
+          <button id="deletePageBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">⌫</span>
+            <span>削除</span>
+          </button>
+          <button id="movePageUpBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">←</span>
+            <span>前へ</span>
+          </button>
+          <button id="movePageDownBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">→</span>
+            <span>後ろへ</span>
+          </button>
+          <button id="rotateLeftBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">↶</span>
+            <span>左90度</span>
+          </button>
+          <button id="rotateRightBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">↷</span>
+            <span>右90度</span>
+          </button>
+        </div>
+        <div
+          id="annotationToolsMenu"
+          class="toolbar-group tools edit-only"
+          role="group"
+          aria-label="図形を追加"
+        >
+          <button class="mode-btn" data-tool="select" type="button" aria-pressed="false" title="選択">
+            <span class="tool-icon" aria-hidden="true">↖</span>
+            <span>選択</span>
+          </button>
+          <button class="mode-btn" data-tool="text" type="button" aria-pressed="false" title="テキスト">
+            <span class="tool-icon" aria-hidden="true">A</span>
+            <span>テキスト</span>
+          </button>
+          <button class="mode-btn" data-tool="rect" type="button" aria-pressed="false" title="四角">
+            <span class="tool-icon" aria-hidden="true">□</span>
+            <span>四角</span>
+          </button>
+          <button class="mode-btn" data-tool="ellipse" type="button" aria-pressed="false" title="丸">
+            <span class="tool-icon" aria-hidden="true">○</span>
+            <span>丸</span>
+          </button>
+          <button class="mode-btn" data-tool="arrow" type="button" aria-pressed="false" title="矢印">
+            <span class="tool-icon" aria-hidden="true">↗</span>
+            <span>矢印</span>
+          </button>
+          <button class="mode-btn" data-tool="line" type="button" aria-pressed="false" title="線">
+            <span class="tool-icon" aria-hidden="true">／</span>
+            <span>線</span>
+          </button>
+          <button
+            class="mode-btn"
+            data-tool="highlight"
+            type="button"
+            aria-pressed="false"
+            title="マーカー"
+          >
+            <span class="tool-icon" aria-hidden="true">▰</span>
+            <span>マーカー</span>
+          </button>
+        </div>
+        <div class="toolbar-group history-actions" role="group" aria-label="履歴操作">
+          <button id="undoBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">↶</span>
+            <span>元に戻す</span>
+          </button>
+          <button id="redoBtn" class="tool-action" type="button" disabled>
+            <span class="tool-icon" aria-hidden="true">↷</span>
+            <span>やり直す</span>
+          </button>
+        </div>
+        <button id="saveBtn" class="tool-action primary" type="button" disabled>
+          <span class="tool-icon" aria-hidden="true">▣</span>
+          <span>保存</span>
+        </button>
+      </div>
+      <div class="overview-status overview-only">
+        <strong id="documentName" class="doc-name"></strong>
+        <span id="pageCount">0ページ</span>
+        <span id="selectionCount" role="status">0ページを選択</span>
+        <button id="selectAllPagesBtn" class="mini-btn" type="button">全選択</button>
+        <span class="overview-hint">クリックで選択・ドラッグで並べ替え</span>
+      </div>
+      <div class="workspace-body">
+        <aside class="pages-panel" aria-label="ページ一覧">
+          <div
+            id="thumbList"
+            class="thumb-list"
+            role="list"
+            aria-label="ページ一覧。Ctrlで複数選択、Shiftで範囲選択"
+          ></div>
+        </aside>
+        <div class="workspace edit-only">
+          <div id="viewerArea" class="viewer-area">
+            <div id="pageHost" class="page-host">
+              <canvas id="pdfCanvas" aria-label="選択中のPDFページ"></canvas>
+              <div
+                id="pdfTextLayer"
+                class="pdf-text-layer"
+                aria-label="マーカーで選択するPDFの文字"
+              ></div>
+              <div id="annotationLayer" class="annotation-layer" aria-label="追加した図形"></div>
+            </div>
+          </div>
+          <section
+            id="formatPanel"
+            class="floating-properties hidden"
+            data-corner="top-right"
+            aria-label="図形の設定"
+          >
+            <div class="floating-head">
+              <button
+                id="formatDragHandle"
+                class="drag-handle"
+                type="button"
+                title="ドラッグで移動。矢印キーでも位置を変更できます"
+                aria-label="図形の設定を移動"
+              >
+                ⠿
+              </button>
+              <strong id="formatTitle">図形の設定</strong>
+              <label class="dock-label">
+                <span class="appbox-sr-only">設定の位置</span>
+                <select id="formatCorner" aria-label="設定の位置">
+                  <option value="top-right">右上</option>
+                  <option value="top-left">左上</option>
+                  <option value="bottom-right">右下</option>
+                  <option value="bottom-left">左下</option>
+                </select>
+              </label>
+            </div>
+            <div class="property-controls">
+              <label class="compact-field" title="図形の色">
+                <span>色</span>
+
+                <input id="colorInput" type="color" value="#000000" aria-label="図形の色" />
+              </label>
+
+              <label id="strokeField" class="compact-field" title="線の太さ">
+                <span>線</span>
+
+                <select id="strokeInput" aria-label="線の太さ">
+                  <option value="1">細</option>
+                  <option value="2" selected>標準</option>
+                  <option value="4">太</option>
+                  <option value="6">極太</option>
+                </select>
+              </label>
+
+              <div
+                id="fontFamilyField"
+                class="compact-field font-picker-field"
+                title="テキストのフォント"
+              >
+                <span>フォント</span>
+
+                <div id="fontFamilyPicker" class="font-picker">
+                  <button
+                    id="fontFamilyButton"
+                    class="font-picker-button"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-controls="fontFamilyMenu"
+                  >
+                    游ゴシック UI
+                  </button>
+                  <div
+                    id="fontFamilyMenu"
+                    class="font-picker-menu"
+                    role="listbox"
+                    aria-label="テキストのフォント"
+                    tabindex="-1"
+                    hidden
+                  >
+                    <button
+                      class="font-option font-biz-udgothic"
+                      type="button"
+                      role="option"
+                      data-font-family="biz-udgothic"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      BIZ UDゴシック
+                    </button>
+
+                    <button
+                      class="font-option font-biz-udpgothic"
+                      type="button"
+                      role="option"
+                      data-font-family="biz-udpgothic"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      BIZ UDPゴシック
+                    </button>
+
+                    <button
+                      class="font-option font-yu-gothic"
+                      type="button"
+                      role="option"
+                      data-font-family="yu-gothic"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      游ゴシック
+                    </button>
+
+                    <button
+                      class="font-option font-yu-gothic-ui"
+                      type="button"
+                      role="option"
+                      data-font-family="yu-gothic-ui"
+                      aria-selected="true"
+                      tabindex="-1"
+                    >
+                      游ゴシック UI
+                    </button>
+
+                    <button
+                      class="font-option font-meiryo"
+                      type="button"
+                      role="option"
+                      data-font-family="meiryo"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      メイリオ
+                    </button>
+
+                    <button
+                      class="font-option font-ms-gothic"
+                      type="button"
+                      role="option"
+                      data-font-family="ms-gothic"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      MS ゴシック
+                    </button>
+
+                    <button
+                      class="font-option font-ms-pgothic"
+                      type="button"
+                      role="option"
+                      data-font-family="ms-pgothic"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      MS Pゴシック
+                    </button>
+
+                    <button
+                      class="font-option font-ms-mincho"
+                      type="button"
+                      role="option"
+                      data-font-family="ms-mincho"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      MS 明朝
+                    </button>
+
+                    <button
+                      class="font-option font-ms-pmincho"
+                      type="button"
+                      role="option"
+                      data-font-family="ms-pmincho"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      MS P明朝
+                    </button>
+
+                    <button
+                      class="font-option font-segoe-ui"
+                      type="button"
+                      role="option"
+                      data-font-family="segoe-ui"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      Segoe UI
+                    </button>
+
+                    <button
+                      class="font-option font-arial"
+                      type="button"
+                      role="option"
+                      data-font-family="arial"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      Arial
+                    </button>
+
+                    <button
+                      class="font-option font-times-new-roman"
+                      type="button"
+                      role="option"
+                      data-font-family="times-new-roman"
+                      aria-selected="false"
+                      tabindex="-1"
+                    >
+                      Times New Roman
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <label id="fontField" class="compact-field" title="テキストの文字サイズ">
+                <span>サイズ</span>
+
+                <select id="fontSizeInput" aria-label="テキストの文字サイズ">
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="10.5">10.5</option>
+                  <option value="12">12</option>
+                  <option value="14" selected>14</option>
+                  <option value="16">16</option>
+                  <option value="18">18</option>
+                  <option value="20">20</option>
+                  <option value="24">24</option>
+                  <option value="32">32</option>
+                  <option value="48">48</option>
+                </select>
+              </label>
+
+              <button
+                id="boldInput"
+                class="compact-format-btn"
+                type="button"
+                title="テキストを太字にする"
+                aria-label="テキストを太字にする"
+                aria-pressed="false"
+              >
+                <strong>B</strong>
+              </button>
+
+              <label id="bgColorField" class="compact-field" title="テキストの背景色">
+                <span>背景</span>
+
+                <input
+                  id="textBgColorInput"
+                  type="color"
+                  value="#ffffff"
+                  aria-label="テキストの背景色"
+                />
+              </label>
+
+              <label id="bgTransparentField" class="compact-check" title="テキストの背景を透明にする">
+                <input id="textBgTransparentInput" type="checkbox" />
+
+                <span>透明</span>
+              </label>
+
+              <label id="outlineField" class="compact-check">
+                <input id="outlineInput" type="checkbox" checked />
+                <span>白縁取り</span>
+              </label>
+              <label id="fillField" class="compact-field">
+                <span>塗り</span>
+                <input id="fillInput" type="color" value="#fdecef" aria-label="図形の塗りつぶし色" />
+              </label>
+              <label id="fillNoneField" class="compact-check">
+                <input id="fillNoneInput" type="checkbox" checked />
+                <span>塗りなし</span>
+              </label>
+              <label id="opacityField" class="compact-field">
+                <span>濃さ</span>
+                <select id="opacityInput" aria-label="マーカーの濃さ">
+                  <option value="0.2">薄い</option>
+                  <option value="0.35" selected>標準</option>
+                  <option value="0.5">濃い</option>
+                </select>
+              </label>
+            </div>
+            <div class="figure-actions">
+              <button id="editTextBtn" class="mini-btn" type="button">文字を編集</button>
+              <button id="copyFiguresBtn" class="mini-btn" type="button">コピー</button>
+              <button id="pasteFiguresBtn" class="mini-btn" type="button">貼り付け</button>
+              <button id="deleteAnnotationBtn" class="mini-btn danger" type="button">削除</button>
+            </div>
+          </section>
+          <div id="dockPreview" class="dock-preview" hidden></div>
+          <div class="viewer-toolbar">
+            <div class="viewer-controls">
+              <button
+                id="prevPageBtn"
+                class="mini-btn"
+                type="button"
+                title="前のページ"
+                aria-label="前のページ"
+                disabled
+              >
+                ‹
+              </button>
+
+              <span id="pageIndicator" aria-live="polite">0 / 0</span>
+
+              <button
+                id="nextPageBtn"
+                class="mini-btn"
+                type="button"
+                title="次のページ"
+                aria-label="次のページ"
+                disabled
+              >
+                ›
+              </button>
+
+              <!--
+                  縮小・拡大ボタンは<label>の外に置いています。
+                  <label>の中へ入れると、labelが最初のボタンと
+                  関連付けられ、倍率の<select>のラベルが失われます。
+                -->
+              <button
+                id="zoomOutBtn"
+                class="mini-btn"
+                type="button"
+                title="縮小"
+                aria-label="表示を縮小"
+                disabled
+              >
+                －
+              </button>
+
+              <label class="zoom-field">
+                <span>表示</span>
+
+                <select id="zoomSelect" aria-label="PDFの表示倍率">
+                  <option value="fit" selected>画面に合わせる</option>
+                  <option value="fit-width">幅に合わせる</option>
+                  <option value="25">25%</option>
+                  <option value="50">50%</option>
+                  <option value="75">75%</option>
+                  <option value="100">100%</option>
+                  <option value="125">125%</option>
+                  <option value="150">150%</option>
+                  <option value="200">200%</option>
+                  <option value="250">250%</option>
+                  <option value="300">300%</option>
+                </select>
+              </label>
+
+              <button
+                id="zoomInBtn"
+                class="mini-btn"
+                type="button"
+                title="拡大"
+                aria-label="表示を拡大"
+                disabled
+              >
+                ＋
+              </button>
+            </div>
+          </div>
+          <p id="canvasHint" class="canvas-hint" role="status"></p>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span id="statusText" role="status" aria-live="polite">PDFを選択してください。</span>
+      </div>
+      <div id="loadingOverlay" class="loading-overlay hidden" aria-hidden="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <span>処理しています…</span>
+      </div>
+    </section>
+    <footer class="appbox-footer pdfeditor-footer">
+      お役立ちアプリBOX / PDFかんたん編集 Version 1.3.2
+    </footer>
+    </div>
+  </main>
+
+  <div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+  <!-- 共通の折りたたみ処理。app.jsとは独立して動きます。 -->
+  <script src="../../assets/appbox-collapse.js?v=2.1.0"></script>
+
+  <script
+    type="module"
+    src="./app.js?v=1.3.1"
+  ></script>
+</body>
+</html>
+

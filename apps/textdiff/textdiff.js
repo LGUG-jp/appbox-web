@@ -13,6 +13,7 @@
       'input[name="diffMode"]'
     )
   );
+  const modeHelpSummary = $("modeHelpSummary");
   const modeNote = $("modeNote");
 
   const optNormalizeSpace = $("optNormalizeSpace");
@@ -20,6 +21,7 @@
   const optNormalizeBlankLines = $("optNormalizeBlankLines");
   const optShowInvisible = $("optShowInvisible");
   const optSyncScroll = $("optSyncScroll");
+  const syncScrollState = $("syncScrollState");
 
   const compareBtn = $("compareBtn");
   const swapBtn = $("swapBtn");
@@ -44,12 +46,9 @@
 
   const statAdded = $("statAdded");
   const statDeleted = $("statDeleted");
-  const statEqual = $("statEqual");
   const statChanges = $("statChanges");
-  const statSimilarity = $("statSimilarity");
   const unitAdded = $("unitAdded");
   const unitDeleted = $("unitDeleted");
-  const unitEqual = $("unitEqual");
 
   const invisibleLegend = $("invisibleLegend");
   const noDiff = $("noDiff");
@@ -274,9 +273,7 @@
 
     statAdded.textContent = "0";
     statDeleted.textContent = "0";
-    statEqual.textContent = "0";
     statChanges.textContent = "0";
-    statSimilarity.textContent = "100%";
 
     changeGroups = [];
     currentChangeIndex = -1;
@@ -317,19 +314,32 @@
       getSelectedMode();
 
     if (selectedMode === "line-char") {
+      modeHelpSummary.textContent =
+        "行内文字単位とは？";
       modeNote.textContent =
         "「行内文字単位」は、まず行を対応付け、対応した行の内部だけを文字単位で比較します。同じ文字列が複数行にある場合の行をまたいだ差分位置のずれを抑えます。";
       return;
     }
 
     if (selectedMode === "char") {
+      modeHelpSummary.textContent =
+        "全文文字単位とは？";
       modeNote.textContent =
         "「全文文字単位」は、改行を含む文章全体を1つの文字列として比較します。繰り返し文字や同一行がある場合、差分位置が別の行へ移ることがあります。";
       return;
     }
 
+    modeHelpSummary.textContent =
+      "行単位とは？";
     modeNote.textContent =
       "「行単位」は、行全体の追加・削除を確認するための比較です。行内の細かな文字変更は表示しません。";
+  }
+
+  function updateSyncScrollState() {
+    syncScrollState.textContent =
+      optSyncScroll.checked
+        ? "ON"
+        : "OFF";
   }
 
   function ensureWithinTime(startedAt, operationCount) {
@@ -1661,8 +1671,6 @@
 
   function renderDiff(
     compacted,
-    oldLength,
-    newLength,
     selectedMode,
     options
   ) {
@@ -1679,17 +1687,9 @@
 
     let addedCount = 0;
     let deletedCount = 0;
-    let equalCount = 0;
 
     for (const segment of compacted) {
-      const count = countSegmentUnits(
-        segment,
-        selectedMode
-      );
-
       if (segment.type === "equal") {
-        equalCount += count;
-
         appendSegment(
           oldFragment,
           segment,
@@ -1713,7 +1713,10 @@
       } else if (
         segment.type === "delete"
       ) {
-        deletedCount += count;
+        deletedCount += countSegmentUnits(
+          segment,
+          selectedMode
+        );
 
         appendSegment(
           oldFragment,
@@ -1729,7 +1732,10 @@
           options.showInvisible
         );
       } else {
-        addedCount += count;
+        addedCount += countSegmentUnits(
+          segment,
+          selectedMode
+        );
 
         appendSegment(
           newFragment,
@@ -1768,41 +1774,14 @@
     const changeCount =
       groupIds.size;
 
-    const denominator = Math.max(
-      oldLength,
-      newLength
-    );
-
-    const similarity =
-      denominator === 0
-        ? 100
-        : Math.max(
-            0,
-            Math.min(
-              100,
-              (
-                equalCount /
-                denominator
-              ) * 100
-            )
-          );
-
     statAdded.textContent =
       addedCount.toLocaleString("ja-JP");
 
     statDeleted.textContent =
       deletedCount.toLocaleString("ja-JP");
 
-    statEqual.textContent =
-      equalCount.toLocaleString("ja-JP");
-
     statChanges.textContent =
       changeCount.toLocaleString("ja-JP");
-
-    statSimilarity.textContent =
-      `${similarity.toFixed(
-        similarity === 100 ? 0 : 1
-      )}%`;
 
     const unit =
       selectedMode === "line"
@@ -1811,7 +1790,6 @@
 
     unitAdded.textContent = unit;
     unitDeleted.textContent = unit;
-    unitEqual.textContent = unit;
 
     const hasDifference =
       addedCount > 0 ||
@@ -1864,13 +1842,25 @@
       const selector =
         `[data-change-group="${group}"]`;
 
+      const oldElement =
+        oldResult.querySelector(selector);
+      const newElement =
+        newResult.querySelector(selector);
+      const unifiedElement =
+        unifiedResult.querySelector(selector);
+
+      const kind =
+        oldElement && newElement
+          ? "modified"
+          : oldElement
+            ? "removed"
+            : "added";
+
       changeGroups.push({
-        oldElement:
-          oldResult.querySelector(selector),
-        newElement:
-          newResult.querySelector(selector),
-        unifiedElement:
-          unifiedResult.querySelector(selector)
+        oldElement,
+        newElement,
+        unifiedElement,
+        kind
       });
     }
 
@@ -1883,10 +1873,35 @@
     nextDiffBtn.disabled =
       changeGroups.length === 0;
 
-    diffPosition.textContent =
+    updateDiffPosition(
+      changeGroups.length === 0 ? -1 : 0
+    );
+  }
+
+  function updateDiffPosition(index) {
+    if (
+      index < 0 ||
       changeGroups.length === 0
-        ? "差分 0 / 0"
-        : `差分 1 / ${changeGroups.length}`;
+    ) {
+      diffPosition.className =
+        "diff-position";
+      diffPosition.textContent =
+        "差分 0 / 0";
+      return;
+    }
+
+    const group = changeGroups[index];
+    const labels = {
+      added: "追加",
+      removed: "削除",
+      modified: "変更"
+    };
+
+    diffPosition.className =
+      `diff-position diff-position--${group.kind}`;
+
+    diffPosition.textContent =
+      `${labels[group.kind]} ${index + 1} / ${changeGroups.length}`;
   }
 
   function clearCurrentHighlight() {
@@ -1938,8 +1953,9 @@
       }
     }
 
-    diffPosition.textContent =
-      `差分 ${normalizedIndex + 1} / ${length}`;
+    updateDiffPosition(
+      normalizedIndex
+    );
 
     if (!scroll) {
       return;
@@ -1965,9 +1981,7 @@
       "",
       `追加: ${statAdded.textContent}${lastUnitName}`,
       `削除: ${statDeleted.textContent}${lastUnitName}`,
-      `一致: ${statEqual.textContent}${lastUnitName}`,
       `差分箇所: ${statChanges.textContent}か所`,
-      `一致率: ${statSimilarity.textContent}`,
       ""
     ];
 
@@ -2094,7 +2108,7 @@
       );
       const color = segment.type === "delete"
         ? "#8f3f4d"
-        : segment.type === "insert" ? "#285d97" : "#000000";
+        : segment.type === "insert" ? "#287a45" : "#000000";
       span.setAttribute("style",
         `color:${color};white-space:pre-wrap;mso-spacerun:yes;` +
         (segment.type === "delete" ? "text-decoration:line-through;" : "")
@@ -2399,38 +2413,8 @@
 
     lastOptions = options;
 
-    const oldNormalized = normalizeText(
-      oldText.value,
-      options
-    );
-
-    const newNormalized = normalizeText(
-      newText.value,
-      options
-    );
-
-    const oldLength =
-      lastMode === "line"
-        ? splitLinesKeepEnds(
-            oldNormalized
-          ).length
-        : toCodePoints(
-            oldNormalized
-          ).length;
-
-    const newLength =
-      lastMode === "line"
-        ? splitLinesKeepEnds(
-            newNormalized
-          ).length
-        : toCodePoints(
-            newNormalized
-          ).length;
-
     renderDiff(
       lastDiff,
-      oldLength,
-      newLength,
       lastMode,
       options
     );
@@ -2552,8 +2536,6 @@
         };
 
         let edits;
-        let oldLength;
-        let newLength;
 
         if (
           selectedMode === "line-char"
@@ -2564,16 +2546,6 @@
               newNormalized,
               context
             );
-
-          oldLength =
-            toCodePoints(
-              oldNormalized
-            ).length;
-
-          newLength =
-            toCodePoints(
-              newNormalized
-            ).length;
         } else {
           const oldTokens =
             tokenizeNormalized(
@@ -2592,11 +2564,6 @@
             newTokens,
             context
           );
-
-          oldLength =
-            oldTokens.length;
-          newLength =
-            newTokens.length;
         }
 
         if (
@@ -2628,8 +2595,6 @@
 
         renderDiff(
           lastDiff,
-          oldLength,
-          newLength,
           selectedMode,
           options
         );
@@ -2759,6 +2724,7 @@
     setSelectedMode("line-char");
 
     updateModeNote();
+    updateSyncScrollState();
     updateCounts();
     clearRenderedResults();
 
@@ -2853,16 +2819,7 @@
   optSyncScroll.addEventListener(
     "change",
     () => {
-      if (!hasComparisonResult) {
-        return;
-      }
-
-      setStatus(
-        optSyncScroll.checked
-          ? "比較結果の連動スクロールを有効にしました。"
-          : "比較結果の連動スクロールを解除しました。",
-        "ok"
-      );
+      updateSyncScrollState();
     }
   );
 
@@ -3028,6 +2985,7 @@
   );
 
   updateModeNote();
+  updateSyncScrollState();
   updateCounts();
   clearRenderedResults();
 

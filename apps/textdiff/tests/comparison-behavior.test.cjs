@@ -55,6 +55,33 @@ function createApp() {
   return {elements,radios,document,errors,flush,setText,setMode,compare,toggle,changeRule};
 }
 
+test('比較単位の補足見出しは選択中の方式に合わせて更新する', () => {
+  const app = createApp();
+  const e = app.elements;
+
+  assert.equal(e.modeHelpSummary.textContent, '行内文字単位とは？');
+  app.setMode('char');
+  assert.equal(e.modeHelpSummary.textContent, '全文文字単位とは？');
+  app.setMode('line');
+  assert.equal(e.modeHelpSummary.textContent, '行単位とは？');
+});
+
+test('スクロール連動は初期ONで、結果欄の切替状態を更新する', () => {
+  const app = createApp();
+  const e = app.elements;
+
+  assert.equal(e.optSyncScroll.checked, true);
+  assert.equal(e.syncScrollState.textContent, 'ON');
+  app.setText('変更前', '変更後');
+  app.compare();
+  app.toggle('optSyncScroll', false);
+  assert.equal(e.syncScrollState.textContent, 'OFF');
+  assert.doesNotMatch(e.status.textContent, /連動スクロール/);
+  app.toggle('optSyncScroll', true);
+  assert.equal(e.syncScrollState.textContent, 'ON');
+  assert.doesNotMatch(e.status.textContent, /連動スクロール/);
+});
+
 for (const mode of ['line-char', 'char', 'line']) {
   test(`${mode}: 比較ルール変更で結果を更新し、原文を維持する`, () => {
     for (const [option, oldValue, newValue] of [
@@ -71,7 +98,6 @@ for (const mode of ['line-char', 'char', 'line']) {
       assert.notEqual(e.statChanges.textContent, '0');
       app.toggle(option, true);
       assert.equal(e.statChanges.textContent, '0');
-      assert.equal(e.statSimilarity.textContent, '100%');
       assert.equal(app.document.activeElement, e[option]);
       app.toggle(option, false);
       assert.notEqual(e.statChanges.textContent, '0');
@@ -81,6 +107,21 @@ for (const mode of ['line-char', 'char', 'line']) {
     }
   });
 }
+
+test('差分ナビは追加・削除・変更を区別する', () => {
+  for (const [oldValue, newValue, expected, expectedClass] of [
+    ['abc', 'abcX', '追加 1 / 1', 'diff-position--added'],
+    ['abcX', 'abc', '削除 1 / 1', 'diff-position--removed'],
+    ['abc', 'adc', '変更 1 / 1', 'diff-position--modified']
+  ]) {
+    const app = createApp();
+    app.setText(oldValue, newValue);
+    app.compare();
+    assert.equal(app.elements.diffPosition.textContent, expected);
+    assert.match(app.elements.diffPosition.className, new RegExp(expectedClass));
+    assert.deepEqual(app.errors, []);
+  }
+});
 
 test('自動再比較の上限エラー後、設定を戻すと結果が復帰する', () => {
   const app = createApp();
@@ -97,7 +138,6 @@ test('自動再比較の上限エラー後、設定を戻すと結果が復帰�
   assert.equal(e.compareBtn.disabled, false);
   app.toggle('optNormalizeSpace', true);
   assert.equal(e.resultsPanel.hidden, false);
-  assert.equal(e.statSimilarity.textContent, '100%');
   assert.equal(e.copyBtn.disabled, false);
   assert.equal(e.printBtn.disabled, false);
   assert.equal(app.document.activeElement, e.optNormalizeSpace);

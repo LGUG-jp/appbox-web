@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="green">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>期限・日数かんたん計算 | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <link rel="stylesheet" href="./app.css?v=1.4.2">
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="ヘルプ（新しいタブで開きます）">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+            <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+        <a class="appbox-back-button" href="../../">&lt; ポータルに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="appbox-app-intro appbox-app-intro--edge appbox-print-hidden">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+            <path d="M16 2v4M8 2v4M3 10h18"></path>
+            <path d="m9 16 2 2 4-4"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">期限・日数かんたん計算</h1>
+      </div>
+      <p class="appbox-app-desc">カレンダーをクリックして直感的に操作。初日不算入や開庁日を考慮して期限・日数を計算します。</p>
+    </div>
+    <div class="appbox-shell">
+
+    <noscript>
+      <p class="appbox-status appbox-status--warning">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
+    </noscript>
+
+    <!-- タブ切り替えナビゲーション -->
+    <div class="appbox-tabs appbox-print-hidden" role="tablist" aria-label="機能の切り替え">
+      <button class="appbox-tab is-active" id="tab-calculator" role="tab" aria-selected="true" aria-controls="panel-calculator" tabindex="0" type="button" data-mode="deadline">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+          <path d="m9 16 2 2 4-4"></path>
+        </svg>
+        期限を計算（○日後・前）
+      </button>
+      <button class="appbox-tab" id="tab-duration" role="tab" aria-selected="false" aria-controls="panel-calculator" tabindex="-1" type="button" data-mode="duration">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        期間を計算（2点間・残日数）
+      </button>
+      <button class="appbox-tab" id="tab-yearly" role="tab" aria-selected="false" aria-controls="panel-yearly" tabindex="-1" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        年間祝日・閉庁日早見表
+      </button>
+    </div>
+
+    <!-- 1. 期限・日数計算パネル -->
+    <section class="appbox-tab-panel" id="panel-calculator" role="tabpanel" aria-labelledby="tab-calculator">
+      <!-- 隠しラジオグループ（テスト整合性＆状態同期用）と操作ヒントバー -->
+      <section class="calc-mode-bar appbox-print-hidden" aria-label="計算モード案内">
+        <div class="calc-mode-group" role="radiogroup" aria-label="計算モード" hidden>
+          <label class="calc-mode-option">
+            <input type="radio" name="calc-main-mode" value="deadline" checked>
+            <span class="calc-mode-label">期限を計算</span>
+          </label>
+          <label class="calc-mode-option">
+            <input type="radio" name="calc-main-mode" value="duration">
+            <span class="calc-mode-label">期間を計算</span>
+          </label>
+        </div>
+        <p class="calc-mode-tip" id="mode-tip">カレンダーの日付をクリックして基準日を選択し、日数をボタンでカチカチ変更できます。</p>
+      </section>
+
+    <!-- メイン2カラムレイアウト -->
+    <div class="calc-main-layout" id="main-interactive-view">
+      <!-- 左カラム: カレンダー主役エリア -->
+      <section class="calc-calendar-column appbox-panel--accent" aria-label="月間カレンダー">
+        <div class="calc-cal-header appbox-print-hidden">
+          <div class="calc-cal-nav">
+            <button class="appbox-button appbox-button--secondary calc-btn-nav" type="button" id="btn-prev-month" aria-label="前月へ">
+              &lt; 前月
+            </button>
+            <div class="calc-cal-selects">
+              <select class="appbox-input calc-select-year" id="select-cal-year" aria-label="年を選択"></select>
+              <select class="appbox-input calc-select-month" id="select-cal-month" aria-label="月を選択"></select>
+            </div>
+            <button class="appbox-button appbox-button--secondary calc-btn-nav" type="button" id="btn-next-month" aria-label="翌月へ">
+              翌月 &gt;
+            </button>
+            <button class="appbox-button appbox-button--secondary" type="button" id="btn-cal-today">今月</button>
+          </div>
+        </div>
+
+        <!-- 月間サマリバー -->
+        <div class="calc-month-summary" id="cal-month-summary" aria-live="polite">
+          <span class="calc-summary-title" id="summary-month-label">2026年9月</span>
+          <span class="calc-summary-badge badge-business">開庁日数: <strong id="summary-business-days">20</strong>日</span>
+          <span class="calc-summary-badge badge-closed">閉庁日数: <strong id="summary-closed-days">10</strong>日</span>
+          <span class="calc-summary-note" id="summary-sub-note">（土日: 8日 / 祝日等: 2日）</span>
+        </div>
+
+        <!-- カレンダーグリッド本体 -->
+        <div class="calc-grid-wrapper">
+          <div class="calc-calendar-grid" id="calendar-grid" role="grid" aria-label="日付カレンダー">
+            <!-- 曜日ヘッダー -->
+            <div class="calc-dow calc-dow--sun" role="columnheader">日</div>
+            <div class="calc-dow" role="columnheader">月</div>
+            <div class="calc-dow" role="columnheader">火</div>
+            <div class="calc-dow" role="columnheader">水</div>
+            <div class="calc-dow" role="columnheader">木</div>
+            <div class="calc-dow" role="columnheader">金</div>
+            <div class="calc-dow calc-dow--sat" role="columnheader">土</div>
+            <!-- 日付セル群はJSで動的生成 -->
+          </div>
+        </div>
+
+        <div class="calc-legend appbox-print-hidden">
+          <span class="legend-item"><span class="legend-box is-base-legend"></span> 基準日（選択中）</span>
+          <span class="legend-item"><span class="legend-box is-target-legend"></span> 期限日（結果）</span>
+          <span class="legend-item"><span class="legend-box is-range-legend"></span> 計算期間</span>
+          <span class="legend-item"><span class="legend-box is-holiday-legend"></span> 祝日・休庁日</span>
+        </div>
+
+        <div class="calc-holiday-meta-note appbox-print-hidden" id="cal-holiday-meta-note">
+          <span class="meta-note-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </span>
+          <span id="cal-holiday-meta-text">祝日データ収録期間: 1955-01-01〜2027-12-31（データ取得日: 2026-02-02）</span>
+        </div>
+      </section>
+
+      <!-- 右カラム: 操作パネル ＆ 結果カード -->
+      <aside class="calc-control-column" aria-label="操作と計算結果">
+
+        <!-- 1. 期限計算モード用操作パネル -->
+        <div class="calc-panel-card appbox-panel--accent" id="panel-deadline-ctrl">
+          <h2 class="calc-panel-card__title">期限の計算条件</h2>
+
+          <div class="calc-field-row">
+            <span class="calc-label">基準日:</span>
+            <strong class="calc-selected-date-text" id="deadline-base-display">2026年9月16日（水）</strong>
+            <button class="appbox-button appbox-button--secondary calc-btn-xs" type="button" id="btn-set-today">今日にする</button>
+          </div>
+
+          <div class="calc-stepper-wrap">
+            <div class="calc-stepper-label-row">
+              <span class="calc-label">日数:</span>
+              <div class="calc-dir-toggle" role="radiogroup" aria-label="計算方向">
+                <label class="calc-dir-option">
+                  <input type="radio" name="deadline-direction" value="after" checked>
+                  <span>○日後（未来）</span>
+                </label>
+                <label class="calc-dir-option">
+                  <input type="radio" name="deadline-direction" value="before">
+                  <span>○日前（過去）</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- ステッパーコントローラー -->
+            <div class="calc-stepper-controls">
+              <button class="calc-btn-step" type="button" data-step="-10" aria-label="10日減らす">-10</button>
+              <button class="calc-btn-step" type="button" data-step="-1" aria-label="1日減らす">-1</button>
+              <div class="calc-step-input-wrap">
+                <input class="appbox-input calc-input-step" id="input-days-value" type="number" min="0" max="36525" value="14" required>
+                <span class="calc-unit">日間</span>
+              </div>
+              <button class="calc-btn-step" type="button" data-step="1" aria-label="1日増やす">+1</button>
+              <button class="calc-btn-step" type="button" data-step="10" aria-label="10日増やす">+10</button>
+            </div>
+
+            <!-- クイック日数ボタン -->
+            <div class="calc-quick-chips" role="group" aria-label="よく使う日数">
+              <span class="calc-quick-chips__label">よく使う日数:</span>
+              <button class="calc-chip" type="button" data-quick-days="7">7日</button>
+              <button class="calc-chip" type="button" data-quick-days="10">10日</button>
+              <button class="calc-chip active" type="button" data-quick-days="14">14日</button>
+              <button class="calc-chip" type="button" data-quick-days="20">20日</button>
+              <button class="calc-chip" type="button" data-quick-days="30">30日</button>
+              <button class="calc-chip" type="button" data-quick-days="60">60日</button>
+              <button class="calc-chip" type="button" data-quick-days="90">90日</button>
+            </div>
+          </div>
+
+          <!-- 詳細設定アコーディオン -->
+          <details class="calc-details-accordion appbox-print-hidden" id="deadline-advanced-settings">
+            <summary class="calc-accordion-summary">
+              <span>詳細設定（初日不算入・閉庁日補正など）</span>
+            </summary>
+            <div class="calc-accordion-content">
+              <div class="calc-subfield">
+                <span class="calc-subfield__label">基準日の扱い（初日）:</span>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-include-first" value="false" checked>
+                  <span>初日不算入（翌日から起算・公文書や法令の標準）</span>
+                </label>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-include-first" value="true">
+                  <span>初日算入（基準日を1日目として数える）</span>
+                </label>
+              </div>
+
+              <div class="calc-subfield">
+                <span class="calc-subfield__label">日数の数え方:</span>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-count-mode" value="calendar" checked>
+                  <span>暦日で数える（土日祝も含めて日数カウント）</span>
+                </label>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-count-mode" value="business">
+                  <span>開庁日のみで数える（土日祝・休庁日をスキップ）</span>
+                </label>
+              </div>
+
+              <div class="calc-subfield" id="adv-adjust-group">
+                <span class="calc-subfield__label">期限日が閉庁日（土日祝等）の場合:</span>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-closed-adjust" value="next" checked>
+                  <span>翌開庁日へ繰越（地方自治法等の一般的な行政標準）</span>
+                </label>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-closed-adjust" value="prev">
+                  <span>前開庁日へ繰上（期日前締切など）</span>
+                </label>
+                <label class="appbox-radio">
+                  <input type="radio" name="adv-closed-adjust" value="none">
+                  <span>補正なし（その日のまま）</span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <!-- 期限計算結果カード -->
+          <div class="calc-result-box" id="deadline-result-card" aria-live="polite">
+            <div class="calc-res-header">
+              <span class="calc-res-caption">計算結果（期限日）</span>
+              <span class="calc-badge-closed-notice" id="deadline-adjust-badge" hidden>翌開庁日へ繰越済</span>
+            </div>
+            <div class="calc-res-primary-date" id="deadline-final-date">令和8年9月30日（水）</div>
+            <div class="calc-res-sub-date" id="deadline-final-sub">2026-09-30</div>
+
+            <div class="calc-res-metrics-grid">
+              <div class="calc-res-metric">
+                <span class="metric-lbl">実日数</span>
+                <strong class="metric-val" id="metric-real-days">14</strong>日間
+              </div>
+              <div class="calc-res-metric">
+                <span class="metric-lbl">実働開庁日</span>
+                <strong class="metric-val" id="metric-business-days">10</strong>開庁日
+              </div>
+              <div class="calc-res-metric">
+                <span class="metric-lbl">除外された閉庁日</span>
+                <strong class="metric-val" id="metric-excluded-days">4</strong>日
+              </div>
+            </div>
+
+            <div class="calc-adjust-msg" id="deadline-adjust-msg" hidden></div>
+            <div class="calc-warning-box" id="deadline-warnings" hidden></div>
+
+            <div class="calc-res-actions appbox-print-hidden">
+              <button class="appbox-button appbox-button--primary" type="button" id="btn-copy-deadline-simple">
+                結果をコピー
+              </button>
+              <button class="appbox-button appbox-button--secondary" type="button" id="btn-copy-deadline-full">
+                条件を含めてコピー
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 期間計算モード用操作パネル -->
+        <div class="calc-panel-card appbox-panel--accent" id="panel-duration-ctrl" hidden>
+          <h2 class="calc-panel-card__title">期間の計算条件</h2>
+
+          <div class="calc-duration-pickers">
+            <div class="calc-picker-block" id="block-duration-start">
+              <div class="calc-picker-label-col">
+                <span class="calc-label">開始日</span>
+              </div>
+              <strong class="calc-selected-date-text" id="duration-start-display">2026年9月1日（火）</strong>
+              <button class="appbox-button appbox-button--secondary calc-btn-picker" type="button" id="btn-duration-pick-start">カレンダーで選択</button>
+            </div>
+            <div class="calc-picker-block" id="block-duration-end">
+              <div class="calc-picker-label-col">
+                <span class="calc-label">終了日</span>
+                <span class="calc-sub-label">（期限日）</span>
+              </div>
+              <strong class="calc-selected-date-text" id="duration-end-display">2026年9月30日（水）</strong>
+              <button class="appbox-button appbox-button--secondary calc-btn-picker" type="button" id="btn-duration-pick-end">カレンダーで選択</button>
+            </div>
+          </div>
+          <p class="calc-instruction-text">カレンダーの日付を2回クリックして、開始日と終了日を自由に指定できます。</p>
+
+          <details class="calc-details-accordion appbox-print-hidden" id="duration-advanced-settings">
+            <summary class="calc-accordion-summary">
+              <span>詳細設定（初日の扱い）</span>
+            </summary>
+            <div class="calc-accordion-content">
+              <div class="calc-subfield">
+                <label class="appbox-radio">
+                  <input type="radio" name="duration-include-first" value="false" checked>
+                  <span>初日不算入（片端入れ・一般的な期間計算）</span>
+                </label>
+                <label class="appbox-radio">
+                  <input type="radio" name="duration-include-first" value="true">
+                  <span>両端を含む（開始日も1日目としてカウント）</span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <!-- 期間計算結果カード -->
+          <div class="calc-result-box" id="duration-result-card" aria-live="polite">
+            <div class="calc-res-header">
+              <span class="calc-res-caption">期間・残日数の計算結果</span>
+              <span class="calc-res-period-tag" id="duration-range-tag"></span>
+            </div>
+
+            <div class="calc-res-metrics-grid">
+              <div class="calc-res-metric">
+                <span class="metric-lbl">実日数</span>
+                <strong class="metric-val" id="duration-metric-total">29</strong>日間
+                <span class="metric-sub" id="duration-metric-inclusive">（両端含む: 30日）</span>
+              </div>
+              <div class="calc-res-metric">
+                <span class="metric-lbl">開庁日数</span>
+                <strong class="metric-val" id="duration-metric-business">20</strong>開庁日
+              </div>
+              <div class="calc-res-metric">
+                <span class="metric-lbl">期間の目安</span>
+                <strong class="metric-val" id="duration-metric-approx" style="font-size: 16px;">0年0か月29日</strong>
+              </div>
+            </div>
+
+            <div class="calc-period-breakdown">
+              <span class="breakdown-lbl">閉庁日の内訳:</span>
+              <span class="breakdown-val" id="duration-breakdown-text">土日 8日 / 祝日等 2日（計10日）</span>
+            </div>
+
+            <div class="calc-warning-box" id="duration-warnings" hidden></div>
+
+            <div class="calc-res-actions appbox-print-hidden">
+              <button class="appbox-button appbox-button--primary" type="button" id="btn-copy-duration-simple">
+                結果をコピー
+              </button>
+              <button class="appbox-button appbox-button--secondary" type="button" id="btn-copy-duration-full">
+                詳細を含めてコピー
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+    </section>
+    <!-- /#panel-calculator -->
+
+    <!-- 2. 年間祝日・閉庁日早見表パネル -->
+    <section class="appbox-tab-panel calc-yearly-panel appbox-panel--accent" id="panel-yearly" role="tabpanel" aria-labelledby="tab-yearly" hidden aria-label="年間祝日・閉庁日早見表">
+      <div class="calc-yearly-header">
+        <div>
+          <h2>年間祝日・閉庁日早見表</h2>
+          <p class="calc-yearly-sub">指定した1年間の国民の祝日、年末年始、および組織独自閉庁日の一覧と年間カレンダーです。</p>
+        </div>
+        <div class="calc-yearly-nav appbox-print-hidden">
+          <button class="appbox-button appbox-button--secondary calc-btn-nav" type="button" id="btn-yearly-prev" aria-label="前年へ">
+            &lt; 前年
+          </button>
+          <div class="calc-yearly-select-wrap">
+            <label class="calc-yearly-label" for="yearly-select-year">対象年:</label>
+            <select class="appbox-input" id="yearly-select-year" aria-label="対象年を選択"></select>
+          </div>
+          <button class="appbox-button appbox-button--secondary calc-btn-nav" type="button" id="btn-yearly-next" aria-label="翌年へ">
+            翌年 &gt;
+          </button>
+          <button class="appbox-button appbox-button--secondary calc-btn-print" type="button" id="btn-print-yearly">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            早見表を印刷
+          </button>
+        </div>
+      </div>
+
+      <div class="calc-yearly-summary" id="yearly-summary-box"></div>
+      <div class="calc-yearly-meta-note" id="yearly-holiday-meta-note">
+        <span class="meta-note-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </span>
+        <span id="yearly-holiday-meta-text">祝日データ収録期間: 1955-01-01〜2027-12-31（データ取得日: 2026-02-02）</span>
+      </div>
+
+      <!-- 年間12ヶ月ミニカレンダーセクション -->
+      <div class="yearly-calendar-section">
+        <div class="yearly-calendar-header">
+          <h3 class="yearly-section-title" id="yearly-calendar-title">年間カレンダー</h3>
+          <div class="yearly-calendar-legend">
+            <span class="mini-legend-item"><span class="mini-legend-circle is-holiday"></span>祝日</span>
+            <span class="mini-legend-item"><span class="mini-legend-circle is-custom"></span>独自閉庁日</span>
+          </div>
+        </div>
+        <div class="yearly-calendar-grid" id="yearly-calendar-grid" role="region" aria-label="年間12ヶ月カレンダー">
+          <!-- JSで12ヶ月分のミニカレンダーを動的生成 -->
+        </div>
+      </div>
+
+      <!-- 年間閉庁日一覧テーブル -->
+      <div class="calc-yearly-table-section">
+        <h3 class="yearly-section-title">国民の祝日・閉庁日一覧</h3>
+        <div class="calc-yearly-table-wrap">
+          <table class="calc-table" id="yearly-table">
+            <thead>
+              <tr>
+                <th scope="col">日付</th>
+                <th scope="col">曜日</th>
+                <th scope="col">和暦</th>
+                <th scope="col">閉庁理由・祝日名称</th>
+                <th scope="col">備考</th>
+              </tr>
+            </thead>
+            <tbody id="yearly-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- コピー完了トースト -->
+    <div class="calc-toast" id="copy-toast" role="status" aria-live="polite" hidden></div>
+
+    <footer class="appbox-footer">
+      お役立ちアプリBOX / 期限・日数かんたん計算 Version 1.4.2
+    </footer>
+    </div>
+  </main>
+
+  <!-- スクリプト群 -->
+  <script src="../../assets/appbox-utilities.js?v=2.1.0"></script>
+  <script src="custom-closed-days.js?v=1.3.3"></script>
+  <script src="holidays.js?v=1.3.3"></script>
+  <script src="calc-core.js?v=1.3.3"></script>
+  <script src="app.js?v=1.4.2"></script>
+</body>
+</html>

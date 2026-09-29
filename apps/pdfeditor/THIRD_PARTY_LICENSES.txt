@@ -1,0 +1,102 @@
+THIRD-PARTY SOFTWARE NOTICE
+===========================
+
+Fixed local copies of the runtime libraries are bundled under vendor/.
+The corresponding license texts are included under licenses/ so the notices
+required for redistribution stay together with the pdfeditor application.
+The user interface still depends on the shared AppBox assets documented in
+README.txt. The existing copyright and license comments in vendor/pdf-lib.esm.js
+are part of the distribution.
+
+1) pdf-lib 1.17.1
+   Bundle: vendor/pdf-lib.esm.js
+   Project: https://github.com/Hopding/pdf-lib/tree/v1.17.1
+   License: MIT License; Copyright (c) 2019 Andrew Dillon
+   Text: licenses/pdf-lib_LICENSE.txt
+
+   The following code and data are incorporated into this bundle. Versions
+   for package dependencies come from pdf-lib v1.17.1's yarn.lock, and the
+   embedded implementations were checked against the bundled source:
+
+   a) @pdf-lib/upng 1.0.1 (PNG/APNG decoder)
+      Project: https://github.com/Hopding/upng
+      License: MIT License; Copyright (c) 2017 Photopea
+      Text: licenses/upng_LICENSE.txt
+
+   b) @pdf-lib/standard-fonts 1.0.0 (Standard 14 font metrics/encodings)
+      Project: https://github.com/Hopding/standard-fonts
+      License: MIT License; Copyright (c) 2018 Andrew Dillon
+      Forked from afm: Copyright 2015-2018 Christopher Brown (MIT)
+      Text and original attribution: licenses/standard-fonts_LICENSE.txt
+
+   c) pako 1.0.11 (direct pdf-lib dependency) and pako 1.0.10
+      (dependencies of @pdf-lib/upng and @pdf-lib/standard-fonts)
+      Project: https://github.com/nodeca/pako
+      License: MIT for the JavaScript port; Zlib for the ported zlib code
+      Texts: licenses/pako_LICENSE.txt and licenses/pako-zlib_LICENSE.txt
+      The Zlib notice in the bundle is also retained verbatim.
+
+   d) tslib 1.11.1 (TypeScript helpers)
+      Project: https://github.com/microsoft/tslib/tree/1.11.1
+      License: Apache License 2.0; Copyright (c) Microsoft Corporation
+      Text: licenses/tslib_LICENSE.txt
+      The Microsoft copyright/license banner in the bundle is retained.
+
+   e) base64-arraybuffer-derived encode/decode code
+      Project: https://github.com/niklasvh/base64-arraybuffer
+      License: MIT License; Copyright (c) 2012 Niklas von Hertzen
+      Text: licenses/base64-arraybuffer_LICENSE.txt
+      The code is credited inside pdf-lib.esm.js near lines 103 and 7701.
+      It is copied/derived code, not a separately locked npm dependency;
+      no package version is asserted.
+
+   f) pdfkit-derived vector operators
+      Project: https://github.com/foliojs/pdfkit
+      License: MIT License; Copyright (c) 2014 Devon Govett
+      Text: licenses/pdfkit_LICENSE.txt
+      The source attribution in pdf-lib.esm.js is retained; its version is
+      not specified by pdf-lib's dependency lock.
+
+   g) pdf.js/XPDF-derived stream implementations
+      The bundle retains copyright comments for Mozilla Foundation (2012)
+      and Glyph & Cog, LLC (1996-2003), describing their Apache 2.0 terms.
+      Full Apache 2.0 text: licenses/PDF.js_LICENSE.txt
+
+2) PDF.js / pdfjs-dist 5.3.31
+   Bundle: vendor/pdf.min.mjs and vendor/pdf.worker.min.mjs
+   Project: https://github.com/mozilla/pdf.js/tree/v5.3.31
+   License: Apache License 2.0
+   Text: licenses/PDF.js_LICENSE.txt
+
+   JPEG 2000 / JPXDecode image decoding uses the OpenJPEG runtime shipped
+   with PDF.js 5.3.31:
+   - vendor/wasm/openjpeg.wasm
+   - vendor/wasm/openjpeg_nowasm_fallback.js
+
+   OpenJPEG:
+   License: BSD 2-Clause
+   Text: licenses/openjpeg_LICENSE.txt
+
+   PDF.js OpenJPEG wrapper:
+   Copyright (c) 2024, Mozilla Foundation
+   License: BSD 2-Clause
+   Text: licenses/pdfjs-openjpeg_LICENSE.txt
+
+   ICC color profile conversion uses the qcms runtime shipped with PDF.js
+   5.3.31:
+   - vendor/wasm/qcms_bg.wasm
+
+   qcms:
+   License: MIT License
+   Text: licenses/qcms_LICENSE.txt
+
+   PDF.js qcms wrapper:
+   Copyright (c) 2025, Mozilla Foundation
+   License: BSD 2-Clause
+   Text: licenses/pdfjs-qcms_LICENSE.txt
+
+3) Adobe CMap resources
+   Bundle: vendor/cmaps.bundle.json.gz (239 PDF.js CMaps)
+   License and copyright: licenses/Adobe_CMap_LICENSE.txt
+
+No third-party runtime library is loaded from the Internet.

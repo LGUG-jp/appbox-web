@@ -1,0 +1,35 @@
+THIRD-PARTY NOTICE
+
+Core editor:
+  Excalidraw / @excalidraw/excalidraw 0.18.1
+  License: MIT
+  Copyright (c) 2020 Excalidraw
+  Project: https://github.com/excalidraw/excalidraw
+
+Runtime framework:
+  React 19.0.0 / ReactDOM 19.0.0
+  License: MIT
+
+Fonts distributed by Excalidraw may use separate font licenses, including
+the SIL Open Font License (OFL) 1.1. The build script copies Excalidraw's
+self-hosted font assets into the deployment package.
+
+tools/flowchart-build/scripts/generate-licenses.mjs generates the package
+license inventory from the locked node_modules tree and places it in the
+deployed licenses folder during npm run sync.
+
+Bundled font assets:
+  Copyright notices, license mapping and full license texts for the bundled
+  font files are recorded in FONT_LICENSES.txt.
+
+License inventory note:
+  PACKAGE_LICENSE_REPORT.txt is generated from package metadata. khroma@2.1.0
+  may be reported as UNKNOWN by the detector, while its captured upstream
+  license text in THIRD_PARTY_LICENSE_TEXTS.txt is the MIT License.
+
+Runtime notice supplement:
+  RUNTIME_LICENSE_SUPPLEMENT.txt preserves the version-matched Radix UI MIT
+  notice, the Zlib conditions for pako@2.0.3, and attribution for embedded
+  WebAssembly and Cytoscape subcomponents. Include the entire licenses/
+  directory when copying or publishing apps/flowchart/. Run the license
+  audit before approving a rebuilt bundle for publication.

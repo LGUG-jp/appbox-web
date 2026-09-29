@@ -1,0 +1,230 @@
+@charset "UTF-8";
+
+/*
+ * AppBox共通の戻る・ヘルプボタンは appbox-chrome.css を利用します。
+ * ExcalidrawのCSSで崩れるヘッダーの書体・ボタン文字と、
+ * 作図面の高さ・Excalidraw固有の配置を調整します。
+ */
+
+/* Excalidrawがルートの共通フォント指定を上書きするため、ヘッダー内で復元します。 */
+.appbox-header {
+  --appbox-font-sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic UI",
+    Meiryo,
+    sans-serif;
+  font-family: var(--appbox-font-sans);
+}
+
+.appbox-header__actions .appbox-help-button,
+.appbox-header__actions .appbox-back-button {
+  font-size: var(--appbox-header-action-font-size);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .appbox-header__actions .appbox-help-button {
+    padding: 0 12px;
+  }
+}
+
+/* =========================================================
+   作図面には共通ヘッダーを除いた画面高を割り当てます。
+   縦幅が足りない場合も作図面を切り取らず、ページをスクロールします。
+   ========================================================= */
+
+body {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+body > .appbox-header {
+  flex: 0 0 auto;
+}
+
+#root {
+  flex: 1 1 auto;
+  min-height: 420px;
+}
+
+.flow-app {
+  background: var(--appbox-page-bg);
+}
+
+/* =========================================================
+   Excalidraw側ヘッダー
+   ========================================================= */
+
+.flow-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  padding-left: 24px;
+  background: var(--appbox-surface);
+  border-bottom-color: var(--appbox-border);
+}
+
+/*
+ * ビルド済みJavaScriptが生成する従来の戻るリンクは隠します。
+ * AppBoxの戻る導線はindex.htmlへ直接記述します。
+ */
+.flow-header .back-link {
+  display: none !important;
+}
+
+.flow-brand {
+  min-width: 0;
+}
+
+.brand-row {
+  display: grid;
+  grid-template-columns: var(--appbox-app-icon-size) auto 1fr;
+  align-items: center;
+  column-gap: var(--appbox-app-title-gap);
+  row-gap: 4px;
+}
+
+.flow-header .brand-icon {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--appbox-app-icon-size);
+  height: var(--appbox-app-icon-size);
+  background: var(--appbox-surface-soft);
+  border: 1px solid var(--appbox-border);
+  border-radius: var(--appbox-app-icon-radius);
+  color: var(--appbox-primary);
+  box-shadow: 0 1px 2px rgba(var(--appbox-primary-rgb), 0.04);
+  flex-shrink: 0;
+}
+
+.brand-icon svg {
+  width: var(--appbox-app-icon-glyph-size);
+  height: var(--appbox-app-icon-glyph-size);
+}
+
+.brand-row > div:not(.brand-icon) {
+  display: contents;
+}
+
+.flow-title {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  height: var(--appbox-app-icon-size);
+  font-size: var(--appbox-app-title-size);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.flow-subtitle {
+  grid-column: 3;
+  grid-row: 1;
+  margin: 0 0 0 16px;
+  font-size: var(--appbox-app-desc-size);
+  color: var(--appbox-dads-neutral-700);
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.flow-subtitle .appbox-save-hint {
+  color: var(--appbox-muted);
+}
+
+@media (max-width: 900px) {
+  .brand-row {
+    grid-template-columns: var(--appbox-app-icon-size) 1fr;
+  }
+  .flow-subtitle {
+    grid-column: 2;
+    grid-row: 2;
+    margin-left: 0;
+  }
+}
+.header-right {
+  display: none;
+}
+
+/* =========================================================
+   キャンバス周辺
+   ========================================================= */
+
+.canvas-shell {
+  background: var(--appbox-surface-soft);
+}
+
+/* 作図面に重なる案内はヘルプにあるため表示しません。 */
+.offline-strip {
+  display: none;
+}
+
+/*
+ * AppBox側にヘルプ導線があるため、Excalidraw標準の右下ヘルプボタンは
+ * 重複表示しません。
+ */
+.excalidraw .help-icon {
+  display: none !important;
+}
+
+/*
+ * キーボードショートカット画面の外部サイト導線は、閉域運用では
+ * 利用できないため表示しません。
+ */
+.excalidraw .HelpDialog__btn {
+  display: none !important;
+}
+
+/* =========================================================
+   通知
+   ========================================================= */
+
+.notice {
+  max-width: min(420px, calc(100vw - 36px));
+  line-height: 1.5;
+}
+
+/* 狭い画面ではサンプルを隠し、説明と保存案内の幅を確保します。 */
+@media (max-width: 900px) {
+  .flow-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* =========================================================
+   スマートフォン
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .flow-header {
+    gap: 7px;
+    padding-top: 8px;
+    padding-left: 16px;
+  }
+
+  .notice {
+    top: 8px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
+
+/* Excalidraw 0.18.1ではこのtestidが「ライブラリを公開」を指す。
+ * React管理のDOMは削除せず、投稿項目だけを非表示にする。通常の削除は維持。 */
+.library-menu [data-testid="lib-dropdown--remove"] {
+  display: none !important;
+}

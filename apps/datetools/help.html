@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="blue">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>西暦・和暦・年齢早見表 ヘルプ | お役立ちアプリBOX</title>
+  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
+        <div class="appbox-header__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+          </svg>
+        </div>
+        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+    <div class="appbox-help-header-card">
+      <div>
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
+              <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+              <path d="M16 3v4M8 3v4M3 10h18"></path>
+              <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">西暦・和暦・年齢早見表</h1>
+        </div>
+        <p class="appbox-help-header-desc">早見表の見方と、生年月日からの年齢計算方法を説明します。</p>
+      </div>
+      <span class="version-badge">Version 1.2.5</span>
+
+      <div class="help-callout help-callout-warning">
+        <strong>計算結果は事務処理を補助する参考表示です。</strong>
+        <p>法令等に特別な年齢の計算方法がある場合は、その規定を優先してください。学齢、受給資格、採用要件等の最終判定機能はありません。</p>
+      </div>
+    </div>
+
+    <div class="appbox-help-grid help-panel">
+      <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+        <p class="appbox-help-nav-title">目次</p>
+        <ul class="appbox-help-nav-list">
+          <li>
+            <a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#reference-guide">早見表の見方</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#age-calculation">生年月日から年齢を計算</a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#reference-print">早見表の表示・印刷</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#input-notes">基準日・入力の補足</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#copy-output">結果のコピーと出力</a></li>
+            </ul>
+          </li>
+          <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#other">その他</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#supported-range">対応範囲と利用上の注意</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#privacy">セキュリティとプライバシー</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="appbox-help-content">
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+          <ol class="help-steps">
+            <li><strong>早見表を確認</strong><p class="appbox-help-step-desc">最初に、端末の今日の日付を基準とした早見表が表示されます。西暦・和暦・年齢の対応をそのまま確認できます。</p></li>
+            <li><strong>年齢計算を開く</strong><p class="appbox-help-step-desc">満年齢や年度末年齢を調べる場合は、上部の「生年月日から年齢計算」タブを押します。</p></li>
+            <li><strong>基準日と生年月日を入力</strong><p class="appbox-help-step-desc">①基準日には今日の日付が自動入力されます。必要な場合だけ変更し、②生年月日を西暦または和暦で入力します。年・月・日は半角・全角数字に対応し、和暦の1年は「元」でも入力できます。</p></li>
+            <li><strong>年齢を計算</strong><p class="appbox-help-step-desc">「年齢を計算する」を押し、満年齢・年度末年齢・次回誕生日等の結果と計算条件を確認します。</p></li>
+            <li><strong>必要に応じて結果をコピー</strong><p class="appbox-help-step-desc">「結果と条件をコピー」を押します。入力を変更すると古い結果は消えるため、変更後はもう一度計算してください。</p></li>
+          </ol>
+          <p><kbd>Tab</kbd>で項目間を移動し、<kbd>Enter</kbd>で計算できます。表示する機能はタブにフォーカスした状態で左右矢印キーでも切り替えられます。ヘルプは新しいタブで開きます。</p>
+          <h3 class="appbox-help-subheading" id="reference-guide">早見表の見方</h3>
+          <p>今年から過去100年分の生年（0〜100歳、全101年分）を、新しい年から順に表示します。1873年より前の年は表示しません。表示している年と「本日」は端末の日付に合わせて自動更新します。別のタブや休止状態から戻ったときにも日付を確認します。</p>
+          <p><strong>年齢は「今年の誕生日に迎える年齢」です。</strong>生まれた年だけでは、今日時点で誕生日を迎えたか判断できません。誕生日前は表の年齢から1歳引いてください。生年月日から調べる場合は「生年月日から年齢計算」タブを押してください。</p>
+          <h3 class="appbox-help-subheading" id="age-calculation">生年月日から年齢を計算</h3>
+          <p>①基準日には今日の日付が自動入力され、②生年月日を入力すると、③確認結果に満年齢・年度末年齢・次回誕生日等を表示します。基準日はカレンダー付きの日付欄からそのまま変更できます。利用者が基準日を変更していない間は、日付の変わり目や画面復帰時に今日の日付へ更新します。「和暦・年月日で入力」を開くと、従来どおり元号と年・月・日で指定でき、全角数字や「元」も使えます。過去・未来の基準日を指定できますが、生年月日は今日以前、基準日は生年月日以降である必要があります。</p>
+          <ul>
+            <li>満年齢：誕生日当日に1歳加算します。</li>
+            <li>年度末年齢：基準日が属する年度の3月31日時点の年齢です。別の年度末を調べる場合は基準日を変更してください。</li>
+            <li>次回の誕生日：基準日以降で最初の誕生日です。当日なら「0日」と表示します。日数は今日ではなく、指定した基準日から数えます。</li>
+            <li>2月29日生まれ：平年は3月1日を誕生日相当日として加算・表示します。例：2000年2月29日生まれは、2025年2月28日時点では24歳、3月1日では25歳と表示します。</li>
+          </ul>
+        </section>
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+          <h3 class="appbox-help-subheading" id="reference-print">早見表の表示・印刷</h3>
+<ul>
+            <li>改元した年の表示：通常は新元号の「元年」を表示します（例：1989年は平成元年、2019年は令和元年）。「改元年の旧元号も表示」にチェックを入れると、「昭和64年 ／ 平成元年」のように旧元号を併記できます。</li>
+            <li>横幅のある画面では、早見表を0〜34歳・35〜69歳・70〜100歳の3組で並べます。3組の間には余白を設けつつ、各表の西暦・和暦・年齢は高密度に配置します。年齢列は行の背景色に合わせ、青系の文字色・太字で強調します。</li>
+            <li>全101年分を一覧表示します。表の中だけをスクロールする領域は設けず、ページ全体を上下に移動して続けて確認できます。</li>
+            <li>「印刷用ビュー」で、通常モード・シンプルモード・かわいいモード・ふんわりポップ・和モダン・ビジネス・レトロの7種類から選べます。</li>
+            <li>印刷の用紙向きは「縦向き（標準）」と「横向き」を選択できます。どちらも全101年分をA4用紙1ページに収めたレイアウトで出力します。年齢列は印刷でも青系で強調します。</li>
+            <li>印刷設定はA4・倍率100%・ヘッダーとフッターなしにしてください。色や淡い模様を付ける場合は「背景のグラフィック」をオンにします。用紙や余白を変更した場合は、印刷プレビューのページ数も確認してください。</li>
+          </ul>
+          <h3 class="appbox-help-subheading" id="input-notes">基準日・入力の補足</h3>
+<p>このツールは日単位の表示です。法令上の「誕生日の前日の終了時」などの年齢到達時刻を判定しません。日付範囲の端では年度末年齢や次回誕生日を表示できないことがあり、その理由を結果に表示します。</p>
+          <p>基準日は今日の日付が初期入力されます。「入力をクリア」で生年月日と計算結果を消し、基準日も今日に戻します。</p>
+          <h3 class="appbox-help-subheading" id="copy-output">結果のコピーと出力</h3>
+          <p>「結果と条件をコピー」で結果と入力日付・計算条件をまとめてコピーします。自動コピーが使えない環境では、画面にコピー用の文字欄を表示して選択します。<kbd>Ctrl</kbd>＋<kbd>C</kbd>（Macは<kbd>⌘</kbd>＋<kbd>C</kbd>）またはスマートフォンの選択メニューでコピーしてください。</p>
+          <p>早見表の「印刷用ビュー」でデザインと用紙の向きを選び、「この設定で印刷」からブラウザの印刷機能を使えます。PDFへの保存は端末で利用できる印刷先を選択してください。コピーした内容は端末のクリップボードやその履歴、貼り付け先に残る場合があります。</p>
+        </section>
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+          <details class="appbox-help-faq-item"><summary>「存在しない日付」「元号の期間外」と表示されます。</summary><div class="appbox-help-faq-answer">2月30日や平年の2月29日ではないか、改元前後で元号を取り違えていないか確認してください。日付としての令和元年4月30日などは存在しません。</div></details>
+          <details class="appbox-help-faq-item"><summary>元号を切り替えたら年の数字も変換されますか？</summary><div class="appbox-help-faq-answer">生年月日の「西暦／和暦」の切替では、正しい年月日が入力済みなら同じ日付へ変換します。未完成・不正な日付は、入力を完成させるかクリアしてから切り替えてください。和暦の元号プルダウンや基準日の直接入力の「暦」を変えた場合は、年の数字は変換しません。選んだ元号に合う年を入力してください。</div></details>
+          <details class="appbox-help-faq-item"><summary>基準日の今日の日付が変わりません。</summary><div class="appbox-help-faq-answer">早見表は日付の変わり目や画面復帰時に自動更新します。端末の時計も確認してください。年齢計算の基準日は、利用者がまだ変更していない場合だけ今日の日付へ更新し、古い結果を消します。一度変更した基準日は自動変更しません。</div></details>
+          <details class="appbox-help-faq-item"><summary>うまく動かない場合は？</summary><div class="appbox-help-faq-answer">画面を再読み込みし、入力した暦と日付を確認してください。解消しない場合は、Microsoft Edgeのバージョン、操作手順、エラー文を管理担当者へ伝えてください。実際の生年月日等は、問い合わせにそのまま記載しないでください。</div></details>
+        </section>
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+          <h3 class="appbox-help-subheading" id="supported-range">対応範囲と利用上の注意</h3>
+          <p>入力日付は1873年1月1日〜2099年12月31日の新暦（グレゴリオ暦）に対応します。旧暦の変換はできません。</p>
+          <div class="help-table-wrap"><table class="help-table"><thead><tr><th scope="col">元号</th><th scope="col">このツールで対応する日付（西暦）</th></tr></thead><tbody>
+            <tr><th scope="row">明治</th><td>1873年1月1日（明治6年）〜1912年7月29日</td></tr>
+            <tr><th scope="row">大正</th><td>1912年7月30日〜1926年12月24日</td></tr>
+            <tr><th scope="row">昭和</th><td>1926年12月25日〜1989年1月7日</td></tr>
+            <tr><th scope="row">平成</th><td>1989年1月8日〜2019年4月30日</td></tr>
+            <tr><th scope="row">令和</th><td>2019年5月1日〜2099年12月31日（将来は令和が続く前提）</td></tr>
+          </tbody></table></div>
+          <p>1873年1月1日は対応範囲の開始日であり、明治の改元日ではありません。将来の改元にはアプリの更新が必要です。端末の時計がずれている場合は「今日」と未来の生年月日の判定もずれます。</p>
+          <h3 class="appbox-help-subheading" id="privacy">セキュリティとプライバシー</h3>
+          <div class="help-callout help-callout-security"><strong>入力・計算はブラウザ内で完結します。</strong><p>入力した日付や結果をサーバーへ送信せず、Cookie等のブラウザ保存領域にも保存しません。利用中に外部サイトへ通信しません。計算履歴は残しません。</p></div>
+          <p>画面を開き直すと入力と結果は消えます。コピーや画面の印刷・撮影で出力した内容は、出力先で適切に取り扱ってください。</p>
+        </section>
+        <div class="help-footer-actions"><a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a></div>
+      </div>
+    </div>
+
+    <footer class="appbox-footer">お役立ちアプリBOX / 西暦・和暦・年齢早見表 Version 1.2.5</footer>
+  </main>
+
+  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+</body>
+</html>

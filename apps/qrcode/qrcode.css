@@ -1,25 +1,20 @@
 :root {
   --bg: #fbf9ff;
-  --surface: #ffffff;
-  --surface-soft: #f4efff;
-  --primary: #7759a6;
-  --primary-hover: #674b93;
-  --primary-soft: #e9ddf8;
-  --text: #302b3a;
-  --muted: #746d7f;
-  --border: #ddd5e8;
-  --success: #3f7a5f;
+  --surface: var(--appbox-surface);
+  --surface-soft: var(--appbox-primary-soft);
+  --primary: var(--appbox-primary);
+  --primary-hover: var(--appbox-primary-hover);
+  --primary-soft: var(--appbox-primary-soft);
+  --text: var(--appbox-text);
+  --muted: var(--appbox-muted);
+  --border: var(--appbox-border);
+  --success: var(--appbox-success);
   --success-soft: #eaf6ef;
-  --danger: #a64f5d;
+  --danger: var(--appbox-danger);
   --danger-soft: #fcecef;
-  --warning: #8a6118;
+  --warning: var(--appbox-warning);
   --warning-soft: #fff5dc;
-  --shadow:
-    0 14px 36px rgba(86, 64, 112, 0.1);
-}
-
-* {
-  box-sizing: border-box;
+  --shadow: 0 14px 36px rgba(86, 64, 112, 0.1);
 }
 
 html,
@@ -40,34 +35,7 @@ body {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(
-      circle at 10% 0%,
-      rgba(233, 221, 248, 0.85),
-      transparent 32rem
-    ),
-    linear-gradient(
-      180deg,
-      #fdfcff 0%,
-      var(--bg) 100%
-    );
-}
-
-button,
-textarea,
-select,
-input {
-  font: inherit;
-}
-
-button:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
-input:focus-visible,
-summary:focus-visible,
-a:focus-visible {
-  outline: 3px solid rgba(119, 89, 166, 0.28);
-  outline-offset: 2px;
+  background: var(--bg);
 }
 
 button {
@@ -85,97 +53,6 @@ textarea:disabled {
   display: none !important;
 }
 
-.app-shell {
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: 28px 0 36px;
-}
-
-.topbar,
-.brand,
-.top-actions {
-  display: flex;
-  align-items: center;
-}
-
-.topbar {
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.brand {
-  min-width: 0;
-  gap: 12px;
-}
-
-.brand-mark {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  color: var(--primary);
-  background: var(--primary-soft);
-  border-radius: 14px;
-}
-
-.brand-mark svg {
-  width: 23px;
-  height: 23px;
-}
-
-.brand-copy {
-  min-width: 0;
-}
-
-.brand-name {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.app-name {
-  margin: 2px 0 0;
-  font-size: clamp(22px, 4vw, 30px);
-  line-height: 1.25;
-}
-
-.top-actions {
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.back-button {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0 13px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.84);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.back-button {
-  color: var(--primary);
-  text-decoration: none;
-  border-radius: 11px;
-}
-
-.back-button:hover {
-  border-color: #c9bdd8;
-  background: #ffffff;
-}
-
-.back-button svg {
-  width: 16px;
-  height: 16px;
-  flex: 0 0 auto;
-}
 
 .main-grid {
   display: grid;
@@ -190,6 +67,7 @@ textarea:disabled {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.93);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--primary);
   border-radius: 24px;
   box-shadow: var(--shadow);
 }
@@ -915,18 +793,10 @@ select,
   line-height: 1.8;
 }
 
-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 5px 14px;
-  margin-top: 20px;
-  color: #91899c;
-  text-align: center;
-  font-size: 10px;
-  line-height: 1.6;
+.security-note p + p {
+  margin-top: 6px;
 }
+
 
 @media (max-width: 860px) {
   .main-grid {
@@ -943,19 +813,7 @@ footer {
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    width: calc(100% - 20px);
-    padding-top: 18px;
-  }
 
-  .topbar {
-    align-items: flex-start;
-    margin-bottom: 16px;
-  }
-
-  .top-actions {
-    flex: 0 0 auto;
-  }
 
   .options-row,
   .color-grid,
@@ -1017,47 +875,7 @@ footer {
 }
 
 @media (max-width: 430px) {
-  .app-shell {
-    width: calc(100% - 16px);
-  }
 
-  .topbar {
-    gap: 10px;
-  }
-
-  .brand {
-    gap: 9px;
-  }
-
-  .brand-mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .brand-mark svg {
-    width: 21px;
-    height: 21px;
-  }
-
-  .brand-name {
-    font-size: 11px;
-  }
-
-  .app-name {
-    font-size: 21px;
-  }
-
-  .back-button {
-    min-height: 38px;
-    padding: 0 10px;
-    font-size: 11px;
-  }
-
-  .back-button svg {
-    width: 14px;
-    height: 14px;
-  }
 
   .panel {
     border-radius: 20px;
@@ -1106,7 +924,6 @@ footer {
 }
 
 @media (forced-colors: active) {
-  .brand-mark,
   .empty-icon,
   .btn-mini,
   .btn-secondary,

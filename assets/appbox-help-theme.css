@@ -1,0 +1,4 @@
+/* appbox-help.cssと同様に、背景の上書きを有効にするため@layerを使いません。 */
+body.appbox-help-theme-background {
+  background: var(--appbox-help-info-bg);
+}

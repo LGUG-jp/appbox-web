@@ -1,7 +1,7 @@
-お役立ちアプリBOX / CSV差分チェッカー v1.2.2
+お役立ちアプリBOX / CSV差分チェッカー v1.2.3
 ==========================================
 
-現在の共通assets版: v1.4.1（Issue #97）。アプリ固有版: v1.2.2（Issue #83）。
+現在の共通assets版: v2.1.0。アプリ固有版: v1.2.3（Issue #108 フェーズ2）。
 過去の変更履歴に記載された共通assets版は当時の記録です。
 
 本ツール自体の機能版数は、AppBox全体および共通assetsの版数とは別に管理します。
@@ -703,6 +703,8 @@ Content-Security-Policyで script-src 'self' および style-src 'self' を
 ■ 13. ライセンス
 
 
+AppBox本体はMIT Licenseの下で公開しています。RepositoryルートのLICENSEを参照してください。
+
 CSV Diff Browser
 https://github.com/SaurabhBaranawal/csv-diff-browser
 
@@ -805,6 +807,10 @@ https://github.com/SaurabhBaranawal/csv-diff-browser
 - 結果表の不要な空白を除去し、行の高さを調整
 - 新旧比較の表示順を、左から「旧CSV → 新CSV」に統一
 - 結果表および差分CSVの列順を「旧 → 新」に変更
+
+v1.2.3:
+- 導入部を共通幅制約の外へ移し、作業領域を共通広幅shellへ統一。
+- 専用CSSのキャッシュ識別子を更新。CSVの比較・出力仕様およびJavaScriptは変更なし。
 
 v1.2.2:
 - Issue #83の先行標準化として、テーマ指定を旧アプリ名からgreenへ移行。

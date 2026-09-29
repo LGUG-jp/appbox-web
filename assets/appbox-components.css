@@ -1,5 +1,5 @@
 /*
-  お役立ちアプリBOX 共通コンポーネント v1.4.0
+  お役立ちアプリBOX 共通コンポーネント v1.5.1
 
   必要な部品だけをHTML側で .appbox-* クラスとして指定します。
   既存アプリへ読み込んでも、クラスを指定していない要素には影響しません。
@@ -421,6 +421,69 @@
     display: none;
   }
 
+  /* インデックス風タブ。選択状態とパネル切替はアプリ固有JSが管理します。 */
+  .appbox-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0 var(--appbox-space-1);
+    border-bottom: 1px solid var(--appbox-primary);
+  }
+
+  .appbox-tab {
+    position: relative;
+    min-height: 40px;
+    margin-bottom: -1px;
+    padding: var(--appbox-space-2) var(--appbox-space-4);
+    color: var(--appbox-muted);
+    background: var(--appbox-surface-soft);
+    border: 1px solid var(--appbox-border);
+    border-bottom-color: var(--appbox-primary);
+    border-radius: var(--appbox-component-radius) var(--appbox-component-radius) 0 0;
+    font: inherit;
+    cursor: pointer;
+    transition:
+      color var(--appbox-component-transition),
+      background-color var(--appbox-component-transition),
+      border-color var(--appbox-component-transition);
+  }
+
+  .appbox-tab:hover {
+    color: var(--appbox-text);
+    background: var(--appbox-secondary-hover);
+  }
+
+  .appbox-tab.is-active,
+  .appbox-tab[aria-selected="true"] {
+    z-index: 1;
+    color: var(--appbox-text);
+    background: var(--appbox-surface);
+    border-color: var(--appbox-primary);
+    border-bottom-color: var(--appbox-surface);
+  }
+
+  .appbox-tab:focus-visible {
+    outline: none;
+    box-shadow: var(--appbox-focus-ring-double);
+  }
+
+  .appbox-tab-panel {
+    padding: var(--appbox-space-4);
+    color: var(--appbox-text);
+    background: var(--appbox-surface);
+    border: 1px solid var(--appbox-primary);
+    border-top: 0;
+    border-radius: 0 0 var(--appbox-component-radius) var(--appbox-component-radius);
+  }
+
+  @media (forced-colors: active) {
+    .appbox-tab:focus-visible {
+      outline: 2px solid ButtonText;
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+  }
+
   .appbox-button:focus-visible,
   .appbox-input:focus-visible,
   .appbox-select:focus-visible,
@@ -452,6 +515,10 @@
     .appbox-button {
       transition: none;
     }
+    .appbox-tab {
+      transition: none;
+    }
+
 
     .appbox-spinner {
       animation-duration: 1.6s;

@@ -1,0 +1,28 @@
+PUBLIC DATA NOTICE
+==================
+
+対象
+----
+apps/deadlinecalc/holidays.js に収録している「国民の祝日」データ
+
+出典
+----
+内閣府「国民の祝日について」
+https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html
+
+利用条件
+--------
+公共データ利用規約 第1.0版
+https://www.digital.go.jp/resources/open_data/public_data_license_v1.0
+
+取得日
+------
+2026-02-02
+
+加工
+----
+内閣府が公表する祝日データを、LGUGが本アプリで利用するための
+JavaScript形式へ変換・整形しています。
+
+本NOTICEは公開データの出典・利用条件を示すものです。
+AppBox本体はMIT Licenseの下で公開しています。RepositoryルートのLICENSEを参照してください。
