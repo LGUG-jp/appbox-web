@@ -1,6 +1,8 @@
 // Geometry is stored in displayed page points (top-left origin), independent of zoom.
+import { inkBounds } from "./ink.mjs?v=1.8.0";
 export const isLine = (a) => a.type === "arrow" || a.type === "line";
 export function bounds(a) {
+  if (a.type === "ink") return inkBounds(a.points);
   if (isLine(a))
     return {
       x: Math.min(a.x1, a.x2),
@@ -21,7 +23,9 @@ export function bounds(a) {
   return { x: a.x, y: a.y, w: a.w, h: a.h };
 }
 export function translate(a, dx, dy) {
-  if (isLine(a)) {
+  if (a.type === "ink") {
+    for (const p of a.points) { p.x += dx; p.y += dy; }
+  } else if (isLine(a)) {
     a.x1 += dx;
     a.x2 += dx;
     a.y1 += dy;
@@ -38,8 +42,11 @@ export function translate(a, dx, dy) {
   return a;
 }
 export function rotateAnnotation(a, size, delta) {
+  if (a.type === "image") a.rotation = ((a.rotation || 0) + delta + 360) % 360;
   const point = (x, y) => (delta > 0 ? { x: size.height - y, y: x } : { x: y, y: size.width - x });
-  if (isLine(a)) {
+  if (a.type === "ink") {
+    a.points = a.points.map(p => point(p.x, p.y));
+  } else if (isLine(a)) {
     const p = point(a.x1, a.y1),
       q = point(a.x2, a.y2);
     Object.assign(a, { x1: p.x, y1: p.y, x2: q.x, y2: q.y });
@@ -50,6 +57,17 @@ export function rotateAnnotation(a, size, delta) {
     }
   }
 }
+// Annotations are stored from back to front; keep each group's relative order.
+export function reorderAnnotations(annotations, ids, position) {
+  if (position !== "front" && position !== "back") return annotations;
+  const selected = new Set(ids),
+    moving = annotations.filter((a) => selected.has(a.id)),
+    rest = annotations.filter((a) => !selected.has(a.id));
+  if (!moving.length || !rest.length) return annotations;
+  const result = position === "front" ? [...rest, ...moving] : [...moving, ...rest];
+  return result.every((a, index) => a === annotations[index]) ? annotations : result;
+}
+
 export function movePages(pages, ids, targetId, after = false) {
   const selected = new Set(ids);
   if (selected.has(targetId) || !pages.some((p) => p.id === targetId)) return pages;
@@ -81,6 +99,121 @@ export function rangeIds(pages, anchor, target) {
 }
 export function nearestCorner(x, y, width, height) {
   return `${y < height / 2 ? "top" : "bottom"}-${x < width / 2 ? "left" : "right"}`;
+}
+
+export function drawingBox(start, point, size, constrained = false) {
+  if (!constrained) {
+    return {
+      x: Math.min(start.x, point.x),
+      y: Math.min(start.y, point.y),
+      w: Math.abs(point.x - start.x),
+      h: Math.abs(point.y - start.y),
+    };
+  }
+
+  const dx = point.x - start.x,
+    dy = point.y - start.y,
+    directionX = dx < 0 ? -1 : 1,
+    directionY = dy < 0 ? -1 : 1,
+    availableX = directionX < 0 ? start.x : size.width - start.x,
+    availableY = directionY < 0 ? start.y : size.height - start.y,
+    side = Math.max(
+      0,
+      Math.min(
+        Math.max(Math.abs(dx), Math.abs(dy)),
+        availableX,
+        availableY,
+      ),
+    ),
+    endX = start.x + directionX * side,
+    endY = start.y + directionY * side;
+
+  return {
+    x: Math.min(start.x, endX),
+    y: Math.min(start.y, endY),
+    w: side,
+    h: side,
+  };
+}
+
+export function constrainedLinePoint(anchor, point, constrained = false) {
+  if (!constrained) return { x: point.x, y: point.y };
+
+  const dx = point.x - anchor.x,
+    dy = point.y - anchor.y;
+
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return { x: point.x, y: anchor.y };
+  }
+
+  return { x: anchor.x, y: point.y };
+}
+
+export function angleLockedLinePoint(anchor, originalPoint, point, size = null) {
+  const dx = originalPoint.x - anchor.x,
+    dy = originalPoint.y - anchor.y,
+    lengthSquared = dx * dx + dy * dy;
+
+  if (!lengthSquared) return { x: point.x, y: point.y };
+
+  const projectedScale =
+    ((point.x - anchor.x) * dx + (point.y - anchor.y) * dy) / lengthSquared;
+  let maxScale = Infinity;
+
+  if (size) {
+    if (dx > 0) maxScale = Math.min(maxScale, (size.width - anchor.x) / dx);
+    else if (dx < 0) maxScale = Math.min(maxScale, anchor.x / -dx);
+    if (dy > 0) maxScale = Math.min(maxScale, (size.height - anchor.y) / dy);
+    else if (dy < 0) maxScale = Math.min(maxScale, anchor.y / -dy);
+  }
+
+  const scale = Math.max(0, Math.min(maxScale, projectedScale));
+  return {
+    x: anchor.x + dx * scale,
+    y: anchor.y + dy * scale,
+  };
+}
+
+export function resizeBox(original, dx, dy, size, constrained = false, minWidth = 8, minHeight = 8) {
+  const maxWidth = Math.max(0, size.width - original.x),
+    maxHeight = Math.max(0, size.height - original.y);
+
+  if (!constrained || original.w <= 0 || original.h <= 0) {
+    return {
+      w: Math.min(maxWidth, Math.max(minWidth, original.w + dx)),
+      h: Math.min(maxHeight, Math.max(minHeight, original.h + dy)),
+    };
+  }
+
+  const scaleX = (original.w + dx) / original.w,
+    scaleY = (original.h + dy) / original.h,
+    desiredScale =
+      Math.abs(scaleX - 1) >= Math.abs(scaleY - 1)
+        ? scaleX
+        : scaleY,
+    minScale = Math.max(minWidth / original.w, minHeight / original.h),
+    maxScale = Math.min(maxWidth / original.w, maxHeight / original.h),
+    // Thin shapes may not fit their minimum size while retaining the ratio.
+    // Page bounds take precedence in that case.
+    scale = Math.min(maxScale, Math.max(minScale, desiredScale));
+
+  return {
+    w: original.w * scale,
+    h: original.h * scale,
+  };
+}
+
+
+// Small/medium share a raster; large thumbnails get a sharper preview on demand.
+export function thumbnailRasterSize(size) {
+  return size === "large" ? { width: 210, height: 296 } : { width: 155, height: 218 };
+}
+
+// Count actual grid positions, including gaps and padding, for keyboard navigation.
+export function thumbnailColumns(items) {
+  if (!items.length) return 1;
+  const nextRow = items.findIndex((item) => item.offsetTop > items[0].offsetTop + 1);
+  return nextRow > 0 ? nextRow : items.length;
 }
 
 function pageRenderRotation(page) {

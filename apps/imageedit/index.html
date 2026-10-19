@@ -7,33 +7,54 @@
   <meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>画像かんたん加工｜お役立ちアプリBOX</title>
-  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <title>画像かんたん加工｜共創アプリBOX</title>
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
   <!-- 共通アセット。image.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.3.0">
 
-  <link rel="stylesheet" href="./image.css?v=1.2.2">
+  <link rel="stylesheet" href="./image.css?v=1.12.2">
 </head>
 <body>
-  <header class="appbox-header">
+  <header class="appbox-header appbox-header--editor">
     <div class="appbox-header__inner">
-      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
-        <div class="appbox-header__logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
-            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
-          </svg>
-        </div>
-        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
+        <span class="appbox-header__brand-image" aria-hidden="true">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+        </span>
+        <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
+      <div id="imageHeaderActions" class="image-header-actions" role="group" aria-label="画像の編集操作" hidden inert>
+        <button id="changeSingle" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="画像を変更" title="別の画像を開く">
+          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#open"></use></svg><span>画像を変更</span>
+        </button>
+        <div class="image-history-actions" role="group" aria-label="履歴操作">
+          <button id="undo" class="button plain header-icon-button appbox-button appbox-button--secondary" type="button" aria-label="元に戻す" title="元に戻す（Ctrl／Command+Z）" disabled>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#undo"></use></svg>
+          </button>
+          <button id="redo" class="button plain header-icon-button appbox-button appbox-button--secondary" type="button" aria-label="やり直す" title="やり直す（Ctrl／Command+Y）" disabled>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#redo"></use></svg>
+          </button>
+          <button id="resetSingle" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="すべて戻す" title="すべての加工を読込み時の状態へ戻す">すべて戻す</button>
+        </div>
+        <button id="previewButton" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="読込み時と現在を比較" title="読込み時と現在を比較">
+          <svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16M6 14l3-3 3 3M15 10h3M15 14h3"></path></svg><span>比較</span>
+        </button>
+        <button id="showSaveSettings" class="button primary appbox-button appbox-button--primary" type="button" aria-label="加工した画像を保存" title="加工した画像を保存（Ctrl／Command+S）">
+          <svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#save"></use></svg><span>保存</span>
+        </button>
+      </div>
       <nav class="appbox-header__actions" aria-label="ページ操作">
+        <button id="changeProcessingMode" class="button plain mode-choice-button appbox-button appbox-button--secondary" type="button" aria-label="加工方法を変更" aria-controls="processingModeTabs" aria-expanded="false" hidden>
+          <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#back"></use></svg><span>加工方法を変更</span>
+        </button>
         <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="ヘルプ（新しいタブで開きます）">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
@@ -47,8 +68,8 @@
     </div>
   </header>
 
-  <main id="appMain">
-    <div class="appbox-app-intro appbox-app-intro--edge">
+  <main id="appMain" aria-label="画像かんたん加工">
+    <div id="imageIntro" class="appbox-app-intro appbox-app-intro--edge">
       <div class="appbox-app-title-group">
         <div class="appbox-app-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" focusable="false">
@@ -60,15 +81,15 @@
         </div>
         <h1 class="appbox-app-h1">画像かんたん加工</h1>
       </div>
-      <p class="appbox-app-desc">注釈、黒塗り、モザイク、トリミング、リサイズ、形式変換、一括処理に対応します。保存時は新しい画像として書き出すため、元画像のEXIF・GPS等は引き継がれません。</p>
+      <p class="appbox-app-desc">文字・図形・手書き・スタンプ、画像の重ね合わせ、黒塗り、モザイク、トリミング、リサイズ、形式変換、一括処理に対応します。表示ズームで細部を拡大して編集できます。保存時は新しい画像として書き出すため、元画像のEXIF・GPS等は引き継がれません。</p>
     </div>
-    <div class="appbox-shell appbox-shell--wide">
+    <div class="appbox-shell appbox-shell--wide imageedit-workspace-shell">
 
     <noscript>
       <p class="appbox-status appbox-status--warning">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
     </noscript>
 
-  <div class="appbox-tabs appbox-print-hidden" role="tablist" aria-label="加工モード">
+  <div id="processingModeTabs" class="appbox-tabs appbox-print-hidden" role="tablist" aria-label="加工モード">
     <button
       id="singleTab"
       class="appbox-tab is-active"
@@ -115,331 +136,188 @@
       hidden>
 
     <div id="singleWorkspace" class="workspace">
-      <aside class="panel left-panel appbox-panel appbox-panel--accent" inert>
-        <div class="panel-head">
-          <h2>加工メニュー</h2>
-          <p>目的別にメニューを開いて操作してください。</p>
+      <aside class="editor-sidebar panel appbox-panel appbox-panel--accent" aria-label="加工ツール">
+      <section class="left-panel editor-toolbar" inert aria-label="加工ツール">
+        <div class="toolbar-group">
+          <h2>操作</h2>
+          <div class="toolbar-buttons">
+            <button class="tool" data-tool="select" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#select"></use></svg><span>選択</span></button>
+            <button class="tool" data-tool="pan" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 4-2 7-6 7h-2c-2 0-3-1-4-3l-4-5a1.5 1.5 0 0 1 2-2z"></path></svg><span>手のひら</span></button>
+          </div>
         </div>
-
-        <div class="panel-body menu-panel-body">
-          <details class="menu-group" open>
-            <summary>選択・再編集</summary>
-            <div class="menu-group-body">
-              <button class="tool full-tool" data-tool="select" type="button">
-                選択・再編集
-              </button>
-              <p class="hint">
-                加工箇所を選択し、移動、サイズ変更、表示切替、削除、設定変更を行えます。
-              </p>
-            </div>
-          </details>
-
-          <details class="menu-group" open>
-            <summary>秘匿加工</summary>
-            <div class="menu-group-body">
-              <div class="tool-grid">
-                <button class="tool" data-tool="blackoutRect" type="button">黒塗り範囲</button>
-                <button class="tool" data-tool="mosaicRect" type="button">モザイク範囲</button>
-                <button class="tool" data-tool="blackoutBrush" type="button">黒塗りブラシ</button>
-                <button class="tool" data-tool="mosaicBrush" type="button">モザイクブラシ</button>
-              </div>
-
-              <div class="two top-gap">
-                <div>
-                  <label for="brushSize">ブラシ幅</label>
-                  <input id="brushSize" type="number" min="5" max="500" step="1" value="50">
-                </div>
-                <div>
-                  <label for="mosaicSize">モザイクサイズ</label>
-                  <input id="mosaicSize" type="number" min="4" max="200" step="1" value="18">
-                </div>
-              </div>
-
-              <p class="hint">
-                保存前なら加工箇所をレイヤーとして移動・拡大縮小・削除できます。
-              </p>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>注釈</summary>
-            <div class="menu-group-body">
-              <div class="tool-grid">
-                <button class="tool" data-tool="text" type="button">文字</button>
-                <button class="tool" data-tool="rect" type="button">四角形</button>
-                <button class="tool" data-tool="ellipse" type="button">楕円</button>
-                <button class="tool" data-tool="arrow" type="button">矢印</button>
-              </div>
-
-              <label for="annotationText">文字</label>
-              <input id="annotationText" type="text" maxlength="100" value="注釈">
-
-              <div class="three top-gap">
-                <div>
-                  <label for="annotationColor">色</label>
-                  <input id="annotationColor" type="color" value="#d00000">
-                </div>
-                <div>
-                  <label for="fontSize">文字サイズ</label>
-                  <input id="fontSize" type="number" min="8" max="300" step="1" value="42">
-                </div>
-                <div>
-                  <label for="lineWidth">線幅</label>
-                  <input id="lineWidth" type="number" min="1" max="100" step="1" value="8">
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>トリミング</summary>
-            <div class="menu-group-body">
-              <button class="tool full-tool" data-tool="crop" type="button">
-                トリミング範囲を指定
-              </button>
-
-              <div class="two top-gap">
-                <div>
-                  <label for="cropX">X</label>
-                  <input id="cropX" type="number" min="0" step="1">
-                </div>
-                <div>
-                  <label for="cropY">Y</label>
-                  <input id="cropY" type="number" min="0" step="1">
-                </div>
-                <div>
-                  <label for="cropW">横幅</label>
-                  <input id="cropW" type="number" min="1" step="1">
-                </div>
-                <div>
-                  <label for="cropH">高さ</label>
-                  <input id="cropH" type="number" min="1" step="1">
-                </div>
-              </div>
-
-              <label for="cropRatio">縦横比</label>
-              <select id="cropRatio">
-                <option value="free">自由</option>
-                <option value="1">1:1</option>
-                <option value="4:3">4:3</option>
-                <option value="16:9">16:9</option>
-                <option value="3:4">3:4</option>
-                <option value="35:45">35:45</option>
-                <option value="original">読込み時の元画像比率</option>
-              </select>
-
-              <div class="button-grid top-gap">
-                <button id="centerCrop" class="button plain appbox-button appbox-button--secondary" type="button">中央配置</button>
-                <button id="resetCrop" class="button plain appbox-button appbox-button--secondary" type="button">枠を戻す</button>
-              </div>
-
-              <p class="hint">
-                範囲の確定は、画像直下に表示される「この範囲で切り抜く」から行います。
-              </p>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>回転・反転</summary>
-            <div class="menu-group-body">
-              <div class="button-grid">
-                <button id="rotateLeft" class="button plain appbox-button appbox-button--secondary" type="button">左90°</button>
-                <button id="rotateRight" class="button plain appbox-button appbox-button--secondary" type="button">右90°</button>
-                <button id="flipH" class="button plain appbox-button appbox-button--secondary" type="button">左右反転</button>
-                <button id="flipV" class="button plain appbox-button appbox-button--secondary" type="button">上下反転</button>
-              </div>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>リサイズ</summary>
-            <div class="menu-group-body">
-              <div class="two">
-                <div>
-                  <label for="resizeW">横幅</label>
-                  <input id="resizeW" type="number" min="1" max="8192" step="1">
-                </div>
-                <div>
-                  <label for="resizeH">高さ</label>
-                  <input id="resizeH" type="number" min="1" max="8192" step="1">
-                </div>
-              </div>
-
-              <label class="check" for="lockAspect">
-                <input id="lockAspect" type="checkbox" checked>
-                縦横比を維持
-              </label>
-
-              <button id="applyResize" class="button plain full appbox-button appbox-button--secondary" type="button">サイズを変更</button>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>選択中の加工設定</summary>
-            <div class="menu-group-body">
-              <button id="applyLayerStyle" class="button soft full appbox-button appbox-button--secondary" type="button" disabled>
-                選択中の加工へ設定を反映
-              </button>
-              <p class="hint">
-                選択した種類に応じて、上の秘匿加工または注釈の設定値を反映します。
-              </p>
-            </div>
-          </details>
-
-          <details class="menu-group">
-            <summary>履歴・リセット</summary>
-            <div class="menu-group-body">
-              <div class="button-grid">
-                <button id="undo" class="button plain appbox-button appbox-button--secondary" type="button">1つ戻す</button>
-                <button id="redo" class="button plain appbox-button appbox-button--secondary" type="button">やり直す</button>
-                <button id="deleteLayer" class="button danger appbox-button appbox-button--danger" type="button">選択削除</button>
-                <button id="resetSingle" class="button danger appbox-button appbox-button--danger" type="button">すべて戻す</button>
-              </div>
-            </div>
-          </details>
+        <div class="toolbar-group">
+          <h2>マスキング</h2>
+          <div class="toolbar-buttons">
+            <button class="tool" data-tool="blackoutRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#blackout"></use></svg><span>黒塗り範囲</span></button>
+            <button class="tool" data-tool="mosaicRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#mosaic"></use></svg><span>モザイク範囲</span></button>
+            <button class="tool" data-tool="blackoutBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#blackout-brush"></use></svg><span>黒塗りブラシ</span></button>
+            <button class="tool" data-tool="mosaicBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#mosaic-brush"></use></svg><span>モザイクブラシ</span></button>
+          </div>
         </div>
+        <div class="toolbar-group">
+          <h2>文字・図形</h2>
+          <div class="toolbar-buttons">
+            <button class="tool" data-tool="text" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#text"></use></svg><span>文字</span></button>
+            <button class="tool" data-tool="rect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rectangle"></use></svg><span>四角形</span></button>
+            <button class="tool" data-tool="ellipse" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#ellipse"></use></svg><span>円</span></button>
+            <button class="tool" data-tool="arrow" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#arrow"></use></svg><span>矢印</span></button>
+            <button class="tool" data-tool="line" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 20 16-16"></path></svg><span>直線</span></button>
+            <button class="tool" data-tool="ink" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 18 11-11 3 3-11 11H4v-3ZM15 7l2-2 3 3-2 2"></path></svg><span>手書き</span></button>
+            <button class="tool" data-tool="inkEraser" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 14 9-9 7 7-7 7H9l-5-5ZM10 8l7 7M13 19h8"></path></svg><span>消しゴム</span></button>
+            <button id="openStamp" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M9 13V7a3 3 0 0 1 6 0v6l4 3v3H5v-3l4-3ZM4 22h16"></path></svg><span>スタンプ</span></button>
+            <button id="addImageLayer" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8" cy="8" r="1.5"></circle><path d="m4 17 5-5 4 4 3-3 5 5"></path></svg><span>画像を追加</span></button>
+          </div>
+          <input id="imageLayerInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
+        </div>
+        <div class="toolbar-group">
+          <h2>回転・リサイズ</h2>
+          <div class="toolbar-buttons">
+            <button id="rotateLeft" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rotate-left"></use></svg><span>左90°</span></button>
+            <button id="rotateRight" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rotate-right"></use></svg><span>右90°</span></button>
+            <button id="flipH" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#flip-horizontal"></use></svg><span>左右反転</span></button>
+            <button id="flipV" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#flip-vertical"></use></svg><span>上下反転</span></button>
+            <button class="tool" data-tool="crop" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#crop"></use></svg><span>トリミング</span></button>
+            <button id="toggleTransform" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M7 7h5M7 7v5M17 17h-5M17 17v-5"></path></svg><span>リサイズ</span></button>
+          </div>
+        </div>
+      </section>
+
       </aside>
 
       <section class="panel stage-panel appbox-panel appbox-panel--accent">
-        <div class="stage-head" inert>
-          <div class="file-heading">
-            <strong id="singleFileName">-</strong>
-            <span id="singleInfo">-</span>
-          </div>
-          <div class="button-row">
-            <button id="changeSingle" class="button plain appbox-button appbox-button--secondary" type="button">画像を変更</button>
-            <button id="previewButton" class="button soft appbox-button appbox-button--secondary" type="button">読込み時と現在を比較</button>
-          </div>
-        </div>
-
-        <div class="canvas-stage">
-          <div
-            id="singleEmpty"
-            class="drop-zone"
-            tabindex="0"
-            role="button"
-            aria-label="JPEG、PNGまたはWebP画像を選択">
-            <div class="drop-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M12 16V4"></path>
-                <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
-                <path d="M5 15v4h14v-4"></path>
-              </svg>
+        <div id="canvasWorkarea" class="canvas-workarea">
+          <div id="canvasViewport" class="canvas-stage">
+            <div
+              id="singleEmpty"
+              class="drop-zone"
+              tabindex="0"
+              role="button"
+              aria-label="JPEG、PNGまたはWebP画像を選択">
+              <div class="drop-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M12 16V4"></path>
+                  <path d="m7.5 8.5 4.5-4.5 4.5 4.5"></path>
+                  <path d="M5 15v4h14v-4"></path>
+                </svg>
+              </div>
+              <h2>画像をここにドロップ</h2>
+              <p>またはクリックして画像を選択してください。JPEG / PNG / WebPに対応しています。</p>
+              <button id="singleChoose" class="button primary appbox-button appbox-button--primary" type="button" tabindex="-1">画像を選択</button>
+              <p class="drop-note">画像はブラウザ内で処理され、サーバーや外部サービスへ送信されません。</p>
             </div>
-            <h2>画像をここにドロップ</h2>
-            <p>またはクリックして画像を選択してください。JPEG / PNG / WebPに対応しています。</p>
-            <button id="singleChoose" class="button primary appbox-button appbox-button--primary" type="button" tabindex="-1">画像を選択</button>
-            <p class="drop-note">画像はブラウザ内で処理され、サーバーや外部サービスへ送信されません。</p>
+
+            <div id="canvasHolder" class="canvas-holder">
+              <canvas id="baseCanvas"></canvas>
+              <canvas id="layerCanvas" class="layer-canvas"></canvas>
+              <canvas id="editCanvas" class="overlay-canvas" tabindex="0" aria-label="画像の編集領域"></canvas>
+              <div id="textEditorHost" hidden>
+                <textarea id="textEditor" class="canvas-text-editor" maxlength="2000" rows="1" wrap="soft" spellcheck="false" aria-label="画像上の文字を編集" hidden></textarea>
+              </div>
+            </div>
           </div>
 
-          <div id="canvasHolder" class="canvas-holder">
-            <canvas id="baseCanvas"></canvas>
-            <canvas id="layerCanvas" class="layer-canvas"></canvas>
-            <canvas id="editCanvas" class="overlay-canvas"></canvas>
-          </div>
+
         </div>
 
-        <div
-          id="cropActionBar"
-          class="crop-action-bar hidden"
-          role="region"
-          aria-label="トリミングの確定操作">
-          <div class="crop-action-info">
-            <strong>トリミング範囲</strong>
-            <span id="cropActionSummary">範囲を指定してください</span>
-          </div>
-          <div class="button-row">
-            <button id="cropBarReset" class="button plain appbox-button appbox-button--secondary" type="button">枠を戻す</button>
-            <button id="cancelCrop" class="button plain appbox-button appbox-button--secondary" type="button">キャンセル</button>
-            <button id="cropBarApply" class="button primary crop-confirm appbox-button appbox-button--primary" type="button">
-              この範囲で切り抜く
-            </button>
-          </div>
+        <div id="zoomControls" class="zoom-controls editor-zoom-controls left-panel" inert role="group" aria-label="画像の表示倍率" title="表示倍率だけを変更し、保存する画像のサイズは変わりません。">
+          <span id="singleInfo" class="image-size-info">-</span>
+          <label for="zoomValue">表示倍率</label>
+          <button id="zoomOut" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="画像表示を縮小">−</button>
+          <div class="zoom-input"><input id="zoomValue" type="number" min="0.1" max="400" step="0.1" value="100" aria-label="画像の表示倍率（%）"><span aria-hidden="true">%</span></div>
+          <button id="zoomIn" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="画像表示を拡大">＋</button>
+          <button id="zoomFit" class="button plain appbox-button appbox-button--secondary" type="button" aria-pressed="false">全体</button>
+          <button id="zoomWidth" class="button plain appbox-button appbox-button--secondary" type="button" aria-pressed="false">幅に合わせる</button>
+          <button id="zoomActual" class="button plain appbox-button appbox-button--secondary" type="button">100%</button>
         </div>
-
-        <p id="stageHelp" class="stage-help">ツールを選択してください。</p>
       </section>
 
-      <aside class="panel right-panel appbox-panel appbox-panel--accent" inert>
-        <div class="panel-head">
-          <h2>保存・確認</h2>
-          <p>保存前に加工箇所と出力条件を確認してください。</p>
-        </div>
-
-        <div class="panel-body">
-          <details class="menu-group" open>
-            <summary>定型プリセット</summary>
-            <div class="menu-group-body">
-              <label for="presetSelect">用途</label>
-              <select id="presetSelect">
-                <option value="">選択してください</option>
-                <option value="web">Web掲載用</option>
-                <option value="mail">メール添付用</option>
-                <option value="document">庁内文書貼付用</option>
-                <option value="thumb">サムネイル用</option>
-                <option value="metadata">原寸・メタデータ除去</option>
-              </select>
-
-              <button id="applyPreset" class="button soft full appbox-button appbox-button--secondary" type="button">プリセットを適用</button>
-            </div>
-          </details>
-
-          <details class="menu-group" open>
-            <summary>加工箇所の確認一覧</summary>
-            <div class="menu-group-body">
-              <div id="layerSummary" class="summary-box">加工箇所はありません。</div>
-              <div id="layerList" class="layer-list"></div>
-            </div>
-          </details>
-
-          <details class="menu-group" open>
-            <summary>保存設定</summary>
-            <div class="menu-group-body">
-              <label for="singleFormat">形式</label>
-              <select id="singleFormat">
-                <option value="image/jpeg">JPEG</option>
-                <option value="image/png">PNG</option>
-                <option value="image/webp">WebP</option>
-              </select>
-
-              <div id="singleJpegBackgroundField">
-                <label for="singleJpegBackground">JPEGの透明部分</label>
-                <select id="singleJpegBackground">
-                  <option value="white">白背景</option>
-                  <option value="black">黒背景</option>
-                </select>
-              </div>
-
-              <label class="check" for="singleTargetEnabled">
-                <input id="singleTargetEnabled" type="checkbox" checked>
-                目標容量以下へ自動調整
-              </label>
-
-              <label for="singleTargetKB">目標容量（KB）</label>
-              <input id="singleTargetKB" type="number" min="10" step="10" value="300">
-
-              <label for="singleSaveName">保存名</label>
-              <input id="singleSaveName" type="text" maxlength="100">
-
-              <button id="singleSave" class="button primary full large appbox-button appbox-button--primary" type="button">
-                加工済み画像を保存
-              </button>
-
-              <div id="singleStatus" class="status" role="status" aria-live="polite">
-                保存時に表示中のレイヤーを画像へ焼き込みます。
-              </div>
-
-              <div class="safe-box">
-                <strong>保存前の確認</strong>
-                <p>
-                  非表示の加工レイヤーは保存されません。個人情報等が確実に隠れていることを
-                  比較プレビューでも確認してください。
-                </p>
+      <aside class="editor-settings right-panel panel appbox-panel appbox-panel--accent" aria-label="ツールの設定" inert>
+        <section id="contextPanel" class="context-panel hidden" aria-labelledby="contextTitle" aria-hidden="true" inert>
+          <span id="contextTitle" class="context-title"></span>
+          <div class="context-fields">
+            <div data-settings="text" class="context-setting hidden">
+              <label class="setting-field setting-field--font" for="fontFamily"><span>フォント</span><select id="fontFamily">
+                <option value="" disabled>複数の値</option>
+                <option value="biz-udgothic">BIZ UDゴシック</option>
+                <option value="biz-udpgothic">BIZ UDPゴシック</option>
+                <option value="yu-gothic">游ゴシック</option>
+                <option value="yu-gothic-ui" selected>游ゴシック UI</option>
+                <option value="meiryo">メイリオ</option>
+                <option value="ms-gothic">MS ゴシック</option>
+                <option value="ms-pgothic">MS Pゴシック</option>
+                <option value="ms-mincho">MS 明朝</option>
+                <option value="ms-pmincho">MS P明朝</option>
+                <option value="segoe-ui">Segoe UI</option>
+                <option value="arial">Arial</option>
+                <option value="times-new-roman">Times New Roman</option>
+              </select></label>
+              <div class="setting-field setting-field--font-size">
+                <label for="fontSize">サイズ</label>
+                <div class="font-size-controls" role="group" aria-label="文字サイズ">
+                  <button id="decreaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を小さく" title="文字を小さく（2px）" disabled>−</button>
+                  <input id="fontSize" type="number" min="8" max="300" step="1" value="42" aria-label="文字サイズ（px）">
+                  <button id="increaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を大きく" title="文字を大きく（2px）" disabled>＋</button>
+                </div>
               </div>
             </div>
-          </details>
-        </div>
+            <div data-settings="color" class="context-setting hidden">
+              <label class="setting-field setting-field--color" for="annotationColor"><span id="annotationColorLabel">色</span><input id="annotationColor" type="color" value="#d00000" aria-label="文字・図形・手書きの色"></label>
+            </div>
+            <div data-settings="text" class="context-setting hidden">
+              <label class="check setting-check" for="boldText"><input id="boldText" type="checkbox" checked>太字</label>
+            </div>
+            <div data-settings="line" class="context-setting hidden">
+              <label class="setting-field" for="lineWidth"><span>太さ</span><input id="lineWidth" type="number" min="1" max="100" step="1" value="8" aria-label="線の太さ（px）"></label>
+            </div>
+            <div data-settings="text" class="context-setting context-setting--fill hidden">
+              <label class="setting-field setting-field--color" for="textBgColor"><span id="textFillLabel">塗り</span><input id="textBgColor" type="color" value="#ffffff" aria-label="文字の塗り色"></label>
+              <label class="check setting-check" for="textBgTransparent"><input id="textBgTransparent" type="checkbox" checked>塗りなし</label>
+            </div>
+            <div data-settings="fill" class="context-setting context-setting--fill hidden">
+              <label class="setting-field setting-field--color" for="shapeFill"><span id="shapeFillLabel">塗り</span><input id="shapeFill" type="color" value="#fff1b8" aria-label="図形の塗り色"></label>
+              <label class="check setting-check" for="shapeFillNone"><input id="shapeFillNone" type="checkbox" checked>塗りなし</label>
+            </div>
+            <div data-settings="outline" class="context-setting hidden">
+              <label class="check setting-check" for="whiteOutline"><input id="whiteOutline" type="checkbox" checked>白縁</label>
+            </div>
+            <div data-settings="brush" class="context-setting hidden">
+              <label class="setting-field" for="brushSize"><span>太さ</span><input id="brushSize" type="number" min="5" max="500" step="1" value="50" aria-label="ブラシの太さ（px）"></label>
+            </div>
+            <div data-settings="mosaic" class="context-setting hidden">
+              <label class="setting-field" for="mosaicSize"><span>粗さ</span><input id="mosaicSize" type="number" min="4" max="200" step="1" value="18" aria-label="モザイクの粗さ（px）"></label>
+            </div>
+            <div data-settings="ink" class="context-setting hidden">
+              <label class="setting-field" for="inkStabilizer"><span>補正</span><select id="inkStabilizer" aria-label="手ぶれ補正">
+                <option value="none">なし</option><option value="weak">弱</option><option value="medium">中</option><option value="strong">強</option>
+              </select></label>
+            </div>
+            <div data-settings="image" class="context-setting hidden">
+              <label class="setting-field" for="imageOpacity"><span>濃さ</span><input id="imageOpacity" type="number" min="0" max="100" step="1" value="100" aria-label="画像の不透明度（%）"></label>
+            </div>
+            <section data-context="crop" class="context-setting hidden" aria-label="トリミング設定">
+              <label class="setting-field" for="cropW"><span>横幅</span><input id="cropW" type="number" min="1" step="1" aria-label="トリミングの横幅（px）"></label>
+              <label class="setting-field" for="cropH"><span>高さ</span><input id="cropH" type="number" min="1" step="1" aria-label="トリミングの高さ（px）"></label>
+              <label class="setting-field" for="cropRatio"><span>比率</span><select id="cropRatio">
+                <option value="free">自由</option><option value="1">1:1</option><option value="4:3">4:3</option><option value="16:9">16:9</option><option value="3:4">3:4</option><option value="35:45">35:45</option><option value="original">元画像</option>
+              </select></label>
+              <button id="centerCrop" class="button plain appbox-button appbox-button--secondary" type="button" disabled>中央配置</button>
+              <button id="applyCrop" class="button primary appbox-button appbox-button--primary" type="button" disabled>この範囲で切り抜く</button>
+              <button id="cancelCrop" class="button plain appbox-button appbox-button--secondary" type="button">キャンセル</button>
+            </section>
+            <section data-context="transform" class="context-setting hidden" aria-label="保存する画像のサイズ変更">
+              <label class="setting-field" for="resizeW"><span>横幅</span><input id="resizeW" type="number" min="1" max="8192" step="1" aria-label="保存する画像の横幅（px）"></label>
+              <label class="setting-field" for="resizeH"><span>高さ</span><input id="resizeH" type="number" min="1" max="8192" step="1" aria-label="保存する画像の高さ（px）"></label>
+              <label class="check setting-check" for="lockAspect"><input id="lockAspect" type="checkbox" checked>比率固定</label>
+              <button id="applyResize" class="button plain appbox-button appbox-button--secondary" type="button">サイズを変更</button>
+            </section>
+          </div>
+          <div id="editorActions" class="editor-actions hidden" role="group" aria-label="重なり順" aria-hidden="true" inert>
+            <button id="frontLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最前面</button>
+            <button id="backLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最背面</button>
+          </div>
+        </section>
       </aside>
+
     </div>
   </section>
 
@@ -663,8 +541,8 @@
             <p id="batchCount">0枚</p>
           </div>
           <div class="button-row">
-            <button id="batchAdd" class="button plain appbox-button appbox-button--secondary" type="button">画像を追加</button>
-            <button id="batchClear" class="button danger appbox-button appbox-button--danger" type="button">一覧を消去</button>
+            <button id="batchAdd" class="button plain appbox-button appbox-button--secondary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#open"></use></svg><span>画像を追加</span></button>
+            <button id="batchClear" class="button danger appbox-button appbox-button--danger" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--delete appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#delete"></use></svg><span>一覧を消去</span></button>
           </div>
         </div>
 
@@ -683,15 +561,11 @@
           <label for="zipName">ZIP名</label>
           <input id="zipName" type="text" maxlength="100" value="images-batch">
 
-          <button id="batchProcess" class="button primary full large appbox-button appbox-button--primary" type="button">
-            一括処理してZIP保存
-          </button>
+          <button id="batchProcess" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#save"></use></svg><span>一括処理してZIP保存</span></button>
           <button id="batchCancel" class="button danger full hidden appbox-button appbox-button--danger" type="button">
             処理を中止
           </button>
-          <button id="batchRedownload" class="button plain full appbox-button appbox-button--secondary" type="button" disabled>
-            最後のZIPを再保存
-          </button>
+          <button id="batchRedownload" class="button plain full appbox-button appbox-button--secondary" type="button" disabled><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#save"></use></svg><span>最後のZIPを再保存</span></button>
 
           <div id="batchStatus" class="status" role="status" aria-live="polite">
             画像を追加してください。
@@ -714,9 +588,122 @@
     </div>
   </section>
 
-  <footer class="appbox-footer">お役立ちアプリBOX / 画像かんたん加工 Version 1.2.2</footer>
+  <footer class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.12.3</footer>
     </div>
 </main>
+
+<div id="objectMenu" class="object-menu hidden" role="menu" aria-label="オブジェクト操作">
+  <button id="menuCopy" type="button" role="menuitem">コピー</button>
+  <button id="menuPaste" type="button" role="menuitem">貼り付け</button>
+  <button id="menuDelete" type="button" role="menuitem">削除</button>
+  <button id="menuFront" type="button" role="menuitem">最前面へ</button>
+  <button id="menuBack" type="button" role="menuitem">最背面へ</button>
+</div>
+
+<div id="stampDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="stampTitle">
+  <div class="dialog-card stamp-dialog-card" tabindex="-1">
+    <div class="dialog-head">
+      <h2 id="stampTitle">スタンプを追加</h2>
+      <button id="closeStamp" class="button plain appbox-button appbox-button--secondary" type="button">閉じる</button>
+    </div>
+    <div class="stamp-dialog-body">
+      <div class="stamp-layout">
+        <div class="stamp-fields">
+          <label for="stampPreset">定型スタンプ・テンプレート</label><select id="stampPreset"></select>
+          <div class="two">
+            <div><label for="stampShape">形</label><select id="stampShape"><option value="rect">四角</option><option value="ellipse">丸</option></select></div>
+            <div><label for="stampDateFormat">日付の表記</label><select id="stampDateFormat"><option value="seireki">西暦</option><option value="wareki">和暦</option><option value="wareki-kanji">和暦（漢字）</option></select></div>
+            <div><label for="stampWidth">幅（px）</label><input id="stampWidth" type="number" min="40" max="1200" step="1" value="180"></div>
+            <div><label for="stampHeight">高さ（px）</label><input id="stampHeight" type="number" min="40" max="1200" step="1" value="180"></div>
+          </div>
+          <label for="stampText">文字（3行まで・{date}で今日の日付）</label><textarea id="stampText" rows="3" maxlength="200">確認</textarea>
+          <div class="two">
+            <div><label for="stampColor">色</label><input id="stampColor" type="color" value="#d7261e"></div>
+            <div><label for="stampBorder">枠線（px）</label><select id="stampBorder"><option value="1">1</option><option value="3" selected>3</option><option value="6">6</option></select></div>
+          </div>
+          <label for="stampFill">背景</label><select id="stampFill"><option value="none">透明</option><option value="white">白</option></select>
+        </div>
+        <div class="stamp-preview">
+          <canvas id="stampPreviewCanvas" width="320" height="240" aria-label="スタンプのプレビュー"></canvas>
+          <p id="stampStatus" class="status" role="status" aria-live="polite"></p>
+          <button id="stampApply" class="button primary full appbox-button appbox-button--primary" type="button">画像の中央へ配置</button>
+        </div>
+      </div>
+      <details class="section stamp-templates">
+        <summary>テンプレートの保存・読込み</summary>
+        <label for="stampName">テンプレート名</label><input id="stampName" type="text" maxlength="40" value="マイスタンプ">
+        <div class="button-row top-gap">
+          <button id="stampSaveTemplate" class="button plain appbox-button appbox-button--secondary" type="button">テンプレートを保存</button>
+          <button id="stampLoadTemplate" class="button plain appbox-button appbox-button--secondary" type="button">テンプレートを読み込む</button>
+        </div>
+        <input id="stampTemplateInput" type="file" accept="application/json,.json" hidden>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div
+  id="saveDialog"
+  class="dialog hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="saveTitle"
+  aria-describedby="saveDescription">
+  <div class="dialog-card save-dialog-card" tabindex="-1">
+    <div class="dialog-head">
+      <div>
+        <h2 id="saveTitle">加工済み画像を保存</h2>
+        <p id="saveDescription">形式と保存名を確認して、新しい画像として保存します。</p>
+      </div>
+      <button id="closeSaveSettings" class="button plain appbox-button appbox-button--secondary" type="button">閉じる</button>
+    </div>
+    <section class="panel right-panel appbox-panel appbox-panel--accent">
+      <div class="panel-body">
+        <div class="two">
+          <div>
+            <label for="singleFormat">形式</label>
+            <select id="singleFormat">
+              <option value="image/png" selected>PNG</option>
+              <option value="image/jpeg">JPEG</option>
+              <option value="image/webp">WebP</option>
+            </select>
+          </div>
+          <div>
+            <label for="singleSaveName">保存名</label>
+            <input id="singleSaveName" type="text" maxlength="100">
+          </div>
+        </div>
+        <p id="singleJpegNote" class="hint hidden">JPEGでは透明部分を白背景で保存します。</p>
+        <p id="singleSaveSize" class="summary-box">保存する画像のサイズを表示します。</p>
+
+        <section class="section" aria-label="保存用の出力設定">
+          <label for="presetSelect">用途に合わせた出力</label>
+          <select id="presetSelect">
+            <option value="">現在のサイズ</option>
+            <option value="web">Web掲載用</option>
+            <option value="mail">メール添付用</option>
+            <option value="document">庁内文書貼付用</option>
+            <option value="thumb">サムネイル用</option>
+            <option value="metadata">原寸・メタデータ除去</option>
+          </select>
+          <label class="check" for="singleTargetEnabled">
+            <input id="singleTargetEnabled" type="checkbox">
+            目標容量以下へ自動調整
+          </label>
+          <label for="singleTargetKB">目標容量（KB）</label>
+          <input id="singleTargetKB" type="number" min="10" step="10" value="300">
+        </section>
+
+        <div class="safe-box">
+          <strong>保存前の確認</strong>
+          <p>非表示のレイヤーは保存されません。個人情報等が確実に隠れていることを、比較プレビューでも確認してください。</p>
+        </div>
+        <button id="singleSave" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#save"></use></svg><span>加工済み画像を保存</span></button>
+        <div id="singleStatus" class="status" role="status" aria-live="polite">保存時に表示中のレイヤーを画像へ焼き込みます。</div>
+      </div>
+    </section>
+  </div>
+</div>
 
 <div
   id="previewDialog"
@@ -750,6 +737,11 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="./image.js?v=1.2.2"></script>
+<script src="./drawing-core.js?v=1.4.0"></script>
+<script src="./annotation-style.js?v=1.8.0"></script>
+<script src="./stamp.js?v=1.4.0"></script>
+<script src="./editor-actions.js?v=1.10.0"></script>
+<script src="../../assets/appbox-safe-image.js?v=2.3.0"></script>
+<script src="./image.js?v=1.12.3"></script>
 </body>
 </html>

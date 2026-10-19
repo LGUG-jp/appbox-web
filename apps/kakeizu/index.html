@@ -8,36 +8,33 @@
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
 
-  <title>相続関係図（ジェノグラム）作成ツール | お役立ちアプリBOX</title>
-  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <title>相続関係図（ジェノグラム）作成ツール | 共創アプリBOX</title>
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
 
 
 
   <!-- 共通アセット。kakeizu.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.3.0">
 
-  <link rel="stylesheet" href="./kakeizu.css?v=1.3.0">
+  <link rel="stylesheet" href="./kakeizu.css?v=1.3.2">
 </head>
 
 
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
-      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
-        <div class="appbox-header__logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
-            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
-          </svg>
-        </div>
-        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
+        <span class="appbox-header__brand-image" aria-hidden="true">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+        </span>
+        <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
 
       <nav class="appbox-header__actions" aria-label="ページ操作">
@@ -694,6 +691,7 @@
 
               <textarea
                 id="chartMemo"
+                maxlength="10000"
                 placeholder="例: 戸籍確認中、相続放棄申述受理通知書確認予定など"
                 oninput="updateChartMemoFromInput()"
               ></textarea>
@@ -820,72 +818,75 @@
         ></div>
 
         <section class="canvas-panel" aria-label="相続関係図の作図領域">
-          <div class="canvas-heading">
-            <div>
-              <span class="canvas-kicker">CHART</span>
-              <strong>相続関係図</strong>
+          <div class="canvas-topbar">
+            <div class="canvas-heading">
+              <div>
+                <span class="canvas-kicker">CHART</span>
+                <strong>相続関係図</strong>
+              </div>
+
+              <span class="canvas-guide">
+                背景ドラッグで移動、Shift+背景ドラッグで人物を範囲選択、<span class="canvas-guide-emphasis">人物右クリックで親族追加</span>
+              </span>
             </div>
 
-            <span class="canvas-guide">
-              背景ドラッグで移動、Shift+背景ドラッグで人物を範囲選択、<span class="canvas-guide-emphasis">人物右クリックで親族追加</span>
-            </span>
-          </div>
+            <div class="toolbar" aria-label="作図領域の操作">
+              <button class="small" type="button" onclick="undo()">
+                元に戻す
+              </button>
 
-          <div class="toolbar" aria-label="作図領域の操作">
-            <button class="small" type="button" onclick="undo()">
-              元に戻す
-            </button>
+              <button class="small" type="button" onclick="redo()">
+                やり直し
+              </button>
 
-            <button class="small" type="button" onclick="redo()">
-              やり直し
-            </button>
+              <button class="small" type="button" onclick="zoomIn()">
+                拡大
+              </button>
 
-            <button class="small" type="button" onclick="zoomIn()">
-              拡大
-            </button>
+              <button class="small" type="button" onclick="zoomOut()">
+                縮小
+              </button>
 
-            <button class="small" type="button" onclick="zoomOut()">
-              縮小
-            </button>
+              <button class="small" type="button" onclick="fitAll()">
+                全体表示
+              </button>
 
-            <button class="small" type="button" onclick="fitAll()">
-              全体表示
-            </button>
-
-            <button class="small" type="button" onclick="focusSelected()">
-              選択へ移動
-            </button>
-            <button class="small" type="button" onclick="resetView()">
-              表示リセット
-            </button>
-            <button class="small" type="button" onclick="moveChartNearOrigin()">
-              図を原点付近へ移動
-            </button>
-            <button class="small" type="button" onclick="clearSelectionAndRender()">
-              選択解除
-            </button>
-          </div>
-
-          <div
-            id="canvasModeBanner"
-            class="canvas-mode-banner"
-            role="status"
-            aria-live="polite"
-            hidden
-          >
-            <div class="canvas-mode-message">
-              <span id="canvasModeStep" class="canvas-mode-step"></span>
-              <strong id="canvasModeTitle"></strong>
-              <span id="canvasModeText"></span>
+              <button class="small" type="button" onclick="focusSelected()">
+                選択へ移動
+              </button>
+              <button class="small" type="button" onclick="resetView()">
+                表示リセット
+              </button>
+              <button class="small" type="button" onclick="moveChartNearOrigin()">
+                図を原点付近へ移動
+              </button>
+              <button class="small" type="button" onclick="clearSelectionAndRender()">
+                選択解除
+              </button>
             </div>
 
-            <button
-              class="canvas-mode-cancel"
-              type="button"
-              onclick="cancelRelationMode()"
+            <div
+              id="canvasModeBanner"
+              class="canvas-mode-banner"
+              role="status"
+              aria-live="polite"
+              hidden
             >
-              中止
-            </button>
+              <div class="canvas-mode-message">
+                <span id="canvasModeStep" class="canvas-mode-step"></span>
+                <strong id="canvasModeTitle"></strong>
+                <span id="canvasModeText"></span>
+              </div>
+
+              <button
+                class="canvas-mode-cancel"
+                type="button"
+                onclick="cancelRelationMode()"
+              >
+                中止
+              </button>
+            </div>
+
           </div>
 
           <div id="printPageHeader" class="appbox-print-only">
@@ -950,7 +951,7 @@
   </div>
 
   <footer class="appbox-footer">
-    お役立ちアプリBOX / 相続関係図（ジェノグラム）作成ツール Version 1.3.1
+    共創アプリBOX / 相続関係図（ジェノグラム）作成ツール Version 1.3.3
   </footer>
 </main>
 
@@ -1349,6 +1350,7 @@
           <label for="annotationEditText">表示テキスト</label>
           <textarea
             id="annotationEditText"
+            maxlength="4000"
             placeholder="図形内に表示する文字を入力"
           ></textarea>
 
@@ -1447,6 +1449,6 @@
 
 
   <script src="./kakeizu-layout.js?v=1.3.0"></script>
-  <script src="./kakeizu.js?v=1.3.1"></script>
+  <script src="./kakeizu.js?v=1.3.3"></script>
 </body>
 </html>

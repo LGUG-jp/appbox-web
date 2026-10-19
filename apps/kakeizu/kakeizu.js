@@ -72,13 +72,31 @@ let autoSaveTimer = null;
 let autoSaveReady = false;
 let autoSaveLastSavedAt = "";
 
+// 大きな連番でも数値精度を失わず採番する。
+function nextSequentialId(prefix, items) {
+  const ids = new Set(items.map(item => item.id));
+  const pattern = new RegExp("^" + prefix + "(\\d+)$");
+  let max = 0n;
+  items.forEach(item => {
+    const match = String(item.id || "").match(pattern);
+    if (!match) return;
+    const number = BigInt(match[1]);
+    if (number > max) max = number;
+  });
+  let next = max + 1n;
+  let id = prefix + String(next).padStart(3, "0");
+  if (id.length > 64) {
+    next = 1n;
+    do {
+      id = prefix + String(next).padStart(3, "0");
+      next++;
+    } while (ids.has(id));
+  }
+  return id;
+}
+
 function nextId() {
-let max = 0;
-people.forEach(p => {
-  const m = String(p.id || "").match(/^P(\d+)$/);
-  if (m) max = Math.max(max, Number(m[1]));
-});
-return "P" + String(max + 1).padStart(3, "0");
+  return nextSequentialId("P", people);
 }
 
 function person(id) {
@@ -215,14 +233,7 @@ function sampleData() {
 
 
 function nextFamilyId() {
-let max = 0;
-
-families.forEach(f => {
-  const m = String(f.id || "").match(/^F(\d+)$/);
-  if (m) max = Math.max(max, Number(m[1]));
-});
-
-return "F" + String(max + 1).padStart(3, "0");
+  return nextSequentialId("F", families);
 }
 
 function createFamily(base = {}) {
@@ -351,6 +362,7 @@ function getTempFamily(parentIds) {
 
   if (!f) {
     f = createFamily({
+      id: "F" + String(newFamilies.length + 1).padStart(3, "0"),
       parents: ids,
       children: []
     });
@@ -4031,7 +4043,19 @@ const data = {
 
 
 
-const json = JSON.stringify(data, null, 2);
+// できるだけ読みやすい整形形式で出力し、容量超過時だけ圧縮形式へ切り替える。
+let json = JSON.stringify(data, null, 2);
+if (new Blob([json]).size > KAKEIZU_JSON_MAX_BYTES) {
+  json = JSON.stringify(data);
+}
+try {
+  validateKakeizuSavedJson(data, json);
+} catch (error) {
+  alert("JSONデータを保存できません。\n" +
+    (error && error.message ? error.message : "データの内容を確認してください。") +
+    "\n\n該当箇所を修正してから再度保存してください。");
+  return;
+}
 const fileName = makeSaveFileName();
 
 // 対応ブラウザでは「名前を付けて保存」ダイアログを使う
@@ -4158,7 +4182,7 @@ if (autoSaveTimer) {
   autoSaveTimer = null;
 }
 
-const hasBackup = !!getAutoSaveBackup();
+const hasBackup = hasAutoSaveBackup();
 
 if (hasBackup) {
   const deleteBackup = confirm(
@@ -4195,6 +4219,18 @@ function saveAutoSaveNow(reason = "") {
   try {
     const data = makeAutoSaveData(reason);
     const json = JSON.stringify(data);
+    try {
+      validateKakeizuSavedJson(data, json);
+    } catch (error) {
+      // 内容・容量による一時的な不正では設定をOFFにしない。
+      // 次の編集で修正できれば自動保存を再試行する。
+      updateAutoSaveStatus(
+        "自動保存を保留しました: " +
+          (error && error.message ? error.message : "保存データを確認してください。"),
+        "warning"
+      );
+      return;
+    }
 
     localStorage.setItem(
       AUTO_SAVE_DATA_KEY,
@@ -4221,15 +4257,12 @@ function saveAutoSaveNow(reason = "") {
     }
 
     updateAutoSaveStatus(
-      "自動保存を停止しました。手動でJSONファイルへ保存してください。",
+      "自動保存に失敗して停止しました。内容を修正し、再度有効にしてください。",
       "error"
     );
-
-    alert(
-      "自動保存に失敗したため、自動保存を停止しました。\n\n" +
-      "ブラウザの保存容量を超えている可能性があります。\n" +
-      "「データを保存」からJSONファイルとして保存してください。"
-    );
+    alert("自動保存に失敗したため、自動保存を停止しました。\n\n" +
+      (error && error.message ? error.message : "保存領域の空き容量を確認してください。") +
+      "\n\n入力内容や保存容量を確認し、修正後に自動保存を再度有効にしてください。");
   }
 }
 
@@ -4261,17 +4294,17 @@ function makeAutoSaveData(reason = "") {
 }
 
 
+function hasAutoSaveBackup() {
+  return localStorage.getItem(AUTO_SAVE_DATA_KEY) !== null;
+}
+
 function getAutoSaveBackup() {
   const text = localStorage.getItem(AUTO_SAVE_DATA_KEY);
-  if (!text) return null;
-
+  if (text === null) return null;
   try {
+    if (new Blob([text]).size > KAKEIZU_JSON_MAX_BYTES) return null;
     const data = JSON.parse(text);
-
-    if (!data || !Array.isArray(data.people)) {
-      return null;
-    }
-
+    validateKakeizuImport(data);
     return data;
   } catch {
     return null;
@@ -4313,7 +4346,9 @@ function restoreAutoSaveManually() {
 const backup = getAutoSaveBackup();
 
 if (!backup) {
-  alert("復元できる自動保存データがありません。");
+  alert(hasAutoSaveBackup()
+    ? "自動保存データは残っていますが、形式または安全上限の問題で復元できません。不要な場合は「自動保存データを削除」から削除できます。"
+    : "復元できる自動保存データがありません。");
   updateAutoSaveStatus();
   return;
 }
@@ -4447,28 +4482,24 @@ function restoreAutoSaveData(data) {
 
 
 function deleteAutoSaveBackup() {
-const backup = getAutoSaveBackup();
-
-if (!backup) {
-  alert("削除する自動保存データはありません。");
-  updateAutoSaveStatus();
-  return;
-}
-
-const savedText = formatAutoSaveDateTime(backup.savedAt);
-
-const ok = confirm(
-  "自動保存データを削除します。\n\n" +
-  `保存日時: ${savedText}\n\n` +
-  "削除してよろしいですか？"
-);
-
-if (!ok) return;
-
-localStorage.removeItem(AUTO_SAVE_DATA_KEY);
-autoSaveLastSavedAt = "";
-
-updateAutoSaveStatus("自動保存データを削除しました。");
+  if (!hasAutoSaveBackup()) {
+    alert("削除する自動保存データはありません。");
+    updateAutoSaveStatus();
+    return;
+  }
+  const backup = getAutoSaveBackup();
+  const savedText = backup
+    ? formatAutoSaveDateTime(backup.savedAt)
+    : "不明（復元できないデータ）";
+  const ok = confirm(
+    "自動保存データを削除します。\n\n保存日時: " + savedText + "\n\n" +
+    (backup ? "" : "このデータは現在の形式では復元できません。\n") +
+    "削除してよろしいですか？"
+  );
+  if (!ok) return;
+  localStorage.removeItem(AUTO_SAVE_DATA_KEY);
+  autoSaveLastSavedAt = "";
+  updateAutoSaveStatus("自動保存データを削除しました。");
 }
 
 function updateAutoSaveStatus(message = "", level = "") {
@@ -4476,7 +4507,8 @@ const el = document.getElementById("autoSaveStatus");
 if (!el) return;
 
 const enabled = isAutoSaveEnabled();
-const backup = getAutoSaveBackup();
+const hasBackup = hasAutoSaveBackup();
+const backup = hasBackup ? getAutoSaveBackup() : null;
 
 let html = "";
 
@@ -4487,9 +4519,11 @@ if (enabled) {
 }
 
 if (backup && backup.savedAt) {
-  html += `<br>最終自動保存: ${escapeHtml(formatAutoSaveDateTime(backup.savedAt))}`;
+  html += "<br>最終自動保存: " + escapeHtml(formatAutoSaveDateTime(backup.savedAt));
+} else if (hasBackup) {
+  html += '<br><span class="autosave-error">自動保存データ: 復元不可（削除可能）</span>';
 } else {
-  html += `<br>自動保存データ: なし`;
+  html += "<br>自動保存データ: なし";
 }
 
 if (message) {
@@ -4712,11 +4746,266 @@ function areAllPeopleInLegacyCoordinateArea() {
 }
 
 
+/*
+ * JSONの容量だけでは、親の組合せや旧形式の配偶者参照による
+ * 計算量増幅を防げないため、状態を書き換える前に構造を検証する。
+ */
+const KAKEIZU_JSON_MAX_BYTES = 2 * 1024 * 1024;
+
+function isSafeKakeizuPaint(value) {
+  if (typeof value !== "string" || value.length > 80) {
+    return false;
+  }
+
+  if (/^(?:none|transparent|black|white|red|blue|green|gray|grey)$/i.test(value)) {
+    return true;
+  }
+
+  if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
+    return true;
+  }
+
+  const rgb = value.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0(?:\.\d+)?|1(?:\.0+)?))?\s*\)$/i
+  );
+  if (!rgb) return false;
+  if (value.slice(0, 4).toLowerCase() === "rgba" && rgb[4] === undefined) return false;
+  if (value.slice(0, 3).toLowerCase() === "rgb" && value.slice(0, 4).toLowerCase() !== "rgba" && rgb[4] !== undefined) return false;
+  return rgb.slice(1, 4).every(component => Number(component) <= 255);
+}
+
+function validateKakeizuImport(data) {
+  const LIMITS = {
+    people: 500,
+    families: 1000,
+    annotations: 500,
+    totalRefs: 5000,
+    legacyRefs: 1000,
+    text: 2000,
+    annotationText: 4000,
+    annotationLines: 100,
+    totalAnnotationLines: 5000,
+    memo: 10000,
+    coordinate: 1000000
+  };
+
+  function reject(reason) {
+    throw new Error(reason);
+  }
+
+  function record(value, label) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      reject(label + "はオブジェクトである必要があります。");
+    }
+  }
+
+  function list(value, label, limit, optional = false) {
+    if (optional && (value === undefined || value === null)) return [];
+    if (!Array.isArray(value) || value.length > limit) {
+      reject(label + "は" + limit + "件以下の配列で指定してください。");
+    }
+    return value;
+  }
+
+  function text(value, label, limit = LIMITS.text) {
+    if (value === undefined || value === null) return;
+    if (typeof value !== "string" || value.length > limit) {
+      reject(label + "は" + limit + "文字以内の文字列で指定してください。");
+    }
+  }
+
+  function number(value, label, min, max) {
+    if (value === undefined || value === null) return;
+    if (typeof value !== "number" || !Number.isFinite(value) ||
+        value < min || value > max) {
+      reject(label + "は" + min + "～" + max + "の有限数で指定してください。");
+    }
+  }
+
+  function flag(value, label) {
+    if (value !== undefined && value !== null && typeof value !== "boolean") {
+      reject(label + "は真偽値で指定してください。");
+    }
+  }
+
+  function identifier(value, label, seen) {
+    if (typeof value !== "string" || !value || value.length > 64 ||
+        /[\u0000-\u001f\u007f]/.test(value)) {
+      reject(label + "のIDが不正です。");
+    }
+    if (seen.has(value)) reject(label + "のIDが重複しています。");
+    seen.add(value);
+  }
+
+  record(data, "ルート");
+  const importedPeople = list(data.people, "people", LIMITS.people);
+  const importedFamilies = list(data.families, "families", LIMITS.families, true);
+  const importedAnnotations = list(data.annotations, "annotations", LIMITS.annotations, true);
+  const peopleIds = new Set();
+  const familyIds = new Set();
+  const annotationIds = new Set();
+  let totalRefs = 0;
+  let legacyRefs = 0;
+  let totalAnnotationLines = 0;
+  // family未設定・未初期化の場合は人物側の参照から家族を生成する。
+  const needsLegacyMigration =
+    data.families === undefined || data.families === null ||
+    data.familyModelInitialized === false;
+
+  importedPeople.forEach((p, index) => {
+    const label = "people[" + index + "]";
+    record(p, label);
+    identifier(p.id, label, peopleIds);
+  });
+
+  function refs(value, label, max, ownerId) {
+    const items = list(value, label, max, true);
+    const seen = new Set();
+    for (const id of items) {
+      if (typeof id !== "string" || !peopleIds.has(id) ||
+          id === ownerId || seen.has(id)) {
+        reject(label + "に不正・重複・自己参照の人物IDがあります。");
+      }
+      seen.add(id);
+    }
+    totalRefs += items.length;
+    if (totalRefs > LIMITS.totalRefs) {
+      reject("親子・配偶者の参照数は合計" + LIMITS.totalRefs + "件以下にしてください。");
+    }
+    return items;
+  }
+
+  importedPeople.forEach((p, index) => {
+    const label = "people[" + index + "]";
+    for (const field of [
+      "name", "relation", "gender", "address", "birth", "death",
+      "renunciation", "share", "note"
+    ]) text(p[field], label + "." + field);
+    for (const field of ["representative", "taxpayer", "manager"]) {
+      flag(p[field], label + "." + field);
+    }
+    for (const field of ["x", "y"]) {
+      number(p[field], label + "." + field, -LIMITS.coordinate, LIMITS.coordinate);
+    }
+    // v7では複数のfamilyに子として属すると親が2人を超える。
+    // 旧形式の移行時だけ従来の厳しい上限を適用する。
+    const parents = refs(
+      p.parents, label + ".parents", needsLegacyMigration ? 2 : LIMITS.people, p.id
+    );
+    const spouses = refs(
+      p.spouses, label + ".spouses", needsLegacyMigration ? 20 : LIMITS.people, p.id
+    );
+    legacyRefs += parents.length + spouses.length;
+  });
+  if (needsLegacyMigration) {
+    if (legacyRefs > LIMITS.legacyRefs) {
+      reject("旧形式の親・配偶者参照は合計" + LIMITS.legacyRefs + "件以下にしてください。");
+    }
+  }
+
+  importedFamilies.forEach((f, index) => {
+    const label = "families[" + index + "]";
+    record(f, label);
+    identifier(f.id, label, familyIds);
+    const parents = refs(f.parents, label + ".parents", 2);
+    const children = refs(f.children, label + ".children", LIMITS.people);
+    if (children.some(id => parents.includes(id))) {
+      reject(label + "で同じ人物が親と子の両方に指定されています。");
+    }
+  });
+
+  importedAnnotations.forEach((a, index) => {
+    const label = "annotations[" + index + "]";
+    record(a, label);
+    identifier(a.id, label, annotationIds);
+    if (a.type !== undefined &&
+        !["text", "rect", "ellipse", "cross", "arrow"].includes(a.type)) {
+      reject(label + ".typeが不正です。");
+    }
+    if (a.layer !== undefined && !["front", "back"].includes(a.layer)) {
+      reject(label + ".layerが不正です。");
+    }
+    text(a.text, label + ".text", LIMITS.annotationText);
+    if (typeof a.text === "string") {
+      // 描画時は改行1つにつきSVGのtspanが1つ増えるため行数も制限する。
+      const lineCount = a.text.split("\n").length;
+      if (lineCount > LIMITS.annotationLines) {
+        reject(label + ".textは" + LIMITS.annotationLines + "行以下にしてください。");
+      }
+      totalAnnotationLines += lineCount;
+      if (totalAnnotationLines > LIMITS.totalAnnotationLines) {
+        reject("注釈テキストの合計行数は" + LIMITS.totalAnnotationLines + "行以下にしてください。");
+      }
+    }
+    for (const field of ["startPersonId", "endPersonId", "startAnchor", "endAnchor"]) {
+      text(a[field], label + "." + field, 64);
+    }
+    for (const field of ["startPersonId", "endPersonId"]) {
+      if (a[field] && !peopleIds.has(a[field])) {
+        reject(label + "." + field + "の参照先が存在しません。");
+      }
+    }
+    for (const field of ["fill", "stroke", "color"]) {
+      if (a[field] !== undefined && a[field] !== null &&
+          !isSafeKakeizuPaint(a[field])) {
+        reject(label + "." + field + "に利用できない色指定があります。");
+      }
+    }
+    for (const field of ["x", "y", "width", "height"]) {
+      number(a[field], label + "." + field, -LIMITS.coordinate, LIMITS.coordinate);
+    }
+    number(a.fontSize, label + ".fontSize", 8, 72);
+    number(a.strokeWidth, label + ".strokeWidth", 1, 12);
+  });
+
+  text(data.chartMemo, "chartMemo", LIMITS.memo);
+  text(data.savedAt, "savedAt", 100);
+  text(data.source, "source", 100);
+  text(data.reason, "reason", 200);
+  number(data.version, "version", 0, 100);
+  number(data.scale, "scale", 0.01, 20);
+  number(data.offsetX, "offsetX", -LIMITS.coordinate, LIMITS.coordinate);
+  number(data.offsetY, "offsetY", -LIMITS.coordinate, LIMITS.coordinate);
+  flag(data.familyModelInitialized, "familyModelInitialized");
+
+  function selectedId(value, label, ids) {
+    if (value === undefined || value === null || value === "") return;
+    if (typeof value !== "string" || !ids.has(value)) {
+      reject(label + "の参照先が存在しません。");
+    }
+  }
+
+  selectedId(data.selectedId, "selectedId", peopleIds);
+  selectedId(data.selectedAnnotationId, "selectedAnnotationId", annotationIds);
+  for (const [key, ids, limit] of [
+    ["selectedIds", peopleIds, LIMITS.people],
+    ["selectedAnnotationIds", annotationIds, LIMITS.annotations]
+  ]) {
+    for (const id of list(data[key], key, limit, true)) {
+      selectedId(id, key, ids);
+    }
+  }
+}
+
+// ファイル保存・自動保存に共通する、復元可能性とUTF-8容量の検証。
+function validateKakeizuSavedJson(data, json) {
+  validateKakeizuImport(data);
+  if (new Blob([json]).size > KAKEIZU_JSON_MAX_BYTES) {
+    throw new Error("JSONデータは2 MiB以下にしてください。");
+  }
+}
+
 function handleJsonFile(event) {
   const input = event.target;
   const file = input.files && input.files[0];
 
   if (!file) {
+    return;
+  }
+
+  if (file.size > KAKEIZU_JSON_MAX_BYTES) {
+    alert("JSONファイルは2 MiB以下にしてください。現在の作業データは変更されていません。");
+    input.value = "";
     return;
   }
 
@@ -4739,19 +5028,11 @@ function handleJsonFile(event) {
     try {
       data = JSON.parse(reader.result);
 
-      if (
-        !data ||
-        typeof data !== "object" ||
-        !Array.isArray(data.people)
-      ) {
-        throw new Error(
-          "相続関係図データにpeople配列がありません。"
-        );
-      }
+      validateKakeizuImport(data);
     } catch (error) {
       alert(
         "データの復元に失敗しました。\n" +
-        "JSONファイルの形式を確認してください。"
+        (error && error.message ? error.message : "JSONファイルの形式を確認してください。")
       );
 
       console.error(error);
@@ -5294,6 +5575,18 @@ function sanitizeSvgClone(root) {
     [...element.attributes].forEach(attribute => {
       const name = attribute.name.toLowerCase();
       const value = String(attribute.value || "").trim();
+
+      // 矢印の先端に必要な既知の内部マーカー参照のみ許可する。
+      // それ以外のurl(...)や@importは外部・不正参照として除去する。
+      const isAllowedArrowMarker =
+        name === "marker-end" && value === "url(#annotationArrowHead)";
+      if ((!isAllowedArrowMarker && /url\s*\(/i.test(value)) ||
+          /@import/i.test(value) ||
+          (["fill", "stroke", "color", "stop-color"].includes(name) &&
+           !isSafeKakeizuPaint(value))) {
+        element.removeAttribute(attribute.name);
+        return;
+      }
 
       if (name.startsWith("on")) {
         element.removeAttribute(attribute.name);
@@ -7388,17 +7681,7 @@ document.addEventListener("keydown", event => {
    ========================================================= */
 
 function nextAnnotationId() {
-  let max = 0;
-
-  annotations.forEach(item => {
-    const match = String(item.id || "").match(/^A(\d+)$/);
-
-    if (match) {
-      max = Math.max(max, Number(match[1]));
-    }
-  });
-
-  return "A" + String(max + 1).padStart(3, "0");
+  return nextSequentialId("A", annotations);
 }
 
 function createAnnotation(base = {}) {
@@ -8243,6 +8526,30 @@ function handleAnnotationTextEditorKeydown(event) {
   }
 }
 
+function getAnnotationTextEditError(itemId, text) {
+  if (text.length > 4000) {
+    return "図形・注釈の文字は4,000文字以下にしてください。";
+  }
+
+  const lineCount = text.split("\n").length;
+  if (lineCount > 100) {
+    return "図形・注釈のテキストは1件100行以下にしてください。";
+  }
+
+  let totalLines = lineCount;
+  annotations.forEach(item => {
+    if (item.id !== itemId && typeof item.text === "string") {
+      totalLines += item.text.split("\n").length;
+    }
+  });
+
+  if (totalLines > 5000) {
+    return "図形・注釈のテキストは合計5,000行以下にしてください。";
+  }
+
+  return null;
+}
+
 function finishAnnotationTextEdit(accept) {
   const edit = annotationTextEdit;
 
@@ -8250,33 +8557,42 @@ function finishAnnotationTextEdit(accept) {
     return;
   }
 
-  annotationTextEdit = null;
-
   if (!accept) {
+    annotationTextEdit = null;
     renderChart();
     return;
   }
 
   const text = String(edit.value || "");
 
-  if (edit.isNew) {
-    if (!text.trim()) {
-      renderChart();
-      return;
-    }
-
-    edit.item.text = text;
-    pushUndoSnapshot(edit.beforeSnapshot);
-    annotations.push(edit.item);
-    selectOnlyAnnotation(edit.item.id);
-    sync();
+  if (edit.isNew && !text.trim()) {
+    annotationTextEdit = null;
+    renderChart();
     return;
   }
 
-  const item = annotation(edit.id);
-
+  const item = edit.isNew ? edit.item : annotation(edit.id);
   if (!item) {
+    annotationTextEdit = null;
     renderChart();
+    return;
+  }
+
+  const textError = getAnnotationTextEditError(item.id, text);
+  if (textError) {
+    alert(textError);
+    focusAnnotationTextEditor();
+    return;
+  }
+
+  annotationTextEdit = null;
+
+  if (edit.isNew) {
+    item.text = text;
+    pushUndoSnapshot(edit.beforeSnapshot);
+    annotations.push(item);
+    selectOnlyAnnotation(item.id);
+    sync();
     return;
   }
 
@@ -8338,6 +8654,7 @@ function drawAnnotationTextEditor() {
   editor.setAttribute("class", "annotation-inline-text-editor");
   editor.setAttribute("aria-label", "テキスト注釈");
   editor.placeholder = "ここにテキストを入力";
+  editor.maxLength = 4000;
   editor.value = edit.value;
 
   editor.addEventListener("input", () => {
@@ -9057,6 +9374,15 @@ function applyAnnotationEdit() {
     return;
   }
 
+  const nextText = supportsText
+    ? document.getElementById("annotationEditText")?.value || ""
+    : "";
+  const textError = getAnnotationTextEditError(item.id, nextText);
+  if (textError) {
+    alert(textError);
+    return;
+  }
+
   pushUndo("図形・注釈編集前");
 
 
@@ -9084,9 +9410,7 @@ function applyAnnotationEdit() {
       "#ffffff";
 
   if (supportsText) {
-    item.text =
-      document.getElementById("annotationEditText")?.value ||
-      "";
+    item.text = nextText;
 
     item.color =
       document.getElementById("annotationEditColor")?.value ||

@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- PDFかんたん編集の図柄を基準とする共通操作アイコン。利用方法: docs/COMMON_ASSETS.md -->
+  <symbol id="open" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-folder-back)" d="M24 126 19 55q-1-10 10-10h50l14 21h31v60Z"/>
+      <path fill="var(--appbox-icon-paper-fill)" stroke="var(--appbox-icon-paper)" d="M52 63V21a6 6 0 0 1 6-6h45l22 24v24" stroke-width="7" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M101 15v20a5 5 0 0 0 5 5h19"/>
+      <path fill="var(--appbox-icon-fill)" stroke="var(--appbox-icon-cutout)" d="M25 128 40 73q2-7 10-7h94q10 0 6 10l-17 47q-2 7-9 7H25Z" stroke-width="5" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+  <symbol id="close" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-paper-fill)" stroke="var(--appbox-icon-paper)" d="M44 15h49l24 25v80a6 6 0 0 1-6 6H44a6 6 0 0 1-6-6V21a6 6 0 0 1 6-6Z" stroke-width="7" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M91 15v22a5 5 0 0 0 5 5h21"/>
+      <path stroke="currentColor" d="m58 62 38 38m0-38-38 38" fill="none" stroke-width="13" stroke-linecap="round"/>
+    </g>
+  </symbol>
+  <symbol id="undo" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M64 48V31q0-8-6-3L15 59q-6 4 0 8l43 29q6 4 6-3V77h20c28 0 40 12 34 33-2 8-6 13-12 18q-5 5 1 5c22-7 37-25 36-44-1-25-21-41-58-41Z"/>
+    </g>
+  </symbol>
+  <symbol id="redo" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M96 48V31q0-8 6-3l43 31q6 4 0 8l-43 29q-6 4-6-3V77H76c-28 0-40 12-34 33 2 8 6 13 12 18q5 5-1 5c-22-7-37-25-36-44 1-25 21-41 58-41Z"/>
+    </g>
+  </symbol>
+  <symbol id="save" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M68 24h24a6 6 0 0 1 6 6v31h14q8 0 3 6l-30 33q-5 5-10 0L45 67q-5-6 3-6h14V30a6 6 0 0 1 6-6Z"/>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M26 85h8a6 6 0 0 1 6 6v19h80V91a6 6 0 0 1 6-6h8a7 7 0 0 1 7 7v33a7 7 0 0 1-7 7H26a7 7 0 0 1-7-7V92a7 7 0 0 1 7-7Z"/>
+    </g>
+  </symbol>
+  <symbol id="back" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m10 5-7 7 7 7M3 12h18"/>
+    </g>
+  </symbol>
+  <symbol id="sidebar" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2"/>
+      <path d="M9 4v16M5 8h2M5 12h2M5 16h2"/>
+    </g>
+  </symbol>
+  <symbol id="chevron-left" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m14 6-6 6 6 6"/>
+    </g>
+  </symbol>
+  <symbol id="chevron-right" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m10 6 6 6-6 6"/>
+    </g>
+  </symbol>
+  <symbol id="rotate-left" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M68 26V16q0-8-6-3L34 33q-5 4 0 8l28 18q6 4 6-3V44c27-4 49 6 55 30 4 14 1 28-5 37l5 17c20-21 26-48 11-73-13-23-37-31-66-29Z"/>
+      <g transform="rotate(-17 75 99)">
+      <path fill="var(--appbox-icon-paper-fill)" stroke="var(--appbox-icon-paper)" d="M49 69h40l17 19v44H49a3 3 0 0 1-3-3V72a3 3 0 0 1 3-3Z" stroke-width="6" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M88 69v17a3 3 0 0 0 3 3h15"/>
+      </g>
+    </g>
+  </symbol>
+  <symbol id="rotate-right" viewBox="0 0 160 160">
+    <g>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M68 26V16q0-8-6-3L34 33q-5 4 0 8l28 18q6 4 6-3V44c27-4 49 6 55 30 4 14 1 28-5 37l5 17c20-21 26-48 11-73-13-23-37-31-66-29Z" transform="translate(160 0) scale(-1 1)"/>
+      <g transform="rotate(16 78 99)">
+      <path fill="var(--appbox-icon-paper-fill)" stroke="var(--appbox-icon-paper)" d="M52 67h40l17 19v45H52a3 3 0 0 1-3-3V70a3 3 0 0 1 3-3Z" stroke-width="6" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M91 67v17a3 3 0 0 0 3 3h15"/>
+      </g>
+    </g>
+  </symbol>
+  <symbol id="page-before" viewBox="0 0 160 160">
+    <g>
+      <path fill="none" stroke="var(--appbox-icon-paper)" d="M67 66V30a6 6 0 0 1 6-6h46l23 24v75a6 6 0 0 1-6 6H73a6 6 0 0 1-6-6v-17" stroke-width="7" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M117 24v21a5 5 0 0 0 5 5h20"/>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M15 83 49 55q6-5 6 3v13h45a5 5 0 0 1 5 5v20a5 5 0 0 1-5 5H55v13q0 8-6 3L15 89q-4-3 0-6Z"/>
+    </g>
+  </symbol>
+  <symbol id="page-after" viewBox="0 0 160 160">
+    <g>
+      <path fill="none" stroke="var(--appbox-icon-paper)" d="M57 66V30a6 6 0 0 1 6-6h46l23 24v75a6 6 0 0 1-6 6H63a6 6 0 0 1-6-6v-17" stroke-width="7" stroke-linejoin="round"/>
+      <path fill="var(--appbox-icon-paper)" d="M107 24v21a5 5 0 0 0 5 5h20"/>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="M117 83 83 55q-6-5-6 3v13H32a5 5 0 0 0-5 5v20a5 5 0 0 0 5 5h45v13q0 8 6 3l34-28q4-3 0-6Z"/>
+    </g>
+  </symbol>
+  <symbol id="delete" viewBox="0 0 160 160">
+    <g>
+      <path stroke="currentColor" d="M62 43v-7c0-7 5-12 12-12h12c7 0 12 5 12 12v7" fill="none" stroke-width="10" stroke-linejoin="round"/>
+      <rect fill="var(--appbox-icon-fill, currentColor)" x="27" y="37" width="106" height="15" rx="7.5"/>
+      <path fill="var(--appbox-icon-fill, currentColor)" d="m36 57 6 62q1 10 11 10h54q10 0 11-10l6-62Z"/>
+      <path stroke="var(--appbox-icon-cutout)" d="M67 75v34m26-34v34" fill="none" stroke-width="9" stroke-linecap="round"/>
+    </g>
+  </symbol>
+  <symbol id="download" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>
+    </g>
+  </symbol>
+  <symbol id="select" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 3 14 10-7 1-3 7z"/>
+    </g>
+  </symbol>
+  <symbol id="text" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5h16M12 5v15M8 20h8M4 5v3M20 5v3"/>
+    </g>
+  </symbol>
+  <symbol id="rectangle" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="5" width="16" height="14" rx="1"/>
+    </g>
+  </symbol>
+  <symbol id="ellipse" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="12" rx="9" ry="7"/>
+    </g>
+  </symbol>
+  <symbol id="arrow" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 19 14-14M10 5h9v9"/>
+    </g>
+  </symbol>
+  <symbol id="line" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 19 14-14"/>
+    </g>
+  </symbol>
+  <symbol id="image" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/><path d="m3 17 6-6 4 4 3-3 5 5"/>
+    </g>
+  </symbol>
+  <symbol id="stamp" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 3h6v4l-1 5h4a2 2 0 0 1 2 2v3H4v-3a2 2 0 0 1 2-2h4L9 7Z M4 21h16"/>
+    </g>
+  </symbol>
+  <symbol id="pen" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m4 16 2 4 4-2L21 7l-6-4Z M13 5l6 4M3 22c3-4 6 2 10-1"/>
+    </g>
+  </symbol>
+  <symbol id="eraser" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m3 14 10-11 8 7-10 11H9Z M7 10l8 7M11 21h10"/>
+    </g>
+  </symbol>
+  <symbol id="highlight" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m8 13 7-10 6 4-7 10zM8 13l-4 6h7l3-2M3 22h18"/>
+    </g>
+  </symbol>
+  <symbol id="bring-front" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="12" height="12" rx="1"/>
+      <rect x="9" y="9" width="12" height="12" rx="1" fill="currentColor" stroke="none"/>
+    </g>
+  </symbol>
+  <symbol id="send-back" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 9h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10a1 1 0 0 1-1-1v-3h6a2 2 0 0 0 2-2Z" fill="currentColor" stroke="none"/>
+      <rect x="3" y="3" width="12" height="12" rx="1"/>
+    </g>
+  </symbol>
+  <symbol id="blackout" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="1" fill="currentColor" stroke="none"/>
+    </g>
+  </symbol>
+  <symbol id="mosaic" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="1"/><path d="M9 5v14M15 5v14M3 12h18"/><path d="M3 5h6v7H3zm12 7h6v7h-6Z" fill="currentColor" stroke="none"/>
+    </g>
+  </symbol>
+  <symbol id="blackout-brush" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m10 13 8-10 3 3-9 9Z"/><path d="M10 14c-5-1-3 5-7 6 6 2 10-1 9-5Z" fill="currentColor"/>
+    </g>
+  </symbol>
+  <symbol id="mosaic-brush" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m10 13 8-10 3 3-9 9Z"/><path d="M9 14H5v4H1v4h8v-4h4v-4Z"/><path d="M5 14h4v4H5zm-4 4h4v4H1Z" fill="currentColor" stroke="none"/>
+    </g>
+  </symbol>
+  <symbol id="crop" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 3v14h14M3 7h14v14"/>
+    </g>
+  </symbol>
+  <symbol id="flip-horizontal" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v18M3 17 8 7v10Zm18 0L16 7v10Z"/>
+    </g>
+  </symbol>
+  <symbol id="flip-vertical" viewBox="0 0 24 24">
+    <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12h18M7 3l10 5H7Zm0 18 10-5H7Z"/>
+    </g>
+  </symbol>
+</svg>

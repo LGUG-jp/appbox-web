@@ -1,5 +1,5 @@
 /*
- * Local QR Code core for お役立ちアプリBOX
+ * Local QR Code core for 共創アプリBOX
  *
  * QR Code algorithm source:
  * Copyright (c) 2009 Kazuhiko Arase

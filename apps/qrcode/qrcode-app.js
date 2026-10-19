@@ -825,35 +825,13 @@
       return;
     }
 
-    if (
-      ![
-        "image/png",
-        "image/jpeg",
-        "image/webp"
-      ].includes(file.type)
-    ) {
-      setLogoProcessing(false);
-
-      logoFile.value = "";
-
-      updateDecoVisibility();
-
-      setStatus(
-        "中央画像はPNG、JPEG、WebPを選択してください。",
-        "error"
-      );
-
-      return;
-    }
-
     const previousPngUrl =
       safeLogoPngUrl;
 
     const previousImage =
       safeLogoImage;
 
-    const objectUrl =
-      URL.createObjectURL(file);
+    let objectUrl = "";
 
     setLogoProcessing(true);
     updateDecoVisibility();
@@ -864,6 +842,17 @@
     );
 
     try {
+      // The file's real header is checked before Image.src can decode it.
+      const header = await window.AppBoxSafeImage.readDimensions(file, {allowAnimation: true});
+      if (
+        header.width > MAX_LOGO_DIM ||
+        header.height > MAX_LOGO_DIM ||
+        header.width * header.height > MAX_LOGO_PIXELS
+      ) {
+        throw new Error("IMAGE_DIMENSION_TOO_LARGE");
+      }
+      if (version !== logoLoadVersion) return;
+      objectUrl = URL.createObjectURL(file);
       const sourceImage =
         await loadImage(objectUrl);
 
@@ -901,6 +890,8 @@
           "IMAGE_DIMENSION_TOO_LARGE"
         );
       }
+
+      window.AppBoxSafeImage.assertDimensions(header, width, height);
 
       const scale = Math.min(
         1,
@@ -1024,9 +1015,7 @@
 
       renderPreview();
     } finally {
-      URL.revokeObjectURL(
-        objectUrl
-      );
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
 
       if (
         version ===

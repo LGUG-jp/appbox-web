@@ -1,11 +1,11 @@
 /*
-  お役立ちアプリBOX 共通デザイントークン
+  共創アプリBOX 共通デザイントークン
 
   このファイルは --appbox-* トークンの既定値だけを持ちます。
   実際のツールごとの色は appbox-themes.css が上書きします。
 
   共通CSS（appbox-base.css / appbox-chrome.css / appbox-components.css /
-  appbox-help.css）は
+  appbox-help.css / appbox-icons.css）は
   色リテラルを一切書かず、必ずここで定義したトークンを参照します。
 
   読み込み順:
@@ -53,6 +53,18 @@
   --appbox-success: #3d7b62;
   --appbox-danger: #b25161;
   --appbox-warning: #8f6412;
+
+  /* PDFを基準にした共通操作アイコン ------------------------------------ */
+  --appbox-icon-color-paper: #505c69;
+  --appbox-icon-color-paper-fill: #ffffff;
+  --appbox-icon-color-move: #009b89;
+  --appbox-icon-color-rotation: #1068ff;
+  --appbox-icon-color-history: #8837e8;
+  --appbox-icon-color-delete: #ff4b50;
+  --appbox-icon-color-folder: #ffca2c;
+  --appbox-icon-color-folder-back: #ffbe20;
+  --appbox-icon-color-save: #009469;
+  --appbox-icon-color-disabled: #69717a;
 
   /* 影 ------------------------------------------------------------------ */
   --appbox-shadow: 0 14px 36px rgba(57, 91, 130, 0.1);

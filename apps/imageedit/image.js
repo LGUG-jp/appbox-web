@@ -9,11 +9,13 @@
   const SUPPORTED_TYPES = ["image/jpeg","image/png","image/webp"];
   const RECT_TYPES = ["blackoutRect","mosaicRect","rect","ellipse"];
   const BRUSH_TYPES = ["blackoutBrush","mosaicBrush"];
+  const drawing = window.AppBoxImageDrawing;
 
   const $ = id => document.getElementById(id);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const clamp = (value,min,max) => Math.min(max,Math.max(min,value));
   const isFiniteInteger = value => Number.isSafeInteger(value);
+  const annotationStyle = globalThis.AppBoxImageAnnotation;
 
   const baseCanvas = $("baseCanvas");
   const baseContext = baseCanvas.getContext("2d");
@@ -23,12 +25,22 @@
 
   const editCanvas = $("editCanvas");
   const editContext = editCanvas.getContext("2d");
+  const textEditor = $("textEditor");
+  const textEditorHost = $("textEditorHost");
+  textEditor.hidden = true;
+  textEditorHost.hidden = true;
+
+  // 表示倍率とスクロールは編集データ・保存用の画像座標から独立させる。
+  const canvasViewport = $("canvasViewport");
+  const canvasHolder = $("canvasHolder");
+  const viewState = {mode:"fit",scale:1,pan:null,rule:null,pending:false};
 
   const state = {
     sourceFile:null,
     originalCanvas:null,
     layers:[],
     selectedLayerId:null,
+    selectedLayerIds:new Set(),
     tool:null,
     crop:null,
     drag:null,
@@ -36,9 +48,14 @@
     redo:[],
     loadVersion:0,
     baseRevision:0,
+    revision:0,
+    savedRevision:0,
+    revisionCounter:0,
     mosaicCache:new Map(),
     renderPending:false,
-    singleBusy:false
+    singleBusy:false,
+    textEditing:null,
+    composing:false
   };
 
   const batchState = {
@@ -61,8 +78,23 @@
 
   let toastTimer = null;
   let previewReturnFocus = null;
+  let saveReturnFocus = null;
+  let singleSavePreset = null;
   let singleAspect = 1;
-
+  let styleEditSession = null;
+  let fontPreview = null;
+  let textEditSession = null;
+  let textEditorRule = null;
+  let textEditorHostRule = null;
+  let modeChoicesOpen = false;
+  const toolOutlinePreferences = new Map([
+    ["text",true],["arrow",true],["line",true],["rect",false],["ellipse",false]
+  ]);
+  let objectClipboard = null;
+  let objectClipboardToken = "";
+  let objectClipboardText = "";
+  let objectPasteCount = 0;
+  const OBJECT_CLIPBOARD_TYPE = "application/x-appbox-imageedit-object";
   function toast(message){
     const element = $("toast");
     element.textContent = message;
@@ -159,25 +191,40 @@
   }
 
   async function decodeImage(file){
+    // Reject invalid or huge dimensions before createImageBitmap / Image.src.
+    const header = await window.AppBoxSafeImage.readDimensions(file);
+    validateDimensions(header.width,header.height);
+    function verify(image){
+      const width = image.width || image.naturalWidth;
+      const height = image.height || image.naturalHeight;
+      validateDimensions(width,height);
+      window.AppBoxSafeImage.assertDimensions(header,width,height);
+      return image;
+    }
     if("createImageBitmap" in window){
+      let bitmap;
       try{
-        return await createImageBitmap(file,{imageOrientation:"from-image"});
+        bitmap = await createImageBitmap(file,{imageOrientation:"from-image"});
       }catch(error){
         try{
-          return await createImageBitmap(file);
+          bitmap = await createImageBitmap(file);
         }catch(secondError){
           throw new Error("画像を読み込めませんでした。");
         }
       }
+      try{
+        return verify(bitmap);
+      }catch(error){
+        if(typeof bitmap.close === "function") bitmap.close();
+        throw error;
+      }
     }
-
     return await new Promise((resolve,reject) => {
       const url = URL.createObjectURL(file);
       const image = new Image();
-
       image.onload = () => {
         URL.revokeObjectURL(url);
-        resolve(image);
+        try{resolve(verify(image));}catch(error){reject(error);}
       };
       image.onerror = () => {
         URL.revokeObjectURL(url);
@@ -263,14 +310,16 @@
     let excessBitmaps = bitmapCount - allowedBitmaps;
 
     if(excessBitmaps > 0){
-      for(let index=0; index<list.length && excessBitmaps>0;){
+      let cutoff = 0;
+      for(let index=0; index<list.length && excessBitmaps>0; index++){
         if(list[index].kind === "full"){
-          list.splice(index,1);
+          cutoff = index+1;
           excessBitmaps--;
-        }else{
-          index++;
         }
       }
+      // Layer-only snapshots before this boundary still require the discarded
+      // bitmap. Keep a continuous history rather than restoring mismatched data.
+      list.splice(0,cutoff);
     }
 
     while(list.length > 40){
@@ -281,6 +330,7 @@
   function makeLayerSnapshot(){
     return {
       kind:"layers",
+      revision:state.revision,
       layers:cloneLayers(state.layers)
     };
   }
@@ -288,6 +338,7 @@
   function makeFullSnapshot(){
     return {
       kind:"full",
+      revision:state.revision,
       base:cloneCanvas(baseCanvas),
       layers:cloneLayers(state.layers)
     };
@@ -297,6 +348,7 @@
     state.undo.push(kind === "full" ? makeFullSnapshot() : makeLayerSnapshot());
     trimHistory(state.undo);
     state.redo = [];
+    state.revision = ++state.revisionCounter;
     updateHistoryButtons();
   }
 
@@ -305,6 +357,7 @@
   }
 
   function restoreSnapshot(item){
+    state.revision = item.revision;
     if(item.kind === "full"){
         baseCanvas.width = item.base.width;
         baseCanvas.height = item.base.height;
@@ -320,7 +373,7 @@
 
     state.layers = cloneLayers(item.layers);
     state.crop = null;
-    state.selectedLayerId = null;
+    selectLayers([]);
     state.drag = null;
 
     singleAspect =
@@ -331,6 +384,8 @@
   }
 
   function undo(){
+    if(state.singleBusy || state.drag || viewState.pan) return;
+    finishTextEditing();
     if(!state.undo.length){
       toast("これ以上戻せません。");
       return;
@@ -344,6 +399,8 @@
   }
 
   function redo(){
+    if(state.singleBusy || state.drag || viewState.pan) return;
+    finishTextEditing();
     if(!state.redo.length){
       toast("やり直せる操作がありません。");
       return;
@@ -380,15 +437,7 @@ function syncCanvas(){
   editCanvas.width = baseCanvas.width;
   editCanvas.height = baseCanvas.height;
 
-  requestAnimationFrame(() => {
-    const width = `${baseCanvas.clientWidth}px`;
-    const height = `${baseCanvas.clientHeight}px`;
-
-    layerCanvas.style.width = width;
-    layerCanvas.style.height = height;
-    editCanvas.style.width = width;
-    editCanvas.style.height = height;
-  });
+  syncDisplaySize();
 
   $("resizeW").value = baseCanvas.width || "";
   $("resizeH").value = baseCanvas.height || "";
@@ -401,13 +450,244 @@ function syncCanvas(){
     : 1;
 
   syncCropInputs();
-  updateCropActionBar();
+  updateCropControls();
   renderLayers();
   renderEditor();
-  renderLayerList();
   updateSelectedControls();
   updateHistoryButtons();
+  updateSingleSaveSize();
 }
+
+  function fitDisplayScale(){
+    return Math.min(
+      1,
+      Math.max(1,canvasViewport.clientWidth)/Math.max(1,baseCanvas.width),
+      Math.max(1,canvasViewport.clientHeight)/Math.max(1,baseCanvas.height)
+    );
+  }
+
+  function widthDisplayScale(){
+    return Math.min(4,Math.max(1,canvasViewport.clientWidth)/Math.max(1,baseCanvas.width));
+  }
+
+  function editorChromeActive(){
+    return !!state.sourceFile && !!state.originalCanvas && !$("singlePanel").hidden;
+  }
+
+  function syncEditorChrome(){
+    const active = editorChromeActive();
+    const changed = document.body.classList.contains("image-editor-active") !== active;
+    document.body.classList.toggle("image-editor-active",active);
+    const intro = $("imageIntro");
+    if(intro) intro.hidden = active;
+    const actions = $("imageHeaderActions");
+    if(actions){actions.hidden = !active;actions.inert = !active;}
+    syncModeControls();
+    if(changed) scheduleDisplayResize();
+  }
+
+  function syncModeControls(){
+    const loaded = editorChromeActive() || (!$("batchPanel").hidden && batchState.items.length > 0);
+    const tabs = $("processingModeTabs");
+    const tabFocused = tabs.contains(document.activeElement);
+    tabs.hidden = loaded && !modeChoicesOpen;
+    tabs.inert = tabs.hidden;
+    const change = $("changeProcessingMode");
+    change.hidden = !loaded;
+    change.disabled = state.singleBusy || batchState.processing || batchState.adding;
+    change.setAttribute("aria-expanded",String(!tabs.hidden));
+    if(tabs.hidden && tabFocused){
+      if(!$("singlePanel").hidden) editCanvas.focus({preventScroll:true});
+      else $("batchAdd").focus();
+    }
+  }
+
+  function syncWorkspaceHeight(){
+    if(!editorChromeActive()){
+      if(viewState.sidebarRule) viewState.sidebarRule.style.setProperty("--image-sidebar-height","");
+      if(!viewState.viewportRule?.style.height) return false;
+      viewState.viewportRule.style.height = "";
+      return true;
+    }
+    if(!Number.isFinite(window.innerHeight) || window.innerHeight <= 0) return false;
+    const rect = canvasViewport.getBoundingClientRect();
+    if(!Number.isFinite(rect.top)) return false;
+    let extra = 16;
+    for(const id of ["zoomControls"]){
+      const element = $(id);
+      if(!element || element.hidden || element.classList.contains("hidden")) continue;
+      const height = element.getBoundingClientRect().height;
+      if(Number.isFinite(height)) extra += Math.max(0,height);
+    }
+    const top = Math.max(0,rect.top+(Number.isFinite(window.scrollY) ? window.scrollY : 0));
+    const height = `${Math.max(240,Math.floor(window.innerHeight-top-extra))}px`;
+    if(!viewState.viewportRule){
+      const origin = new URL(document.baseURI).origin;
+      const sheet = [...document.styleSheets].find(item => item.href &&
+        new URL(item.href,document.baseURI).origin === origin &&
+        new URL(item.href,document.baseURI).pathname.endsWith("/imageedit/image.css"));
+      if(!sheet) return false;
+      try{
+        const index = sheet.insertRule("#canvasViewport {}",sheet.cssRules.length);
+        const viewportRule = sheet.cssRules[index];
+        const sidebarIndex = sheet.insertRule(".editor-sidebar, .editor-settings {}",sheet.cssRules.length);
+        viewState.sidebarRule = sheet.cssRules[sidebarIndex];
+        viewState.viewportRule = viewportRule;
+      }catch(error){return false;}
+    }
+    viewState.sidebarRule.style.setProperty("--image-sidebar-height",`${parseFloat(height)+extra-16}px`);
+    const changed = viewState.viewportRule.style.height !== height;
+    viewState.viewportRule.style.height = height;
+    return changed;
+  }
+
+  function displayCenter(){
+    const viewport = canvasViewport.getBoundingClientRect();
+    const holder = canvasHolder.getBoundingClientRect();
+    return {
+      x:(viewport.left+canvasViewport.clientLeft+canvasViewport.clientWidth/2-holder.left)/viewState.scale,
+      y:(viewport.top+canvasViewport.clientTop+canvasViewport.clientHeight/2-holder.top)/viewState.scale
+    };
+  }
+
+  function displayAnchorAtEvent(event){
+    const rectangle = editCanvas.getBoundingClientRect();
+    if(!Number.isFinite(event.clientX) || !Number.isFinite(event.clientY) ||
+      event.clientX < rectangle.left || event.clientY < rectangle.top ||
+      event.clientX > rectangle.left+rectangle.width || event.clientY > rectangle.top+rectangle.height) return null;
+    const viewport = canvasViewport.getBoundingClientRect();
+    return {
+      ...pointFromEvent(event),
+      viewportX:event.clientX-viewport.left-canvasViewport.clientLeft,
+      viewportY:event.clientY-viewport.top-canvasViewport.clientTop
+    };
+  }
+
+  function syncDisplaySize(center=null){
+    const previousCenter = !center && state.sourceFile && viewState.mode !== "fit" ? displayCenter() : null;
+    const heightChanged = syncWorkspaceHeight();
+    if(heightChanged && previousCenter) center = previousCenter;
+    if(!state.sourceFile || !canvasViewport.clientWidth || !canvasViewport.clientHeight) return;
+
+    if(!viewState.rule){
+      // 同一オリジンの外部CSSへルールを追加し、style属性は付与しない。
+      const sheet = [...document.styleSheets].find(item => item.href &&
+        new URL(item.href,document.baseURI).pathname.endsWith("/image.css"));
+      if(!sheet) return;
+      const index = sheet.insertRule("#canvasHolder {}",sheet.cssRules.length);
+      viewState.rule = sheet.cssRules[index];
+    }
+
+    if(viewState.mode === "fit") viewState.scale = fitDisplayScale();
+    if(viewState.mode === "width") viewState.scale = widthDisplayScale();
+    const scale = viewState.scale;
+    // 三枚のキャンバスを同じ親要素の寸法に追従させ、縦横の倍率を統一する。
+    viewState.rule.style.width = `${baseCanvas.width*scale}px`;
+    viewState.rule.style.height = `${baseCanvas.height*scale}px`;
+
+    if(center && viewState.mode !== "fit"){
+      const viewport = canvasViewport.getBoundingClientRect();
+      const holder = canvasHolder.getBoundingClientRect();
+      canvasViewport.scrollLeft += holder.left+center.x*scale-
+        (viewport.left+canvasViewport.clientLeft+(center.viewportX ?? canvasViewport.clientWidth/2));
+      canvasViewport.scrollTop += holder.top+center.y*scale-
+        (viewport.top+canvasViewport.clientTop+(center.viewportY ?? canvasViewport.clientHeight/2));
+    }else if(viewState.mode === "fit"){
+      canvasViewport.scrollLeft = 0;
+      canvasViewport.scrollTop = 0;
+    }
+
+    $("zoomValue").value = Math.round(scale*1000)/10;
+    $("zoomOut").disabled = scale <= Math.min(.05,fitDisplayScale());
+    $("zoomIn").disabled = scale >= 4;
+    $("zoomFit").setAttribute("aria-pressed",String(viewState.mode === "fit"));
+    $("zoomWidth")?.setAttribute("aria-pressed",String(viewState.mode === "width"));
+    renderEditor();
+  }
+
+  function setDisplayZoom(scale,mode="manual",anchor=null){
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan) return;
+    const center = anchor || displayCenter();
+    viewState.mode = mode;
+    viewState.scale = clamp(scale,Math.min(.05,fitDisplayScale()),4);
+    syncDisplaySize(center);
+  }
+
+  $("zoomOut").addEventListener("click",() => setDisplayZoom(viewState.scale/1.25));
+  $("zoomIn").addEventListener("click",() => setDisplayZoom(viewState.scale*1.25));
+  $("zoomFit").addEventListener("click",() => setDisplayZoom(1,"fit"));
+  $("zoomWidth")?.addEventListener("click",() => setDisplayZoom(1,"width"));
+  $("zoomActual").addEventListener("click",() => setDisplayZoom(1));
+  $("zoomValue").addEventListener("change",() => {
+    const value = Number($("zoomValue").value);
+    if(Number.isFinite(value) && value > 0) setDisplayZoom(value/100);
+    else $("zoomValue").value = Math.round(viewState.scale*1000)/10;
+  });
+
+  canvasViewport.addEventListener("wheel",event => {
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan ||
+      state.composing || state.textEditing || isEditingTarget(event.target)) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvasViewport.clientHeight : 1;
+    const delta = event.deltaY*unit;
+    if(!Number.isFinite(delta) || delta === 0) return;
+    event.preventDefault();
+    setDisplayZoom(viewState.scale*Math.exp(-clamp(delta,-300,300)*.003),"manual",displayAnchorAtEvent(event));
+  },{passive:false});
+
+  function scheduleDisplayResize(){
+    if(viewState.pending) return;
+    viewState.pending = true;
+    requestAnimationFrame(() => {
+      viewState.pending = false;
+      syncDisplaySize();
+    });
+  }
+
+  if("ResizeObserver" in window){
+    const observer = new ResizeObserver(scheduleDisplayResize);
+    observer.observe(canvasViewport);
+    [$("editorActions"),$("imageHeaderActions"),$("zoomControls")].filter(Boolean)
+      .forEach(element => observer.observe(element));
+    const header = document.querySelector(".appbox-header");
+    if(header) observer.observe(header);
+  }
+  window.addEventListener("resize",scheduleDisplayResize);
+
+  // captureで手のひら操作を先に受け、注釈の移動・描画処理へ渡さない。
+  canvasViewport.addEventListener("pointerdown",event => {
+    if(state.tool !== "pan" || !state.sourceFile || state.singleBusy || event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    editCanvas.focus({preventScroll:true});
+    canvasViewport.setPointerCapture(event.pointerId);
+    viewState.pan = {
+      id:event.pointerId,x:event.clientX,y:event.clientY,
+      left:canvasViewport.scrollLeft,top:canvasViewport.scrollTop
+    };
+    canvasViewport.classList.add("panning");
+  },true);
+
+  canvasViewport.addEventListener("pointermove",event => {
+    const pan = viewState.pan;
+    if(!pan || pan.id !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    canvasViewport.scrollLeft = pan.left-(event.clientX-pan.x);
+    canvasViewport.scrollTop = pan.top-(event.clientY-pan.y);
+  },true);
+
+  function endViewPan(event){
+    if(!viewState.pan || viewState.pan.id !== event.pointerId) return;
+    event.stopPropagation();
+    viewState.pan = null;
+    canvasViewport.classList.remove("panning");
+    if(canvasViewport.hasPointerCapture(event.pointerId)){
+      canvasViewport.releasePointerCapture(event.pointerId);
+    }
+  }
+  canvasViewport.addEventListener("pointerup",endViewPan,true);
+  canvasViewport.addEventListener("pointercancel",endViewPan,true);
+  canvasViewport.addEventListener("lostpointercapture",endViewPan,true);
 
 
 function renderLayers(){
@@ -418,11 +698,29 @@ function renderLayers(){
     layerCanvas.height
   );
 
-  state.layers.forEach(layer => {
-    if(layer.visible !== false){
-      drawLayer(layerContext,layer);
-    }
-  });
+  let source = null;
+  let sourceContext = null;
+  let drawnLayers = 0;
+  try{
+    state.layers.forEach(layer => {
+      if(layer.visible === false) return;
+      const isMosaic = ["mosaicRect","mosaicBrush"].includes(layer.type);
+      if(isMosaic && drawnLayers){
+        if(!source){
+          source = createCanvas(baseCanvas.width,baseCanvas.height);
+          sourceContext = source.getContext("2d");
+        }
+        sourceContext.clearRect(0,0,source.width,source.height);
+        sourceContext.drawImage(baseCanvas,0,0);
+        sourceContext.drawImage(layerCanvas,0,0);
+      }
+      drawLayer(layerContext,layer,isMosaic && drawnLayers ? source : baseCanvas);
+      drawnLayers++;
+    });
+  }finally{
+    // 合成素材はフレームをまたいで保持しない。大画像のbitmapを早期解放する。
+    if(source){source.width = 0;source.height = 0;}
+  }
 }
 
 
@@ -464,33 +762,43 @@ function renderLayers(){
     };
   }
 
-  function selectedLayer(){
-    return state.layers.find(layer => layer.id === state.selectedLayerId) || null;
+  function selectedLayers(){
+    const ids = state.selectedLayerIds || new Set();
+    return state.layers.filter(layer => ids.size
+      ? ids.has(layer.id)
+      : layer.id === state.selectedLayerId);
   }
 
-  function textBounds(layer){
-    editContext.save();
-    editContext.font = `bold ${layer.fontSize}px sans-serif`;
-    const metrics = editContext.measureText(layer.text || "");
-    editContext.restore();
+  function selectLayers(layers){
+    if(state.textEditing) finishTextEditing();
+    state.selectedLayerIds = new Set(layers.map(layer => layer.id));
+    state.selectedLayerId = layers.length === 1 ? layers[0].id : null;
+    state.textEditing = null;
+    styleEditSession = null;
+  }
 
-    const ascent = Number.isFinite(metrics.actualBoundingBoxAscent)
-      ? metrics.actualBoundingBoxAscent
-      : layer.fontSize;
-    const descent = Number.isFinite(metrics.actualBoundingBoxDescent)
-      ? metrics.actualBoundingBoxDescent
-      : layer.fontSize*.25;
+  function selectedLayer(){
+    const layers = selectedLayers();
+    return layers.length === 1 ? layers[0] : null;
+  }
 
+  function layersBounds(layers){
+    const bounds = layers.map(layerBounds);
+    const x = Math.min(...bounds.map(item => item.x));
+    const y = Math.min(...bounds.map(item => item.y));
     return {
-      x:layer.x,
-      y:layer.y-ascent,
-      w:Math.max(1,metrics.width),
-      h:Math.max(1,ascent+descent)
+      x,y,
+      w:Math.max(...bounds.map(item => item.x+item.w))-x,
+      h:Math.max(...bounds.map(item => item.y+item.h))-y
     };
   }
 
+  function textBounds(layer){
+    return annotationStyle.layoutText(editContext,layerForStylePreview(layer)).bounds;
+  }
+
   function layerBounds(layer){
-    if(RECT_TYPES.includes(layer.type)){
+    if(RECT_TYPES.includes(layer.type) || layer.type === "image"){
       return {x:layer.x,y:layer.y,w:layer.w,h:layer.h};
     }
 
@@ -498,12 +806,12 @@ function renderLayers(){
       return textBounds(layer);
     }
 
-    if(layer.type === "arrow"){
+    if(drawing.isLine(layer)){
       const rectangle = normalizeRectangle(
         {x:layer.x1,y:layer.y1},
         {x:layer.x2,y:layer.y2}
       );
-      const pad = Math.max(10,layer.lineWidth*2);
+      const pad = layer.type === "arrow" ? Math.max(10,layer.lineWidth*2) : Math.max(1,layer.lineWidth/2);
 
       return {
         x:rectangle.x-pad,
@@ -513,20 +821,19 @@ function renderLayers(){
       };
     }
 
-    if(BRUSH_TYPES.includes(layer.type)){
+    if(BRUSH_TYPES.includes(layer.type) || layer.type === "ink"){
       if(!layer.points || !layer.points.length){
         return {x:0,y:0,w:0,h:0};
       }
 
-      const xs = layer.points.map(point => point.x);
-      const ys = layer.points.map(point => point.y);
+      const bounds = drawing.inkBounds(layer.points);
       const pad = layer.brushSize/2;
 
       return {
-        x:Math.min(...xs)-pad,
-        y:Math.min(...ys)-pad,
-        w:Math.max(1,Math.max(...xs)-Math.min(...xs)+pad*2),
-        h:Math.max(1,Math.max(...ys)-Math.min(...ys)+pad*2)
+        x:bounds.x-pad,
+        y:bounds.y-pad,
+        w:Math.max(1,bounds.w+pad*2),
+        h:Math.max(1,bounds.h+pad*2)
       };
     }
 
@@ -555,7 +862,7 @@ function renderLayers(){
   function hitTestLayer(layer,point){
     if(layer.visible === false) return false;
 
-    if(layer.type === "arrow"){
+    if(drawing.isLine(layer)){
       const tolerance = Math.max(10*displayScale(),layer.lineWidth*2);
       return pointToSegmentDistance(
         point,
@@ -564,7 +871,7 @@ function renderLayers(){
       ) <= tolerance;
     }
 
-    if(BRUSH_TYPES.includes(layer.type)){
+    if(BRUSH_TYPES.includes(layer.type) || layer.type === "ink"){
       if(!layer.points || !layer.points.length) return false;
       const tolerance = Math.max(layer.brushSize/2,8*displayScale());
 
@@ -603,8 +910,7 @@ function renderLayers(){
     return null;
   }
 
-  function clampLayerTranslation(layer,dx,dy){
-    const bounds = layerBounds(layer);
+  function clampBoundsTranslation(bounds,dx,dy){
 
     if(bounds.w <= baseCanvas.width){
       dx = clamp(dx,-bounds.x,baseCanvas.width-(bounds.x+bounds.w));
@@ -622,10 +928,10 @@ function renderLayers(){
   }
 
   function moveLayerRaw(layer,dx,dy){
-    if(RECT_TYPES.includes(layer.type) || layer.type === "text"){
+    if(RECT_TYPES.includes(layer.type) || ["text","image"].includes(layer.type)){
       layer.x += dx;
       layer.y += dy;
-    }else if(layer.type === "arrow"){
+    }else if(drawing.isLine(layer)){
       layer.x1 += dx;
       layer.y1 += dy;
       layer.x2 += dx;
@@ -639,32 +945,35 @@ function renderLayers(){
     }
   }
 
-  function moveLayer(layer,dx,dy,constrain=true){
-    const translation = constrain
-      ? clampLayerTranslation(layer,dx,dy)
-      : {dx,dy};
-
-    moveLayerRaw(layer,translation.dx,translation.dy);
-  }
-
-  function scaleLayerFromBounds(layer,startLayer,startBounds,newWidth,newHeight){
+  function scaleLayerFromBounds(layer,startLayer,startBounds,newWidth,newHeight,uniformStroke=false){
     const sx = newWidth/Math.max(1,startBounds.w);
-    const sy = newHeight/Math.max(1,startBounds.h);
+    const sy = uniformStroke ? sx : newHeight/Math.max(1,startBounds.h);
 
-    if(RECT_TYPES.includes(layer.type)){
+    if(layer.type === "image"){
+      // Follow the axis with the larger relative change, including shrinking
+      // on only one axis; the other axis follows the image's aspect ratio.
+      const desired = Math.abs(sx-1) >= Math.abs(sy-1) ? sx : sy;
+      const ratio = Math.min(
+        desired,
+        Math.max(2,baseCanvas.width-startBounds.x)/Math.max(1,startLayer.w),
+        Math.max(2,baseCanvas.height-startBounds.y)/Math.max(1,startLayer.h)
+      );
+      layer.x = startBounds.x;
+      layer.y = startBounds.y;
+      layer.w = startLayer.w*ratio;
+      layer.h = startLayer.h*ratio;
+    }else if(RECT_TYPES.includes(layer.type)){
       layer.x = startBounds.x;
       layer.y = startBounds.y;
       layer.w = Math.max(2,startLayer.w*sx);
       layer.h = Math.max(2,startLayer.h*sy);
     }else if(layer.type === "text"){
-      layer.x = startBounds.x;
-      layer.fontSize = clamp(
-        startLayer.fontSize*Math.max(sx,sy),
-        8,
-        300
-      );
-      layer.y = startBounds.y+layer.fontSize;
-    }else if(layer.type === "arrow"){
+      layer.x = startLayer.x;
+      layer.y = startLayer.y;
+      const pad = startLayer.bgTransparent === false ? 8
+        : startLayer.outline ? annotationStyle.TEXT_OUTLINE_WIDTH : 0;
+      layer.textWidth = Math.max(2,newWidth-pad);
+    }else if(drawing.isLine(layer)){
       layer.x1 = startBounds.x+(startLayer.x1-startBounds.x)*sx;
       layer.y1 = startBounds.y+(startLayer.y1-startBounds.y)*sy;
       layer.x2 = startBounds.x+(startLayer.x2-startBounds.x)*sx;
@@ -679,7 +988,7 @@ function renderLayers(){
         x:startBounds.x+(point.x-startBounds.x)*sx,
         y:startBounds.y+(point.y-startBounds.y)*sy
       }));
-      layer.brushSize = clamp(
+      layer.brushSize = uniformStroke ? startLayer.brushSize*sx : clamp(
         startLayer.brushSize*Math.max(sx,sy),
         5,
         500
@@ -689,26 +998,7 @@ function renderLayers(){
   }
 
   function drawArrow(context,layer){
-    const angle = Math.atan2(layer.y2-layer.y1,layer.x2-layer.x1);
-    const head = Math.max(12,layer.lineWidth*4);
-
-    context.beginPath();
-    context.moveTo(layer.x1,layer.y1);
-    context.lineTo(layer.x2,layer.y2);
-    context.stroke();
-
-    context.beginPath();
-    context.moveTo(layer.x2,layer.y2);
-    context.lineTo(
-      layer.x2-head*Math.cos(angle-Math.PI/6),
-      layer.y2-head*Math.sin(angle-Math.PI/6)
-    );
-    context.lineTo(
-      layer.x2-head*Math.cos(angle+Math.PI/6),
-      layer.y2-head*Math.sin(angle+Math.PI/6)
-    );
-    context.closePath();
-    context.fill();
+    annotationStyle.drawArrow(context,layer);
   }
 
   function buildMosaicCanvas(source,blockSize){
@@ -723,6 +1013,9 @@ function renderLayers(){
     const smallContext = small.getContext("2d");
     smallContext.imageSmoothingEnabled = true;
     smallContext.imageSmoothingQuality = "low";
+    // 半透明PNGでも元の細部がモザイク越しに透けないよう、加工素材だけ白合成する。
+    smallContext.fillStyle = "#ffffff";
+    smallContext.fillRect(0,0,smallWidth,smallHeight);
     smallContext.drawImage(source,0,0,smallWidth,smallHeight);
 
     const mosaic = createCanvas(source.width,source.height);
@@ -737,12 +1030,19 @@ function renderLayers(){
     return mosaic;
   }
 
-  function getMosaicCanvas(blockSize){
+  function getMosaicCanvas(blockSize,source=baseCanvas){
     const size = clamp(Math.round(blockSize),4,200);
+    if(source !== baseCanvas){
+      // 注釈・画像の移動や書式の連続変更中も、直前までの合成内容を使う。
+      state.mosaicCache.clear();
+      return buildMosaicCanvas(source,size);
+    }
     const key = `${state.baseRevision}:${size}`;
 
     if(!state.mosaicCache.has(key)){
-      state.mosaicCache.set(key,buildMosaicCanvas(baseCanvas,size));
+      // スライダー操作で全寸法canvasをサイズの数だけ保持しない。
+      state.mosaicCache.clear();
+      state.mosaicCache.set(key,buildMosaicCanvas(source,size));
     }
 
     return state.mosaicCache.get(key);
@@ -866,45 +1166,33 @@ function renderLayers(){
   }
 
 
-  function updateCropActionBar(){
-    const bar = $("cropActionBar");
-    const summary = $("cropActionSummary");
-    const applyButton = $("cropBarApply");
-
-    if(!bar || !summary || !applyButton) return;
-
-    const active =
-        state.tool === "crop" &&
-        !!state.crop;
-
-    bar.classList.toggle("hidden",!active);
-
-    if(!active){
-        summary.textContent = "範囲を指定してください";
-        applyButton.disabled = true;
-        return;
-    }
-
-    const width = Math.round(state.crop.w);
-    const height = Math.round(state.crop.h);
-    const valid = width >= 1 && height >= 1;
-
-    summary.textContent =
-        `X ${Math.round(state.crop.x)} / ` +
-        `Y ${Math.round(state.crop.y)} / ` +
-        `${width} × ${height} px`;
-
-    applyButton.disabled = !valid;
+  function updateCropControls(){
+    const valid = state.tool === "crop" && !!state.crop &&
+      Math.round(state.crop.w) >= 1 && Math.round(state.crop.h) >= 1;
+    $("applyCrop").disabled = !valid;
+    $("centerCrop").disabled = !valid;
   }
 
-  function drawLayer(context,layer){
-    context.save();
+  function layerForStylePreview(layer){
+    return fontPreview?.ids.has(layer.id) ? {...layer,fontFamily:fontPreview.key} : layer;
+  }
 
-    if(layer.type === "blackoutRect"){
+  function drawLayer(context,layer,mosaicSource=baseCanvas){
+    // 保存用の合成では一時フォント候補を採用しない。
+    if(context === layerContext || context === editContext) layer = layerForStylePreview(layer);
+    context.save();
+    let temporaryMosaic = null;
+    try{
+
+    if(layer.type === "image"){
+      context.globalAlpha = clamp(Number.isFinite(layer.opacity) ? layer.opacity : 100,0,100)/100;
+      context.drawImage(layer.imageCanvas,layer.x,layer.y,layer.w,layer.h);
+    }else if(layer.type === "blackoutRect"){
       context.fillStyle = "#000";
       context.fillRect(layer.x,layer.y,layer.w,layer.h);
     }else if(layer.type === "mosaicRect"){
-      const mosaic = getMosaicCanvas(layer.mosaicSize);
+      const mosaic = getMosaicCanvas(layer.mosaicSize,mosaicSource);
+      if(mosaicSource !== baseCanvas) temporaryMosaic = mosaic;
       const sourceX = clamp(Math.floor(layer.x),0,baseCanvas.width);
       const sourceY = clamp(Math.floor(layer.y),0,baseCanvas.height);
       const sourceRight = clamp(Math.ceil(layer.x+layer.w),0,baseCanvas.width);
@@ -924,37 +1212,29 @@ function renderLayers(){
       context.strokeStyle = "#000";
       traceBrush(context,layer);
     }else if(layer.type === "mosaicBrush"){
-      drawMosaicBrush(context,layer,getMosaicCanvas(layer.mosaicSize));
+      const mosaic = getMosaicCanvas(layer.mosaicSize,mosaicSource);
+      if(mosaicSource !== baseCanvas) temporaryMosaic = mosaic;
+      drawMosaicBrush(context,layer,mosaic);
     }else if(layer.type === "text"){
-      context.fillStyle = layer.color;
-      context.font = `bold ${layer.fontSize}px sans-serif`;
-      context.textBaseline = "alphabetic";
-      context.fillText(layer.text,layer.x,layer.y);
-    }else if(layer.type === "rect"){
-      context.strokeStyle = layer.color;
-      context.lineWidth = layer.lineWidth;
-      context.strokeRect(layer.x,layer.y,layer.w,layer.h);
-    }else if(layer.type === "ellipse"){
-      context.strokeStyle = layer.color;
-      context.lineWidth = layer.lineWidth;
-      context.beginPath();
-      context.ellipse(
-        layer.x+layer.w/2,
-        layer.y+layer.h/2,
-        Math.abs(layer.w/2),
-        Math.abs(layer.h/2),
-        0,0,Math.PI*2
-      );
-      context.stroke();
+      annotationStyle.drawText(context,layer);
+    }else if(["rect","ellipse","line"].includes(layer.type)){
+      annotationStyle.drawShape(context,layer);
     }else if(layer.type === "arrow"){
       context.strokeStyle = layer.color;
       context.fillStyle = layer.color;
       context.lineWidth = layer.lineWidth;
       context.lineCap = "round";
       drawArrow(context,layer);
+    }else if(layer.type === "ink"){
+      context.fillStyle = layer.color;
+      context.strokeStyle = layer.color;
+      traceBrush(context,layer);
     }
 
-    context.restore();
+    }finally{
+      context.restore();
+      if(temporaryMosaic){temporaryMosaic.width = 0;temporaryMosaic.height = 0;}
+    }
   }
 
   function compositeCanvas(){
@@ -963,7 +1243,7 @@ function renderLayers(){
 
     state.layers.forEach(layer => {
       if(layer.visible !== false){
-        drawLayer(context,layer);
+        drawLayer(context,layer,output);
       }
     });
 
@@ -971,15 +1251,18 @@ function renderLayers(){
   }
 
   function drawCropOverlay(){
-    if(!state.crop) return;
+    editContext.save();
+    editContext.fillStyle = state.crop ? "rgba(0,0,0,.48)" : "rgba(0,0,0,.28)";
+    editContext.fillRect(0,0,editCanvas.width,editCanvas.height);
+    if(!state.crop){
+      editContext.restore();
+      return;
+    }
 
     const crop = state.crop;
     const scale = displayScale();
     const handleSize = 7*scale;
 
-    editContext.save();
-    editContext.fillStyle = "rgba(0,0,0,.48)";
-    editContext.fillRect(0,0,editCanvas.width,editCanvas.height);
     editContext.clearRect(crop.x,crop.y,crop.w,crop.h);
     editContext.strokeStyle = "#fff";
     editContext.lineWidth = Math.max(1.5,2*scale);
@@ -1008,13 +1291,10 @@ function renderLayers(){
   }
 
   function drawSelection(){
-    const layer = selectedLayer();
-
-    if(!layer || layer.visible === false){
-        return;
-    }
-
-    const bounds = layerBounds(layer);
+    if(state.textEditing) return;
+    const selected = selectedLayers();
+    const layers = selected.filter(layer => layer.visible !== false);
+    if(!layers.length) return;
     const scale = displayScale();
     const handle = 7*scale;
 
@@ -1027,16 +1307,30 @@ function renderLayers(){
         5*scale
     ]);
 
-    editContext.strokeRect(
-        bounds.x,
-        bounds.y,
-        bounds.w,
-        bounds.h
-    );
+    layers.forEach(layer => {
+      const bounds = layerBounds(layer);
+      editContext.strokeRect(bounds.x,bounds.y,bounds.w,bounds.h);
+    });
+
+    if(selected.length !== 1){
+      editContext.restore();
+      return;
+    }
+    const layer = layers[0];
+    const bounds = layerBounds(layer);
 
     editContext.setLineDash([]);
     editContext.fillStyle = "#fff";
     editContext.strokeStyle = "#9a721b";
+
+    if(drawing.isLine(layer)){
+      [{x:layer.x1,y:layer.y1},{x:layer.x2,y:layer.y2}].forEach(point => {
+        editContext.fillRect(point.x-handle,point.y-handle,handle*2,handle*2);
+        editContext.strokeRect(point.x-handle,point.y-handle,handle*2,handle*2);
+      });
+      editContext.restore();
+      return;
+    }
 
     editContext.fillRect(
         bounds.x+bounds.w-handle,
@@ -1055,12 +1349,27 @@ function renderLayers(){
     editContext.restore();
   }
 
+  function drawSelectionRectangle(drag){
+    if(!drag.active) return;
+    const rectangle = normalizeRectangle(drag.start,drag.last);
+    const scale = displayScale();
+    editContext.save();
+    editContext.fillStyle = "rgba(154,114,27,.12)";
+    editContext.strokeStyle = "#9a721b";
+    editContext.lineWidth = 1.5*scale;
+    editContext.setLineDash([5*scale,3*scale]);
+    editContext.fillRect(rectangle.x,rectangle.y,rectangle.w,rectangle.h);
+    editContext.strokeRect(rectangle.x,rectangle.y,rectangle.w,rectangle.h);
+    editContext.restore();
+  }
+
 
   function drawShapePreview(drag){
     const style = currentStyle();
     const point = drag.last;
     const rectangle =
-        normalizeRectangle(drag.start,point);
+        drawing.drawingBox(drag.start,point,{width:baseCanvas.width,height:baseCanvas.height},
+          ["rect","ellipse"].includes(drag.tool) && drag.constrained);
 
     editContext.save();
     editContext.globalAlpha = .8;
@@ -1089,34 +1398,17 @@ function renderLayers(){
         rectangle.w,
         rectangle.h
         );
-    }else if(drag.tool === "rect"){
-        editContext.strokeRect(
-        rectangle.x,
-        rectangle.y,
-        rectangle.w,
-        rectangle.h
-        );
-    }else if(drag.tool === "ellipse"){
-        editContext.beginPath();
-
-        editContext.ellipse(
-        rectangle.x+rectangle.w/2,
-        rectangle.y+rectangle.h/2,
-        rectangle.w/2,
-        rectangle.h/2,
-        0,
-        0,
-        Math.PI*2
-        );
-
-        editContext.stroke();
-    }else if(drag.tool === "arrow"){
-        drawArrow(editContext,{
+    }else if(["rect","ellipse"].includes(drag.tool)){
+        drawLayer(editContext,{type:drag.tool,...rectangle,...style});
+    }else if(["line","arrow"].includes(drag.tool)){
+        const end = drawing.constrainedLinePoint(drag.start,point,drag.axisLocked);
+        drawLayer(editContext,{
+        type:drag.tool,
+        ...style,
         x1:drag.start.x,
         y1:drag.start.y,
-        x2:point.x,
-        y2:point.y,
-        lineWidth:style.lineWidth
+        x2:end.x,
+        y2:end.y
         });
     }
 
@@ -1131,7 +1423,7 @@ function renderLayers(){
         editCanvas.height
     );
 
-    if(state.tool === "crop" && state.crop){
+    if(state.tool === "crop" && state.sourceFile && editCanvas.width > 0 && editCanvas.height > 0){
         drawCropOverlay();
     }
 
@@ -1141,9 +1433,11 @@ function renderLayers(){
 
     if(state.tool === "select"){
         drawSelection();
+        if(state.drag?.mode === "marquee") drawSelectionRectangle(state.drag);
     }
 
-    updateCropActionBar();
+    updateCropControls();
+    syncTextEditor();
   }
 
 
@@ -1154,256 +1448,160 @@ function renderLayers(){
       mosaicRect:"モザイク範囲",
       blackoutBrush:"黒塗りブラシ",
       mosaicBrush:"モザイクブラシ",
-      text:"文字注釈",
+      text:"文字",
       rect:"四角形",
-      ellipse:"楕円",
-      arrow:"矢印"
+      ellipse:"円",
+      arrow:"矢印",
+      line:"直線",
+      ink:"手書き",
+      inkEraser:"手書き消しゴム",
+      image:"追加画像"
     }[type] || type;
   }
 
   function updateSelectedControls(){
+    // Apply the final selection's controls after pointer-up/cancel, keeping
+    // control and work-area changes out of an active gesture.
+    if(state.drag) return;
+    const layers = selectedLayers();
     const layer = selectedLayer();
-    $("deleteLayer").disabled = !layer;
-    $("applyLayerStyle").disabled = !layer;
-
-    if(!layer) return;
-
-    if(layer.type === "text"){
-      $("annotationText").value = layer.text;
-      $("annotationColor").value = layer.color;
-      $("fontSize").value = Math.round(layer.fontSize);
-    }else if(["rect","ellipse","arrow"].includes(layer.type)){
-      $("annotationColor").value = layer.color;
-      $("lineWidth").value = Math.round(layer.lineWidth);
+    const actions = $("editorActions");
+    actions.classList.toggle("hidden",!layers.length);
+    actions.inert = !layers.length;
+    actions.setAttribute("aria-hidden",String(!layers.length));
+    if($("frontLayer")) $("frontLayer").disabled = !layers.length;
+    if($("backLayer")) $("backLayer").disabled = !layers.length;
+    const contextType = state.tool === "select" ? layer?.type : state.tool;
+    const types = state.tool === "select" ? new Set(layers.map(item => item.type)) : new Set([state.tool]);
+    const selectedTexts = layers.filter(item => item.type === "text");
+    if(fontPreview && (state.tool !== "select" || selectedTexts.some(item => !fontPreview.ids.has(item.id)) || fontPreview.ids.size !== selectedTexts.length)) fontPreview = null;
+    if(state.tool !== "select"){
+      const defaults = currentStyle();
+      for(const [id,property] of Object.entries(styleFieldProperties)){
+        const field = $(id);
+        if(!field || field.dataset.mixed !== "true") continue;
+        field.dataset.mixed = "false";
+        field.title = "";
+        field.placeholder = "";
+        if(field.type === "checkbox"){
+          field.indeterminate = false;
+          field.checked = property === "outline" ? toolOutlinePreferences.get(state.tool) ?? true
+            : !!annotationStyle.valueForField({},property);
+        }else field.value = defaults[property] ?? "";
+      }
+    }
+    const fields = new Set();
+    for(const type of types){
+      if([...BRUSH_TYPES,"ink","inkEraser"].includes(type)) fields.add("brush");
+      if(type === "ink") fields.add("ink");
+      if(["mosaicRect","mosaicBrush"].includes(type)) fields.add("mosaic");
+      if(type === "text") fields.add("text");
+      if(["text","rect","ellipse","arrow","line","ink"].includes(type)) fields.add("color");
+      if(["rect","ellipse","arrow","line"].includes(type)) fields.add("line");
+      if(["text","arrow","line","rect","ellipse"].includes(type)) fields.add("outline");
+      if(["rect","ellipse"].includes(type)) fields.add("fill");
+      if(type === "image") fields.add("image");
     }
 
-    if(BRUSH_TYPES.includes(layer.type)){
-      $("brushSize").value = Math.round(layer.brushSize);
+    $$("[data-settings]").forEach(element => {
+      element.classList.toggle("hidden",!fields.has(element.dataset.settings));
+    });
+    $$("[data-context]").forEach(element => {
+      element.classList.toggle("hidden",element.dataset.context !== contextType);
+    });
+    const title = $("contextTitle");
+    const colorTypes = [...types].filter(type => ["text","ink","rect","ellipse","arrow","line"].includes(type));
+    const colorLabel = colorTypes.length && colorTypes.every(type => type === "text") ? "テキスト"
+      : colorTypes.length && colorTypes.every(type => ["rect","ellipse","arrow","line"].includes(type)) ? "枠" : "色";
+    $("annotationColorLabel").textContent = colorLabel;
+    $("annotationColor").setAttribute("aria-label",colorLabel === "色" ? "文字・図形・手書きの色" : `${colorLabel}の色`);
+    const mixedFill = fields.has("text") && fields.has("fill");
+    $("textFillLabel").textContent = mixedFill ? "文字の塗り" : "塗り";
+    $("shapeFillLabel").textContent = mixedFill ? "図形の塗り" : "塗り";
+    const showPanel = fields.size > 0 || layers.length > 0 || ["crop","transform"].includes(contextType);
+    const panel = $("contextPanel");
+    panel.classList.toggle("hidden",!showPanel);
+    panel.inert = !showPanel;
+    panel.setAttribute("aria-hidden",String(!showPanel));
+    if(title){
+      title.textContent = layers.length && state.tool === "select"
+        ? layers.length > 1 ? `${layers.length}個` : typeLabel(layer.type)
+        : contextType === "crop" ? "トリミング"
+        : contextType === "transform" ? "サイズ"
+        : contextType && contextType !== "select" && contextType !== "pan"
+          ? typeLabel(contextType) : "";
     }
+    scheduleDisplayResize();
 
-    if(["mosaicRect","mosaicBrush"].includes(layer.type)){
-      $("mosaicSize").value = Math.round(layer.mosaicSize);
+    syncFontSizeButtons();
+    if(!layers.length || state.tool !== "select") return;
+
+    for(const [id,property] of Object.entries(styleFieldProperties)){
+      const field = $(id);
+      if(!field) continue;
+      const common = annotationStyle.commonFieldValue(layers,property);
+      if(!common.eligible.length) continue;
+      const mixed = common.mixed;
+      field.dataset.mixed = String(mixed);
+      field.title = mixed ? "選択対象で値が異なります。変更した項目だけが反映されます。" : "";
+      if(field.type === "checkbox"){
+        field.indeterminate = mixed;
+        field.checked = mixed ? false : !!common.value;
+      }else{
+        field.placeholder = mixed ? "複数の値" : "";
+        // color入力には空値を指定できないため、先頭の色とmixed表示を併用する。
+        const value = mixed && field.type !== "color" ? "" : common.value;
+        if(field.value !== String(value ?? "")) field.value = value ?? "";
+      }
     }
   }
-
-  function renderLayerList(){
-    const list = $("layerList");
-    list.innerHTML = "";
-
-    const visibleLayers = state.layers.filter(
-        layer => layer.visible !== false
-    );
-    const hiddenCount =
-        state.layers.length-visibleLayers.length;
-    const counts = {};
-
-    state.layers.forEach(layer => {
-        counts[layer.type] =
-        (counts[layer.type] || 0)+1;
-    });
-
-    if(!state.layers.length){
-        $("layerSummary").textContent =
-        "加工箇所はありません。";
-        updateSelectedControls();
-        return;
-    }
-
-    const summary = Object.entries(counts)
-        .map(([type,count]) =>
-        `${typeLabel(type)}: ${count}件`
-        )
-        .join(" / ");
-
-    $("layerSummary").textContent =
-        `${summary} / 表示中: ${visibleLayers.length}件` +
-        (hiddenCount
-        ? ` / 非表示: ${hiddenCount}件`
-        : "");
-
-    state.layers.forEach((layer,index) => {
-        const row = document.createElement("div");
-        row.className =
-        "layer-item" +
-        (layer.id === state.selectedLayerId
-            ? " selected"
-            : "");
-
-        const name = document.createElement("button");
-        name.type = "button";
-        name.className = "layer-name";
-        name.textContent =
-        `${index+1}. ${typeLabel(layer.type)}` +
-        (layer.text ? `「${layer.text}」` : "") +
-        (layer.visible === false
-            ? "（非表示）"
-            : "");
-
-        name.addEventListener("click",() => {
-        state.selectedLayerId = layer.id;
-        setTool("select");
-        renderLayerList();
-        });
-
-        const actions = document.createElement("div");
-        actions.className = "layer-actions";
-
-        const up = document.createElement("button");
-        up.type = "button";
-        up.textContent = "上へ";
-        up.disabled = index === state.layers.length-1;
-
-        up.addEventListener("click",() => {
-        if(index >= state.layers.length-1) return;
-
-        pushHistory("layers");
-
-        [
-            state.layers[index],
-            state.layers[index+1]
-        ] = [
-            state.layers[index+1],
-            state.layers[index]
-        ];
-
-        renderLayers();
-        renderEditor();
-        renderLayerList();
-        });
-
-        const down = document.createElement("button");
-        down.type = "button";
-        down.textContent = "下へ";
-        down.disabled = index === 0;
-
-        down.addEventListener("click",() => {
-        if(index <= 0) return;
-
-        pushHistory("layers");
-
-        [
-            state.layers[index],
-            state.layers[index-1]
-        ] = [
-            state.layers[index-1],
-            state.layers[index]
-        ];
-
-        renderLayers();
-        renderEditor();
-        renderLayerList();
-        });
-
-        const visible = document.createElement("button");
-        visible.type = "button";
-        visible.textContent =
-        layer.visible === false
-            ? "表示"
-            : "非表示";
-
-        visible.addEventListener("click",() => {
-        pushHistory("layers");
-        layer.visible = layer.visible === false;
-
-        if(
-            layer.visible === false &&
-            state.selectedLayerId === layer.id
-        ){
-            state.selectedLayerId = null;
-        }
-
-        renderLayers();
-        renderEditor();
-        renderLayerList();
-        });
-
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.textContent = "削除";
-
-        remove.addEventListener("click",() => {
-        pushHistory("layers");
-
-        state.layers = state.layers.filter(
-            item => item.id !== layer.id
-        );
-
-        if(state.selectedLayerId === layer.id){
-            state.selectedLayerId = null;
-        }
-
-        renderLayers();
-        renderEditor();
-        renderLayerList();
-        });
-
-        actions.append(up,down,visible,remove);
-        row.append(name,actions);
-        list.appendChild(row);
-    });
-
-    updateSelectedControls();
-  }
-
 
   function setTool(tool){
+    if(state.textEditing) finishTextEditing();
+    if(toolOutlinePreferences.has(state.tool)){
+      toolOutlinePreferences.set(state.tool,$("whiteOutline").checked);
+    }
     const leavingCrop =
         state.tool === "crop" &&
         tool !== "crop";
 
+    if(state.drag) cancelSelectionGesture();
     state.tool = tool;
+    if(toolOutlinePreferences.has(tool)) $("whiteOutline").checked = toolOutlinePreferences.get(tool);
     state.drag = null;
+    state.textEditing = null;
+    styleEditSession = null;
+    if(tool !== "select") selectLayers([]);
 
     if(leavingCrop){
         state.crop = null;
         syncCropInputs();
     }
 
-    $$(".tool").forEach(button => {
+    $$(".tool[data-tool]").forEach(button => {
         button.classList.toggle(
         "active",
         button.dataset.tool === tool
         );
+        button.setAttribute("aria-pressed",String(button.dataset.tool === tool));
     });
 
     editCanvas.classList.toggle(
         "select-mode",
         tool === "select"
     );
-
-    if(tool === "crop" && !state.crop){
-        resetCropFrame();
-    }
-
-    $("stageHelp").textContent = {
-        select:
-        "加工箇所をクリックして選択します。ドラッグで移動し、右下の白いハンドルでサイズを変更できます。",
-        crop:
-        "枠の内側をドラッグすると移動できます。四隅をドラッグするとサイズを変更できます。範囲が決まったら画像直下の「この範囲で切り抜く」を押してください。",
-        blackoutRect:
-        "隠したい範囲をドラッグしてください。保存前なら選択ツールで再編集できます。",
-        mosaicRect:
-        "モザイクにする範囲をドラッグしてください。保存前なら選択ツールで再編集できます。",
-        blackoutBrush:
-        "画像上を自由になぞってください。ストローク単位で移動・拡大縮小できます。",
-        mosaicBrush:
-        "画像上を自由になぞってください。ストローク単位で移動・拡大縮小できます。",
-        text:
-        "文字を配置する位置をクリックしてください。",
-        rect:
-        "四角形をドラッグしてください。",
-        ellipse:
-        "楕円をドラッグしてください。",
-        arrow:
-        "始点から終点へドラッグしてください。"
-    }[tool] || "ツールを選択してください。";
+    $("canvasViewport").classList.toggle("pan-mode",tool === "pan");
 
     renderLayers();
     renderEditor();
+    updateSelectedControls();
+    syncEditorChrome();
+    scheduleDisplayResize();
   }
 
 
   function readNumber(id,min,max,fallback){
+    if(!$(id) || $(id).value === "") return fallback;
     const value = Number($(id).value);
     return Number.isFinite(value)
       ? clamp(value,min,max)
@@ -1414,9 +1612,19 @@ function renderLayers(){
     return {
       color:$("annotationColor").value,
       fontSize:readNumber("fontSize",8,300,42),
+      fontFamily:annotationStyle.safeFontFamily($("fontFamily")?.value),
+      bold:$("boldText")?.checked ?? true,
+      textWidth:300,
+      bgColor:$("textBgColor")?.value || "#ffffff",
+      bgTransparent:$("textBgTransparent")?.checked ?? true,
+      outline:$("whiteOutline")?.checked ?? true,
+      fill:$("shapeFill")?.value || "#ffff00",
+      fillNone:$("shapeFillNone")?.checked ?? true,
       lineWidth:readNumber("lineWidth",1,100,8),
       brushSize:readNumber("brushSize",5,500,50),
-      mosaicSize:readNumber("mosaicSize",4,200,18)
+      mosaicSize:readNumber("mosaicSize",4,200,18),
+      inkStabilizer:$("inkStabilizer")?.value || "none",
+      opacity:readNumber("imageOpacity",0,100,100)
     };
   }
 
@@ -1428,6 +1636,289 @@ function renderLayers(){
         : undefined
     };
   }
+
+  function isEditingTarget(target){
+    return !!target && (
+      target.isContentEditable ||
+      !!target.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']")
+    );
+  }
+
+  function isObjectShortcutBlocked(event,includeDrag=true){
+    return event.defaultPrevented || event.isComposing || event.keyCode === 229 || state.composing || state.singleBusy ||
+      !!viewState.pan ||
+      (includeDrag && !!state.drag) || !!state.textEditing || $("singlePanel").hidden ||
+      !$("previewDialog").classList.contains("hidden") ||
+      !$("saveDialog").classList.contains("hidden") ||
+      !!document.querySelector("#stampDialog:not(.hidden)") ||
+      !!document.querySelector("#objectMenu:not([hidden]):not(.hidden)") ||
+      !!document.querySelector("dialog[open]") ||
+      isEditingTarget(event.target) || isEditingTarget(document.activeElement);
+  }
+
+  function deleteSelectedLayer(){
+    const layers = selectedLayers();
+    if(!layers.length || state.singleBusy || state.drag) return false;
+    const ids = new Set(layers.map(layer => layer.id));
+    pushHistory("layers");
+    state.layers = state.layers.filter(item => !ids.has(item.id));
+    selectLayers([]);
+    renderLayers();
+    renderEditor();
+    updateSelectedControls();
+    return true;
+  }
+
+  function syncTextEditor(){
+    if(!textEditSession || textEditor.hidden) return;
+    const layer = state.layers.find(item => item.id === textEditSession.id);
+    if(!layer) return;
+    if(!textEditorRule){
+      const sheet = [...document.styleSheets].find(item => item.href &&
+        new URL(item.href,document.baseURI).pathname.endsWith("/image.css"));
+      if(!sheet) return;
+      const index = sheet.insertRule("#textEditor {}",sheet.cssRules.length);
+      textEditorRule = sheet.cssRules[index];
+      const hostIndex = sheet.insertRule("#textEditorHost {}",sheet.cssRules.length);
+      textEditorHostRule = sheet.cssRules[hostIndex];
+    }
+    const box = annotationStyle.editingTextBox(editContext,layer);
+    const scale = 1/displayScale();
+    const style = textEditorRule.style;
+    const hostStyle = textEditorHostRule.style;
+    hostStyle.left = `${box.left*scale}px`;
+    hostStyle.top = `${box.top*scale}px`;
+    hostStyle.width = `${(box.width+2)*scale}px`;
+    hostStyle.height = `${box.height*scale}px`;
+    style.width = `${box.width}px`;
+    style.height = `${box.height}px`;
+    style.font = annotationStyle.fontFor(layer);
+    style.lineHeight = String(box.lineHeight/layer.fontSize);
+    style.transform = `scale(${scale})`;
+    style.setProperty("--editing-text-color",layer.color || "#111111");
+    // Native textarea handles IME, selection, clipboard and its own undo.
+    // Canvas remains the visible text and export source; only its caret and
+    // selection are drawn by the transparent textarea.
+    textEditor.scrollTop = 0;
+    textEditor.scrollLeft = 0;
+  }
+
+  function applyInlineTextInput(){
+    if(!textEditSession) return;
+    const layer = state.layers.find(item => item.id === textEditSession.id);
+    if(!layer) return;
+    const text = textEditor.value.replace(/\r\n?/g,"\n");
+    if(text === layer.text) return;
+    if(!textEditSession.historyPushed){
+      textEditSession.undoBefore = state.undo.slice();
+      textEditSession.redoBefore = state.redo.slice();
+      textEditSession.beforeRevision = state.revision;
+      pushHistory("layers");
+      textEditSession.historyPushed = true;
+    }
+    layer.text = text;
+    renderLayers();
+    renderEditor();
+
+  }
+
+  function finishTextEditing(focusCanvas=false){
+    if(!textEditSession) return;
+    applyInlineTextInput();
+    const session = textEditSession;
+    const layer = state.layers.find(item => item.id === session.id);
+    textEditSession = null;
+    state.textEditing = null;
+    textEditor.hidden = true;
+    textEditorHost.hidden = true;
+    if(session.historyPushed && layer?.text === session.originalText){
+      state.undo = session.undoBefore;
+      state.redo = session.redoBefore;
+      state.revision = session.beforeRevision;
+      updateHistoryButtons();
+    }
+    renderLayers();
+    renderEditor();
+    updateSelectedControls();
+    if(focusCanvas) editCanvas.focus({preventScroll:true});
+  }
+
+  function beginTextEditing(layer,point=null){
+    if(!layer || layer.type !== "text" || state.singleBusy) return;
+    selectLayers([layer]);
+    setTool("select");
+    textEditSession = {id:layer.id,originalText:layer.text || "",historyPushed:false};
+    state.textEditing = layer.id;
+    textEditor.value = layer.text || "";
+    textEditor.hidden = false;
+    textEditorHost.hidden = false;
+    renderEditor();
+    updateSelectedControls();
+    textEditor.focus({preventScroll:true});
+    const position = point ? annotationStyle.textCaretIndex(editContext,layer,point) : textEditor.value.length;
+    textEditor.setSelectionRange(position,position);
+  }
+
+  textEditor.addEventListener("input",applyInlineTextInput);
+  textEditor.addEventListener("blur",() => {
+    if(!textEditSession) return;
+    if(state.composing){textEditSession.finishAfterComposition = true;return;}
+    finishTextEditing();
+  });
+  textEditor.addEventListener("compositionend",() => {
+    state.composing = false;
+    applyInlineTextInput();
+    if(textEditSession?.finishAfterComposition) finishTextEditing();
+  });
+  textEditor.addEventListener("keydown",event => {
+    if(event.isComposing || state.composing || event.keyCode === 229) return;
+    const command = event.ctrlKey || event.metaKey;
+    if(event.key === "Escape" || (command && event.key === "Enter")){
+      event.preventDefault();event.stopPropagation();finishTextEditing(true);
+    }else if(command && event.key.toLowerCase() === "s"){
+      event.preventDefault();event.stopPropagation();finishTextEditing(true);openSaveSettings();
+    }
+  });
+  document.addEventListener("pointerdown",event => {
+    if(textEditSession && !textEditorHost.contains(event.target) && !state.composing) finishTextEditing(true);
+  },true);
+
+  function pasteCopiedLayer(event){
+    if(!objectClipboard || !baseCanvas.width || isObjectShortcutBlocked(event)) return false;
+    const data = event.clipboardData;
+    if(!data) return false;
+    let token = "";
+    let plainText = "";
+    try{token = data.getData(OBJECT_CLIPBOARD_TYPE);}catch(error){/* Try plain text below. */}
+    try{plainText = data.getData("text/plain");}catch(error){return false;}
+    // Some browsers omit custom clipboard types. The plain-text fallback must
+    // still match the last object copy, so unrelated text does not paste it.
+    if(token ? token !== objectClipboardToken : !plainText || plainText !== objectClipboardText){
+      return false;
+    }
+    return pasteObjectClipboard(event);
+  }
+
+  function pasteObjectClipboard(event=null){
+    if(!objectClipboard || !baseCanvas.width || state.singleBusy || state.drag) return false;
+    if(drawing.imageInkPointCount(state.layers)+drawing.imageInkPointCount(objectClipboard) > drawing.MAX_IMAGE_INK_POINTS){
+      toast("手書きの点数が上限を超えるため貼り付けできません。不要な手書きを削除してください。");
+      return false;
+    }
+    const layers = cloneLayers(objectClipboard);
+    layers.forEach(layer => {layer.id = makeId();});
+    objectPasteCount++;
+    const offset = 24*objectPasteCount;
+    const bounds = layersBounds(layers);
+    const dx = bounds.x+bounds.w+offset <= baseCanvas.width ? offset : -offset;
+    const dy = bounds.y+bounds.h+offset <= baseCanvas.height ? offset : -offset;
+    const translation = clampBoundsTranslation(bounds,dx,dy);
+    layers.forEach(layer => moveLayerRaw(layer,translation.dx,translation.dy));
+    pushHistory("layers");
+    state.layers.push(...layers);
+    selectLayers(layers);
+    setTool("select");
+    updateSelectedControls();
+    editCanvas.focus({preventScroll:true});
+    event?.preventDefault();
+    return true;
+  }
+
+  function copySelectedLayers(data=null){
+    const layers = selectedLayers();
+    if(!layers.length || state.singleBusy || state.drag) return false;
+    const token = makeId();
+    const layer = layers[0];
+    const plainText = layers.length === 1 && layer.type === "text" && layer.text
+      ? layer.text : layers.length === 1 ? `AppBox: ${typeLabel(layer.type)}`
+      : `AppBox: ${layers.length}個のオブジェクト`;
+    if(data){
+      try{data.setData("text/plain",plainText);}catch(error){return false;}
+      try{data.setData(OBJECT_CLIPBOARD_TYPE,token);}catch(error){/* Plain text fallback. */}
+    }
+    objectClipboard = cloneLayers(layers);
+    objectClipboardToken = token;
+    objectClipboardText = plainText;
+    objectPasteCount = 0;
+    return true;
+  }
+
+  function reorderSelectedLayers(front){
+    if(state.singleBusy || state.drag) return;
+    const ids = new Set(selectedLayers().map(layer => layer.id));
+    if(!ids.size) return;
+    const selected = state.layers.filter(layer => ids.has(layer.id));
+    const others = state.layers.filter(layer => !ids.has(layer.id));
+    const result = front ? [...others,...selected] : [...selected,...others];
+    if(result.every((layer,index) => layer === state.layers[index])) return;
+    pushHistory("layers");
+    state.layers = result;
+    renderLayers();
+    renderEditor();
+    updateSelectedControls();
+  }
+
+  function nudgeSelectedLayers(dx,dy){
+    const layers = selectedLayers();
+    if(!layers.length) return false;
+    const translation = clampBoundsTranslation(layersBounds(layers),dx,dy);
+    if(!translation.dx && !translation.dy) return true;
+    pushHistory("layers");
+    layers.forEach(layer => moveLayerRaw(layer,translation.dx,translation.dy));
+    renderLayers();
+    renderEditor();
+    updateSelectedControls();
+    return true;
+  }
+
+  document.addEventListener("compositionstart",() => {state.composing = true;});
+  document.addEventListener("compositionend",() => {state.composing = false;});
+  document.addEventListener("keydown",event => {
+    if(event.key === "Escape" && !isObjectShortcutBlocked(event,false) && state.drag){
+      cancelSelectionGesture();
+      selectLayers([]);
+      setTool("select");
+      updateSelectedControls();
+      event.preventDefault();
+      return;
+    }
+    if(isObjectShortcutBlocked(event) || event.altKey) return;
+    if(event.ctrlKey || event.metaKey){
+      const key = event.key.toLowerCase();
+      if(key === "z"){
+        (event.shiftKey ? redo : undo)();
+        event.preventDefault();
+      }else if(key === "y"){
+        redo();event.preventDefault();
+      }else if(key === "s" && state.originalCanvas){
+        openSaveSettings();event.preventDefault();
+      }else if(key === "a" && state.originalCanvas){
+        selectLayers(state.layers.filter(layer => layer.visible));
+        setTool("select");updateSelectedControls();event.preventDefault();
+      }
+      return;
+    }
+    const direction = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];
+    if(direction && nudgeSelectedLayers(direction[0]*(event.shiftKey ? 10 : 1),direction[1]*(event.shiftKey ? 10 : 1))){
+      event.preventDefault();return;
+    }
+    if(["Backspace","Delete"].includes(event.key) && deleteSelectedLayer()){
+      event.preventDefault();
+    }
+    if(event.key === "Escape" && selectedLayers().length){
+      selectLayers([]);
+      renderEditor();
+      updateSelectedControls();
+      event.preventDefault();
+    }
+  });
+  document.addEventListener("copy",event => {
+    if(isObjectShortcutBlocked(event)) return;
+    if(!event.clipboardData) return;
+    // Preserve copying ordinary selected page text as well as form text.
+    if(window.getSelection?.()?.toString()) return;
+    if(copySelectedLayers(event.clipboardData)) event.preventDefault();
+  });
 
   function cropRatioValue(){
     const value = $("cropRatio").value;
@@ -1551,56 +2042,284 @@ function renderLayers(){
     };
   }
 
+  function updateCropGesture(drag,point){
+    drag.last = point;
+    if(drag.action === "move" && drag.base){
+      state.crop = moveCrop(drag.base,point,drag.start);
+    }else if(["nw","ne","se","sw"].includes(drag.action) && drag.base){
+      state.crop = resizeCropFromCorner(drag.base,drag.action,point);
+    }else{
+      if(!drag.active && Math.hypot(point.x-drag.start.x,point.y-drag.start.y) < drag.threshold) return;
+      drag.active = true;
+      const fitted = fitDragPointToRatio(drag.start,point,cropRatioValue());
+      state.crop = normalizeRectangle(drag.start,fitted);
+    }
+    syncCropInputs();
+  }
+
+  function updateSelectionRectangle(drag,point){
+    drag.last = point;
+    if(Math.hypot(point.x-drag.start.x,point.y-drag.start.y) >= drag.threshold){
+      drag.active = true;
+    }
+    if(!drag.active) return;
+    const rectangle = normalizeRectangle(drag.start,point);
+    const hits = state.layers.filter(layer => {
+      if(layer.visible === false) return false;
+      const bounds = layerBounds(layer);
+      return bounds.x < rectangle.x+rectangle.w && bounds.x+bounds.w > rectangle.x &&
+        bounds.y < rectangle.y+rectangle.h && bounds.y+bounds.h > rectangle.y;
+    });
+    const ids = new Set([...drag.additiveIds,...hits.map(layer => layer.id)]);
+    selectLayers(state.layers.filter(layer => ids.has(layer.id)));
+  }
+
+  function updateLayerMove(drag,point){
+    if(Math.hypot(point.x-drag.start.x,point.y-drag.start.y) < drag.threshold && !drag.changed){
+      return;
+    }
+    const translation = clampBoundsTranslation(drag.bounds,
+      point.x-drag.start.x,point.y-drag.start.y);
+    const dx = translation.dx-(drag.translation?.dx || 0);
+    const dy = translation.dy-(drag.translation?.dy || 0);
+    if(!dx && !dy) return;
+    if(!drag.historyPushed){
+      drag.undoBefore = state.undo.slice();
+      pushHistory("layers");
+      drag.historyPushed = true;
+    }
+    drag.layers.forEach(layer => moveLayerRaw(layer,dx,dy));
+    drag.translation = translation;
+    drag.last = point;
+    drag.changed = true;
+  }
+
+  function selectedHandleAt(point){
+    const layer = selectedLayer();
+    if(!layer || layer.visible === false) return null;
+    const reach = 12*displayScale();
+    if(drawing.isLine(layer)){
+      let nearest = null;
+      let distance = reach;
+      for(const end of ["1","2"]){
+        const candidate = Math.hypot(point.x-layer[`x${end}`],point.y-layer[`y${end}`]);
+        if(candidate <= reach && (!nearest || candidate < distance)){
+          nearest = {layer,mode:"resizeEndpoint",end};
+          distance = candidate;
+        }
+      }
+      return nearest;
+    }
+    const bounds = layerBounds(layer);
+    return Math.abs(point.x-(bounds.x+bounds.w)) <= reach &&
+      Math.abs(point.y-(bounds.y+bounds.h)) <= reach ? {layer,mode:"resizeLayer"} : null;
+  }
+
+  function beginGestureHistory(drag){
+    if(drag.historyPushed) return;
+    drag.undoBefore = state.undo.slice();
+    pushHistory("layers");
+    drag.historyPushed = true;
+  }
+
+  function updateLayerResize(drag,point,event){
+    if(Math.hypot(point.x-drag.start.x,point.y-drag.start.y) < 1 && !drag.changed) return;
+    const original = drag.startLayer;
+    if(drag.mode === "resizeEndpoint"){
+      const fixed = drag.end === "1" ? "2" : "1";
+      const anchor = {x:original[`x${fixed}`],y:original[`y${fixed}`]};
+      const end = {x:original[`x${drag.end}`],y:original[`y${drag.end}`]};
+      const fitted = event.shiftKey
+        ? drawing.angleLockedLinePoint(anchor,end,point,{width:baseCanvas.width,height:baseCanvas.height})
+        : drawing.constrainedLinePoint(anchor,point,event.ctrlKey);
+      if(fitted.x === drag.layer[`x${drag.end}`] && fitted.y === drag.layer[`y${drag.end}`]) return;
+      beginGestureHistory(drag);
+      drag.layer[`x${drag.end}`] = fitted.x;
+      drag.layer[`y${drag.end}`] = fitted.y;
+    }else{
+      const stroke = BRUSH_TYPES.includes(original.type) || original.type === "ink";
+      const locked = !!(event.ctrlKey || event.shiftKey);
+      const size = drawing.resizeBox(drag.bounds,point.x-drag.start.x,point.y-drag.start.y,
+        {width:baseCanvas.width,height:baseCanvas.height},
+        (["rect","ellipse"].includes(original.type) || stroke) && locked);
+      if(stroke && locked){
+        const minScale = Math.max(5/original.brushSize,2/drag.bounds.w,2/drag.bounds.h);
+        const maxScale = Math.min(500/original.brushSize,
+          (baseCanvas.width-drag.bounds.x)/drag.bounds.w,
+          (baseCanvas.height-drag.bounds.y)/drag.bounds.h);
+        // A stroke clipped to less than the minimum thickness cannot fit at
+        // this anchor. Keep it intact until it is moved away from the edge.
+        if(maxScale < minScale) return;
+        const scale = clamp(size.w/drag.bounds.w,minScale,maxScale);
+        if(scale === 1 && !drag.changed) return;
+        size.w = drag.bounds.w*scale;
+        size.h = drag.bounds.h*scale;
+      }
+      beginGestureHistory(drag);
+      scaleLayerFromBounds(drag.layer,original,drag.bounds,size.w,size.h,stroke && locked);
+    }
+    drag.last = point;
+    drag.changed = true;
+  }
+
+  function updateInkGesture(drag,point,final=false){
+    // Coalesced samples and final pointer-up use the same original-image coordinates.
+    const remaining = drawing.MAX_IMAGE_INK_POINTS-drawing.imageInkPointCount(state.layers)+drag.layer.points.length;
+    const limit = Math.min(drawing.MAX_STROKE_POINTS,remaining);
+    const fitted = final ? point : drawing.stabilizeInkPoint(drag.last,point,drag.stabilizer);
+    if(drawing.appendInkPoint(drag.layer.points,fitted,limit)){
+      drag.last = fitted;
+      drag.changed = true;
+    }
+    if(!drag.limitReported && drag.layer.points.length >= limit){
+      drag.limitReported = true;
+      toast("手書きの点数上限に達しました。この線を確定して続けてください。");
+    }
+  }
+
+  function updateInkEraser(drag,point){
+    const erased = state.layers.filter(layer => layer.type === "ink" && layer.visible !== false &&
+      drawing.inkIntersectsSegment(layer,drag.last,point,drag.radius));
+    if(erased.length){
+      beginGestureHistory(drag);
+      const ids = new Set(erased.map(layer => layer.id));
+      state.layers = state.layers.filter(layer => !ids.has(layer.id));
+      selectLayers(selectedLayers());
+      drag.changed = true;
+      updateSelectedControls();
+    }
+    drag.last = point;
+  }
+
+  function releaseGestureCapture(drag){
+    if(drag && editCanvas.hasPointerCapture?.(drag.pointerId)) editCanvas.releasePointerCapture(drag.pointerId);
+  }
+
+  function cancelSelectionGesture(){
+    const drag = state.drag;
+    if(drag?.mode === "marquee"){
+      const ids = new Set(drag.selectionBefore);
+      selectLayers(state.layers.filter(layer => ids.has(layer.id)));
+    }else if(drag && ["moveLayer","moveLayers","resizeLayer","resizeEndpoint"].includes(drag.mode) && drag.changed){
+      drag.layers.forEach((layer,index) => {
+        const restored = cloneLayerForGesture(drag.startLayers[index]);
+        Object.keys(layer).forEach(key => {delete layer[key];});
+        Object.assign(layer,restored);
+      });
+    }else if(drag && ["brush","ink","inkEraser"].includes(drag.mode)){
+      // New strokes and stroke erasure only add/remove layer references; keep
+      // existing point arrays intact instead of duplicating every stroke again.
+      state.layers = drag.layersBefore.slice();
+      const ids = new Set(drag.selectionBefore);
+      selectLayers(state.layers.filter(layer => ids.has(layer.id)));
+    }else if(drag?.mode === "crop"){
+      state.crop = drag.base ? {...drag.base} : null;
+      syncCropInputs();
+    }
+    if(drag?.historyPushed){
+      state.undo = drag.undoBefore.slice();
+      state.redo = drag.redoBefore.slice();
+      state.revision = drag.beforeRevision;
+      updateHistoryButtons();
+    }
+    state.drag = null;
+    releaseGestureCapture(drag);
+    renderLayers();
+    renderEditor();
+    updateSelectedControls();
+  }
+
   editCanvas.addEventListener("pointerdown",event => {
     if(
         state.singleBusy ||
+        state.drag || event.isPrimary === false ||
         !state.tool ||
-        !baseCanvas.width
+        !baseCanvas.width ||
+        state.tool === "transform" || state.tool === "pan" ||
+        event.button !== 0
     ){
         return;
     }
 
     const point = pointFromEvent(event);
+    const beforeRevision = state.revision;
+    editCanvas.focus({preventScroll:true});
     editCanvas.setPointerCapture(event.pointerId);
 
+    // 配置済みの文字上では直接選択を優先し、ダブルクリックの先行クリックで
+    // 新しい文字やブラシの点を作らない。
+    if(!["select","crop","inkEraser"].includes(state.tool)){
+      const existing = hitLayer(point);
+      if(existing?.type === "text"){
+        selectLayers([existing]);
+        setTool("select");
+        updateSelectedControls();
+        releaseGestureCapture({pointerId:event.pointerId});
+        return;
+      }
+    }
+
     if(state.tool === "select"){
-      const layer = hitLayer(point);
-      state.selectedLayerId = layer?.id || null;
-
+      const selectedHandle = selectedHandleAt(point);
+      const layer = selectedHandle?.layer || hitLayer(point);
+      const selected = selectedLayers();
+      const alreadySelected = selected.some(item => item.id === layer?.id);
+      if(layer && event.shiftKey && !selectedHandle){
+        selectLayers(alreadySelected
+          ? selected.filter(item => item.id !== layer.id) : [...selected,layer]);
+        renderEditor();
+        updateSelectedControls();
+        releaseGestureCapture({pointerId:event.pointerId});
+        return;
+      }
       if(layer){
-        const bounds = layerBounds(layer);
-        const handleSize = 16*displayScale();
-        const isResize =
-          Math.abs(point.x-(bounds.x+bounds.w)) <= handleSize &&
-          Math.abs(point.y-(bounds.y+bounds.h)) <= handleSize;
-
+        if(!alreadySelected) selectLayers([layer]);
+        const layers = selectedLayers();
+        const bounds = layersBounds(layers);
         state.drag = {
-          mode:isResize ? "resizeLayer" : "moveLayer",
+          mode:selectedHandle?.mode || (layers.length === 1 ? "moveLayer" : "moveLayers"),
+          end:selectedHandle?.end,
           start:point,
           last:point,
           layer,
+          layers,
           startLayer:cloneLayerForGesture(layer),
+          startLayers:layers.map(cloneLayerForGesture),
           bounds:{...bounds},
+          threshold:3*displayScale(),
           historyPushed:false,
           changed:false,
+          beforeRevision,pointerId:event.pointerId,
           redoBefore:state.redo.slice()
+        };
+      }else{
+        const selectionBefore = selected.map(item => item.id);
+        if(!event.shiftKey) selectLayers([]);
+        state.drag = {
+          mode:"marquee",start:point,last:point,active:false,
+          beforeRevision,pointerId:event.pointerId,
+          threshold:3*displayScale(),selectionBefore,
+          additiveIds:event.shiftKey ? selectionBefore : []
         };
       }
 
       renderEditor();
-      renderLayerList();
+      updateSelectedControls();
       return;
     }
 
     if(state.tool === "text"){
-      const text = $("annotationText").value || "注釈";
+      // Keep the native pointer default from moving focus back to the canvas
+      // after the newly created text field receives its caret.
+      event.preventDefault();
       const style = currentStyle();
 
       pushHistory("layers");
       const layer = {
         id:makeId(),
         type:"text",
-        text,
+        ...style,
+        text:"",
         x:point.x,
         y:point.y,
         color:style.color,
@@ -1609,9 +2328,11 @@ function renderLayers(){
       };
 
       state.layers.push(layer);
-      state.selectedLayerId = layer.id;
+      selectLayers([layer]);
       setTool("select");
-      renderLayerList();
+      updateSelectedControls();
+      releaseGestureCapture({pointerId:event.pointerId});
+      beginTextEditing(layer);
       return;
     }
 
@@ -1620,27 +2341,43 @@ function renderLayers(){
 
       state.drag = {
         mode:"crop",
+        beforeRevision,pointerId:event.pointerId,
         action:hit,
+        threshold:3*displayScale(),active:false,
         start:point,
         last:point,
         base:state.crop ? {...state.crop} : null
       };
 
-      if(hit === "new"){
-        state.crop = {x:point.x,y:point.y,w:1,h:1};
-      }
-
       renderEditor();
       return;
     }
 
-    if(BRUSH_TYPES.includes(state.tool)){
+    if(state.tool === "inkEraser"){
+      state.drag = {mode:"inkEraser",last:point,radius:currentStyle().brushSize/2,
+        layersBefore:state.layers.slice(),selectionBefore:selectedLayers().map(layer => layer.id),
+        beforeRevision,pointerId:event.pointerId,redoBefore:state.redo.slice(),historyPushed:false,changed:false};
+      updateInkEraser(state.drag,point);
+      scheduleRender();
+      return;
+    }
+
+    if(BRUSH_TYPES.includes(state.tool) || state.tool === "ink"){
       const style = currentStyle();
+      if(state.tool === "ink" && drawing.imageInkPointCount(state.layers) >= drawing.MAX_IMAGE_INK_POINTS){
+        toast("手書きの点数上限に達しました。不要な線を削除してください。");
+        releaseGestureCapture({pointerId:event.pointerId});
+        return;
+      }
+      const layersBefore = state.layers.slice();
+      const selectionBefore = selectedLayers().map(layer => layer.id);
+      const undoBefore = state.undo.slice(),redoBefore = state.redo.slice();
 
       pushHistory("layers");
       const layer = {
         id:makeId(),
         type:state.tool,
+        color:style.color,
         points:[point],
         brushSize:style.brushSize,
         mosaicSize:style.mosaicSize,
@@ -1650,85 +2387,77 @@ function renderLayers(){
       };
 
       state.layers.push(layer);
-      state.selectedLayerId = layer.id;
+      selectLayers([layer]);
       state.drag = {
-        mode:"brush",
+        mode:state.tool === "ink" ? "ink" : "brush",
         layer,
-        last:point
+        last:point,stabilizer:style.inkStabilizer,
+        beforeRevision,pointerId:event.pointerId,layersBefore,selectionBefore,undoBefore,redoBefore,
+        historyPushed:true,changed:false
       };
 
-      renderLayerList();
+      updateSelectedControls();
       scheduleRender();
       return;
     }
 
     state.drag = {
       mode:"shape",
+      beforeRevision,pointerId:event.pointerId,
       start:point,
       last:point,
-      tool:state.tool
+      tool:state.tool,
+      constrained:!!(event.ctrlKey || event.shiftKey),axisLocked:!!event.ctrlKey
     };
 
     renderEditor();
   });
 
+  editCanvas.addEventListener("dblclick",event => {
+    if(state.singleBusy || !baseCanvas.width || state.tool === "pan") return;
+    const layer = hitLayer(pointFromEvent(event));
+    if(layer?.type === "text"){
+      event.preventDefault();
+      beginTextEditing(layer,pointFromEvent(event));
+    }
+  });
+
   editCanvas.addEventListener("pointermove",event => {
-    if(!state.drag) return;
+    if(!state.drag || (state.drag.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
 
     const point = pointFromEvent(event);
     const drag = state.drag;
 
-    if(drag.mode === "moveLayer"){
-      const distance = Math.hypot(
-        point.x-drag.start.x,
-        point.y-drag.start.y
-      );
-
-      if(distance >= 1){
-        if(!drag.historyPushed){
-          pushHistory("layers");
-          drag.historyPushed = true;
-        }
-
-        const dx = point.x-drag.last.x;
-        const dy = point.y-drag.last.y;
-        moveLayer(drag.layer,dx,dy,true);
-        drag.last = point;
-        drag.changed = true;
-      }
-
+    if(["moveLayer","moveLayers"].includes(drag.mode)){
+      updateLayerMove(drag,point);
       scheduleRender();
       return;
     }
 
-    if(drag.mode === "resizeLayer"){
-      const distance = Math.hypot(
-        point.x-drag.start.x,
-        point.y-drag.start.y
-      );
+    if(drag.mode === "marquee"){
+      updateSelectionRectangle(drag,point);
+      updateSelectedControls();
+      scheduleRender();
+      return;
+    }
 
-      if(distance >= 1){
-        if(!drag.historyPushed){
-          pushHistory("layers");
-          drag.historyPushed = true;
-        }
+    if(["resizeLayer","resizeEndpoint"].includes(drag.mode)){
+      updateLayerResize(drag,point,event);
+      scheduleRender();
+      return;
+    }
 
-        const maxWidth = Math.max(2,baseCanvas.width-drag.bounds.x);
-        const maxHeight = Math.max(2,baseCanvas.height-drag.bounds.y);
-        const width = clamp(point.x-drag.bounds.x,2,maxWidth);
-        const height = clamp(point.y-drag.bounds.y,2,maxHeight);
-
-        scaleLayerFromBounds(
-          drag.layer,
-          drag.startLayer,
-          drag.bounds,
-          width,
-          height
-        );
-
-        drag.changed = true;
+    if(drag.mode === "ink"){
+      const samples = event.getCoalescedEvents?.() || [];
+      for(const sample of samples.length ? samples : [event]){
+        updateInkGesture(drag,pointFromEvent(sample));
       }
+      scheduleRender();
+      return;
+    }
 
+    if(drag.mode === "inkEraser"){
+      updateInkEraser(drag,point);
       scheduleRender();
       return;
     }
@@ -1750,67 +2479,78 @@ function renderLayers(){
     }
 
     if(drag.mode === "crop"){
-      drag.last = point;
-
-      if(drag.action === "move" && drag.base){
-        state.crop = moveCrop(drag.base,point,drag.start);
-      }else if(["nw","ne","se","sw"].includes(drag.action) && drag.base){
-        state.crop = resizeCropFromCorner(drag.base,drag.action,point);
-      }else{
-        const fitted = fitDragPointToRatio(
-          drag.start,
-          point,
-          cropRatioValue()
-        );
-        state.crop = normalizeRectangle(drag.start,fitted);
-      }
-
-      syncCropInputs();
+      updateCropGesture(drag,point);
       scheduleRender();
       return;
     }
 
     if(drag.mode === "shape"){
       drag.last = point;
+      drag.constrained = !!(event.ctrlKey || event.shiftKey);
+      drag.axisLocked = !!event.ctrlKey;
       scheduleRender();
     }
   });
 
     editCanvas.addEventListener("pointerup",event => {
-    if(!state.drag) return;
+    if(!state.drag || (state.drag.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
 
     const point = pointFromEvent(event);
     const drag = state.drag;
 
+    if(drag.mode === "marquee"){
+      updateSelectionRectangle(drag,point);
+    }else if(["moveLayer","moveLayers"].includes(drag.mode)){
+      updateLayerMove(drag,point);
+    }else if(["resizeLayer","resizeEndpoint"].includes(drag.mode)){
+      updateLayerResize(drag,point,event);
+    }else if(drag.mode === "ink"){
+      updateInkGesture(drag,point,true);
+    }else if(drag.mode === "inkEraser"){
+      updateInkEraser(drag,point);
+    }else if(drag.mode === "crop"){
+      updateCropGesture(drag,point);
+    }else if(drag.mode === "brush"){
+      if(Math.hypot(point.x-drag.last.x,point.y-drag.last.y) >= .25){
+        drag.layer.points.push(point);
+        drag.layer.maskDirty = true;
+      }
+    }
+
+    let placedShape = false;
     if(drag.mode === "shape"){
         drag.last = point;
         const style = currentStyle();
         const rectangle =
-        normalizeRectangle(drag.start,point);
+        drawing.drawingBox(drag.start,point,{width:baseCanvas.width,height:baseCanvas.height},
+          ["rect","ellipse"].includes(drag.tool) && (event.ctrlKey || event.shiftKey));
 
-        if(drag.tool === "arrow"){
+        if(["arrow","line"].includes(drag.tool)){
+        const end = drawing.constrainedLinePoint(drag.start,point,event.ctrlKey);
         if(
             Math.hypot(
-            point.x-drag.start.x,
-            point.y-drag.start.y
+            end.x-drag.start.x,
+            end.y-drag.start.y
             ) >= 2
         ){
             pushHistory("layers");
 
             const layer = {
             id:makeId(),
-            type:"arrow",
+            type:drag.tool,
+            ...style,
             x1:drag.start.x,
             y1:drag.start.y,
-            x2:point.x,
-            y2:point.y,
+            x2:end.x,
+            y2:end.y,
             color:style.color,
             lineWidth:style.lineWidth,
             visible:true
             };
 
             state.layers.push(layer);
-            state.selectedLayerId = layer.id;
+            selectLayers([layer]);
+            placedShape = true;
         }
         }else if(
         rectangle.w >= 2 &&
@@ -1821,6 +2561,7 @@ function renderLayers(){
         const layer = {
             id:makeId(),
             type:drag.tool,
+            ...style,
             ...rectangle,
             color:style.color,
             lineWidth:style.lineWidth,
@@ -1829,104 +2570,86 @@ function renderLayers(){
         };
 
         state.layers.push(layer);
-        state.selectedLayerId = layer.id;
+        selectLayers([layer]);
+        placedShape = ["rect","ellipse"].includes(drag.tool);
         }
     }
 
     state.drag = null;
+    releaseGestureCapture(drag);
+
+    if(placedShape){
+      setTool("select");
+      return;
+    }
 
     renderLayers();
     renderEditor();
-    renderLayerList();
+    updateSelectedControls();
     });
 
 
-  editCanvas.addEventListener("pointercancel",() => {
-    const drag = state.drag;
-
-    if(
-        drag &&
-        ["moveLayer","resizeLayer"].includes(drag.mode) &&
-        drag.changed
-    ){
-        const restored = cloneLayerForGesture(
-        drag.startLayer
-        );
-
-        Object.keys(drag.layer).forEach(key => {
-        delete drag.layer[key];
-        });
-
-        Object.assign(drag.layer,restored);
-
-        if(drag.historyPushed && state.undo.length){
-        state.undo.pop();
-        }
-
-        state.redo = drag.redoBefore
-        ? drag.redoBefore.slice()
-        : [];
-
-        updateHistoryButtons();
-    }
-
-    state.drag = null;
-    renderLayers();
-    renderEditor();
-    renderLayerList();
+  editCanvas.addEventListener("pointercancel",event => {
+    if(state.drag?.pointerId === event.pointerId) cancelSelectionGesture();
+  });
+  editCanvas.addEventListener("lostpointercapture",event => {
+    if(state.drag?.pointerId === event.pointerId) cancelSelectionGesture();
   });
 
 
 
   function syncCropInputs(){
     if(!state.crop){
-        ["cropX","cropY","cropW","cropH"].forEach(id => {
+        ["cropW","cropH"].forEach(id => {
         $(id).value = "";
         });
 
-        updateCropActionBar();
+        updateCropControls();
         return;
     }
 
-    $("cropX").value = Math.round(state.crop.x);
-    $("cropY").value = Math.round(state.crop.y);
     $("cropW").value = Math.round(state.crop.w);
     $("cropH").value = Math.round(state.crop.h);
 
-    updateCropActionBar();
+    updateCropControls();
   }
 
 
-  function updateCropFromInputs(){
-    if(!baseCanvas.width) return;
+  function updateCropFromInputs(event){
+    if(!state.sourceFile || state.tool !== "crop" || state.singleBusy || state.drag) return;
+    if($("cropW").value === "" || $("cropH").value === ""){
+      if(state.crop) syncCropInputs();
+      renderEditor();
+      return;
+    }
 
-    const xValue = Number($("cropX").value);
-    const yValue = Number($("cropY").value);
     const wValue = Number($("cropW").value);
     const hValue = Number($("cropH").value);
 
     if(
-      !Number.isFinite(xValue) ||
-      !Number.isFinite(yValue) ||
       !Number.isFinite(wValue) ||
-      !Number.isFinite(hValue)
+      !Number.isFinite(hValue) || wValue <= 0 || hValue <= 0
     ){
+      if(state.crop) syncCropInputs();
+      renderEditor();
       return;
     }
 
-    const x = clamp(Math.round(xValue),0,baseCanvas.width-1);
-    const y = clamp(Math.round(yValue),0,baseCanvas.height-1);
-    let width = clamp(Math.round(wValue),1,baseCanvas.width-x);
-    let height = clamp(Math.round(hValue),1,baseCanvas.height-y);
+    // X/Y remain image coordinates controlled by dragging and centering.
+    // Invalid dimensions must not discard that position during a numeric edit.
+    const x = clamp(state.crop?.x ?? 0,0,baseCanvas.width-1);
+    const y = clamp(state.crop?.y ?? 0,0,baseCanvas.height-1);
+    const maxWidth = baseCanvas.width-x,maxHeight = baseCanvas.height-y;
+    let width = clamp(Math.round(wValue),1,maxWidth);
+    let height = clamp(Math.round(hValue),1,maxHeight);
     const ratio = cropRatioValue();
 
     if(ratio){
-      height = Math.round(width/ratio);
-
-      if(height > baseCanvas.height-y){
-        height = baseCanvas.height-y;
-        width = Math.round(height*ratio);
-      }
+      if(event?.target?.id === "cropH") width = Math.max(1,Math.round(height*ratio));
+      else height = Math.max(1,Math.round(width/ratio));
+      const scale = Math.min(1,maxWidth/width,maxHeight/height);
+      width = Math.min(maxWidth,Math.max(1,Math.round(width*scale)));
+      height = Math.min(maxHeight,Math.max(1,Math.round(height*scale)));
     }
 
     state.crop = {
@@ -1940,12 +2663,12 @@ function renderLayers(){
     renderEditor();
   }
 
-  ["cropX","cropY","cropW","cropH"].forEach(id => {
+  ["cropW","cropH"].forEach(id => {
     $(id).addEventListener("change",updateCropFromInputs);
   });
 
   $("cropRatio").addEventListener("change",() => {
-    if(!state.crop) return;
+    if(!state.crop || state.singleBusy || state.drag || state.tool !== "crop") return;
 
     const ratio = cropRatioValue();
     if(!ratio) return;
@@ -1964,38 +2687,8 @@ function renderLayers(){
     renderEditor();
   });
 
-  function resetCropFrame(){
-    if(!baseCanvas.width) return;
-
-    const ratio = cropRatioValue();
-    let width = baseCanvas.width*.8;
-    let height = baseCanvas.height*.8;
-
-    if(ratio){
-        if(width/height > ratio){
-        width = height*ratio;
-        }else{
-        height = width/ratio;
-        }
-    }
-
-    state.crop = {
-        x:(baseCanvas.width-width)/2,
-        y:(baseCanvas.height-height)/2,
-        w:width,
-        h:height
-    };
-
-    syncCropInputs();
-    renderEditor();
-    updateCropActionBar();
-  }
-
-
-  $("resetCrop").addEventListener("click",resetCropFrame);
-
   $("centerCrop").addEventListener("click",() => {
-    if(!state.crop) return;
+    if(!state.crop || state.singleBusy || state.drag || state.tool !== "crop") return;
 
     state.crop.x = (baseCanvas.width-state.crop.w)/2;
     state.crop.y = (baseCanvas.height-state.crop.h)/2;
@@ -2024,7 +2717,7 @@ function renderLayers(){
     });
 
     state.layers = state.layers.filter(layer => {
-      if(RECT_TYPES.includes(layer.type)){
+      if(["blackoutRect","mosaicRect"].includes(layer.type)){
         return clipRectLayerToCanvas(layer,crop.w,crop.h);
       }
 
@@ -2041,16 +2734,16 @@ function renderLayers(){
       return intersects;
     });
 
-    if(!state.layers.some(layer => layer.id === state.selectedLayerId)){
-      state.selectedLayerId = null;
-    }
+    selectLayers(selectedLayers());
   }
 
   function applyCurrentCrop(){
+    if(state.singleBusy || state.drag || state.tool !== "crop") return;
+    finishTextEditing();
     if(
         !state.crop ||
-        state.crop.w < 1 ||
-        state.crop.h < 1
+        Math.round(state.crop.w) < 1 ||
+        Math.round(state.crop.h) < 1
     ){
         toast(
         "有効なトリミング範囲を指定してください。"
@@ -2126,17 +2819,13 @@ function renderLayers(){
   }
 
 
-    $("cropBarApply").addEventListener(
+    $("applyCrop").addEventListener(
     "click",
     applyCurrentCrop
     );
 
-    $("cropBarReset").addEventListener(
-    "click",
-    resetCropFrame
-    );
-
     $("cancelCrop").addEventListener("click",() => {
+      if(state.singleBusy) return;
       setTool("select");
     });
 
@@ -2146,7 +2835,7 @@ function renderLayers(){
     const average = (Math.abs(scaleX)+Math.abs(scaleY))/2;
 
     state.layers.forEach(layer => {
-      if(RECT_TYPES.includes(layer.type)){
+      if(RECT_TYPES.includes(layer.type) || layer.type === "image"){
         layer.x *= scaleX;
         layer.y *= scaleY;
         layer.w *= scaleX;
@@ -2159,7 +2848,8 @@ function renderLayers(){
         layer.x *= scaleX;
         layer.y *= scaleY;
         layer.fontSize = clamp(layer.fontSize*average,8,300);
-      }else if(layer.type === "arrow"){
+        if(layer.textWidth > 0) layer.textWidth *= Math.abs(scaleX);
+      }else if(drawing.isLine(layer)){
         layer.x1 *= scaleX;
         layer.y1 *= scaleY;
         layer.x2 *= scaleX;
@@ -2177,6 +2867,8 @@ function renderLayers(){
   }
 
   function resizeSingle(width,height){
+    if(state.singleBusy || state.drag || !state.originalCanvas) return false;
+    finishTextEditing();
     validateDimensions(width,height);
 
     if(width === baseCanvas.width && height === baseCanvas.height){
@@ -2258,7 +2950,8 @@ function renderLayers(){
   }
 
   function rotateSingle(degrees){
-    if(!baseCanvas.width) return;
+    if(state.singleBusy || state.drag || !state.originalCanvas) return;
+    finishTextEditing();
 
     pushHistory("full");
 
@@ -2281,7 +2974,7 @@ function renderLayers(){
     baseContext.drawImage(output,0,0);
 
     state.layers.forEach(layer => {
-      if(RECT_TYPES.includes(layer.type)){
+      if(RECT_TYPES.includes(layer.type) || layer.type === "image"){
         const corners = [
           rotatePoint({x:layer.x,y:layer.y},degrees,oldWidth,oldHeight),
           rotatePoint({x:layer.x+layer.w,y:layer.y},degrees,oldWidth,oldHeight),
@@ -2295,12 +2988,16 @@ function renderLayers(){
         layer.y = Math.min(...ys);
         layer.w = Math.max(...xs)-layer.x;
         layer.h = Math.max(...ys)-layer.y;
+        if(layer.type === "image"){
+          // History and copied objects share immutable bitmap references.
+          layer.imageCanvas = rotateCanvas(layer.imageCanvas,degrees);
+        }
       }else if(layer.type === "text"){
         Object.assign(
           layer,
           rotatePoint({x:layer.x,y:layer.y},degrees,oldWidth,oldHeight)
         );
-      }else if(layer.type === "arrow"){
+      }else if(drawing.isLine(layer)){
         const first = rotatePoint(
           {x:layer.x1,y:layer.y1},
           degrees,
@@ -2332,7 +3029,8 @@ function renderLayers(){
   }
 
   function flipSingle(horizontal){
-    if(!baseCanvas.width) return;
+    if(state.singleBusy || state.drag || !state.originalCanvas) return;
+    finishTextEditing();
 
     pushHistory("full");
     const output = cloneCanvas(baseCanvas);
@@ -2357,15 +3055,18 @@ function renderLayers(){
         y:horizontal ? point.y : baseCanvas.height-point.y
       });
 
-      if(RECT_TYPES.includes(layer.type)){
+      if(RECT_TYPES.includes(layer.type) || layer.type === "image"){
         if(horizontal){
           layer.x = baseCanvas.width-layer.x-layer.w;
         }else{
           layer.y = baseCanvas.height-layer.y-layer.h;
         }
+        if(layer.type === "image"){
+          layer.imageCanvas = flipCanvas(layer.imageCanvas,horizontal);
+        }
       }else if(layer.type === "text"){
         Object.assign(layer,flipPoint({x:layer.x,y:layer.y}));
-      }else if(layer.type === "arrow"){
+      }else if(drawing.isLine(layer)){
         const first = flipPoint({x:layer.x1,y:layer.y1});
         const second = flipPoint({x:layer.x2,y:layer.y2});
         layer.x1 = first.x;
@@ -2390,70 +3091,136 @@ function renderLayers(){
   $("undo").addEventListener("click",undo);
   $("redo").addEventListener("click",redo);
 
-    $("deleteLayer").addEventListener("click",() => {
-    if(!state.selectedLayerId){
-        toast("加工箇所を選択してください。");
+  const styleFieldProperties = {
+    annotationColor:"color",fontSize:"fontSize",
+    lineWidth:"lineWidth",brushSize:"brushSize",mosaicSize:"mosaicSize",
+    fontFamily:"fontFamily",boldText:"bold",
+    textBgColor:"bgColor",textBgTransparent:"bgTransparent",whiteOutline:"outline",
+    shapeFill:"fill",shapeFillNone:"fillNone",imageOpacity:"opacity"
+  };
+
+  function applySelectedField(event){
+    const field = event.target;
+    const property = styleFieldProperties[field.id];
+    const layers = selectedLayers().filter(layer => annotationStyle.eligibleForField(layer,property));
+    if(!layers.length || state.tool !== "select" || state.singleBusy || state.drag || (property === "text" && layers.length > 1)) return;
+    if(field.type === "number" && (field.value === "" || !Number.isFinite(Number(field.value)))) return;
+    if(event.type === "input" && field.checkValidity && !field.checkValidity()) return;
+    if(property === "fontFamily"){
+      if(!field.value) return;
+      if(event.type === "input"){
+        fontPreview = {ids:new Set(layers.map(layer => layer.id)),key:annotationStyle.safeFontFamily(field.value)};
+        renderLayers();
+        renderEditor();
         return;
+      }
+      fontPreview = null;
     }
-
-    pushHistory("layers");
-
-    state.layers = state.layers.filter(
-        layer => layer.id !== state.selectedLayerId
-    );
-    state.selectedLayerId = null;
-
+    const value = property === "text" ? field.value
+      : currentStyle()[property];
+    const changed = layers.filter(layer => annotationStyle.valueForField(layer,property) !== value);
+    if(!changed.length) return;
+    const selectionKey = layers.map(layer => layer.id).sort().join("\n");
+    if(!styleEditSession || styleEditSession.selectionKey !== selectionKey || styleEditSession.field !== field.id){
+      styleEditSession = {selectionKey,field:field.id,historyPushed:false};
+    }
+    if(!styleEditSession.historyPushed){
+      pushHistory("layers");
+      styleEditSession.historyPushed = true;
+    }
+    for(const layer of changed){
+      layer[property] = value;
+      if(property === "brushSize") layer.maskDirty = true;
+    }
     renderLayers();
     renderEditor();
-    renderLayerList();
+    updateSelectedControls();
+  }
+
+  Object.keys(styleFieldProperties).forEach(id => {
+    const field = $(id);
+    if(!field) return;
+    field.addEventListener("focus",() => {
+      styleEditSession = null;
     });
+    field.addEventListener("blur",() => {
+      styleEditSession = null;
+      if(id === "fontFamily" && fontPreview){
+        fontPreview = null;
+        renderLayers();
+        renderEditor();
+        updateSelectedControls();
+      }
+    });
+    if(id === "fontFamily") field.addEventListener("keydown",event => {
+      if(event.key !== "Escape" || !fontPreview) return;
+      event.preventDefault();
+      fontPreview = null;
+      renderLayers();
+      renderEditor();
+      updateSelectedControls();
+    });
+    field.addEventListener("input",applySelectedField);
+    field.addEventListener("change",applySelectedField);
+  });
 
+  function syncFontSizeButtons(){
+    const sizes = state.tool === "text" ? [currentStyle().fontSize]
+      : state.tool === "select" ? selectedLayers().filter(layer => layer.type === "text").map(layer => layer.fontSize) : [];
+    const blocked = !state.sourceFile || state.singleBusy;
+    $("decreaseFontSize").disabled = blocked || !sizes.some(size => size > 8);
+    $("increaseFontSize").disabled = blocked || !sizes.some(size => size < 300);
+  }
 
-    $("applyLayerStyle").addEventListener("click",() => {
-    const layer = selectedLayer();
-
-    if(!layer){
-        toast("加工箇所を選択してください。");
-        return;
+  function adjustFontSize(delta){
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing) return;
+    finishTextEditing();
+    styleEditSession = null;
+    fontPreview = null;
+    if(state.tool === "text"){
+      $("fontSize").value = clamp(currentStyle().fontSize+delta,8,300);
+      syncFontSizeButtons();
+      return;
     }
-
-    const style = currentStyle();
+    if(state.tool !== "select") return;
+    const changes = selectedLayers().filter(layer => layer.type === "text")
+      .map(layer => ({layer,size:clamp(layer.fontSize+delta,8,300)}))
+      .filter(({layer,size}) => size !== layer.fontSize);
+    if(!changes.length) return;
     pushHistory("layers");
-
-    if(layer.type === "text"){
-        layer.text =
-        $("annotationText").value || "注釈";
-        layer.color = style.color;
-        layer.fontSize = style.fontSize;
-    }else if(
-        ["rect","ellipse","arrow"].includes(layer.type)
-    ){
-        layer.color = style.color;
-        layer.lineWidth = style.lineWidth;
-    }
-
-    if(BRUSH_TYPES.includes(layer.type)){
-        layer.brushSize = style.brushSize;
-    }
-
-    if(
-        ["mosaicRect","mosaicBrush"].includes(layer.type)
-    ){
-        layer.mosaicSize = style.mosaicSize;
-    }
-
+    changes.forEach(({layer,size}) => {layer.fontSize = size;});
     renderLayers();
     renderEditor();
-    renderLayerList();
+    updateSelectedControls();
+  }
 
-    toast(
-        "選択中の加工へ設定を反映しました。"
-    );
-    });
+  $("decreaseFontSize").addEventListener("click",() => adjustFontSize(-2));
+  $("increaseFontSize").addEventListener("click",() => adjustFontSize(2));
+  $("fontSize").addEventListener("input",syncFontSizeButtons);
+  $("fontSize").addEventListener("change",syncFontSizeButtons);
 
+  $("toggleTransform").addEventListener("click",() => setTool("transform"));
+
+  function hasUnsavedChanges(){
+    if(!state.sourceFile) return false;
+    const pending = state.drag && !["marquee","moveLayer","moveLayers","resizeLayer"].includes(state.drag.mode);
+    return state.revision !== state.savedRevision || !!pending;
+  }
+
+  function confirmDiscardChanges(action){
+    return !hasUnsavedChanges() || window.confirm(`保存していない変更があります。${action}\n保存する場合は「キャンセル」を選択してください。`);
+  }
+
+  window.addEventListener("beforeunload",event => {
+    if(!hasUnsavedChanges()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
 
   $("resetSingle").addEventListener("click",() => {
-    if(!state.originalCanvas) return;
+    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
+    finishTextEditing();
+    if(!confirmDiscardChanges("読込み時の状態へ戻しますか？")) return;
 
     pushHistory("full");
 
@@ -2464,7 +3231,7 @@ function renderLayers(){
 
     state.layers = [];
     state.crop = null;
-    state.selectedLayerId = null;
+    selectLayers([]);
     invalidateBaseCaches();
     syncCanvas();
     toast("読込み時の状態へ戻しました。");
@@ -2486,6 +3253,10 @@ function renderLayers(){
         );
         return;
     }
+
+    finishTextEditing();
+    if(state.sourceFile && !confirmDiscardChanges("別の画像を読み込みますか？")) return;
+    if(state.drag) cancelSelectionGesture();
 
     const version = ++state.loadVersion;
     state.singleBusy = true;
@@ -2526,24 +3297,29 @@ function renderLayers(){
         );
 
         state.sourceFile = file;
+        modeChoicesOpen = false;
         state.originalCanvas =
         cloneCanvas(baseCanvas);
         state.layers = [];
         state.crop = null;
-        state.selectedLayerId = null;
+        selectLayers([]);
         state.undo = [];
         state.redo = [];
+        state.revision = ++state.revisionCounter;
+        state.savedRevision = state.revision;
+        viewState.mode = "fit";
+        viewState.pan = null;
+        canvasViewport.classList.remove("panning");
 
         invalidateBaseCaches();
 
-        $("singleFileName").textContent =
-        file.name;
         $("singleSaveName").value =
         `${sanitizeBaseName(file.name)}-edited`;
-        $("singleFormat").value =
-        SUPPORTED_TYPES.includes(file.type)
-            ? file.type
-            : "image/jpeg";
+        $("singleFormat").value = "image/png";
+        $("presetSelect").value = "";
+        singleSavePreset = null;
+        $("singleTargetEnabled").checked = false;
+        $("singleTargetKB").disabled = true;
 
         $("singleEmpty").classList.add(
         "hidden"
@@ -2557,6 +3333,7 @@ function renderLayers(){
             element.inert = false;
           });
 
+        syncEditorChrome();
         updateSingleFormatUI();
         syncCanvas();
         setTool("select");
@@ -2585,6 +3362,7 @@ function renderLayers(){
         version === state.loadVersion
         ){
         state.singleBusy = false;
+        syncEditorChrome();
         }
 
         if(
@@ -2597,6 +3375,124 @@ function renderLayers(){
   }
 
 
+  async function addImageLayer(file,{expandCanvas=false}={}){
+    if(!file) return;
+    if(!state.originalCanvas){
+      await loadSingleFile(file);
+      return;
+    }
+    if(state.singleBusy || state.drag) return;
+    if(!isSupportedImage(file)){
+      toast("JPEG・PNG・WebP画像を選択してください。");
+      return;
+    }
+    if(file.size > MAX_FILE_BYTES){
+      toast("25MBを超える画像は読み込めません。");
+      return;
+    }
+
+    const version = state.loadVersion;
+    const revision = state.baseRevision;
+    state.singleBusy = true;
+    syncModeControls();
+    setSingleStatus("追加する画像を読み込んでいます。");
+    let image = null;
+    let imageCanvas = null;
+    let expandedBase = null;
+    let added = false;
+
+    try{
+      image = await decodeImage(file);
+      if(version !== state.loadVersion || revision !== state.baseRevision) return;
+      const width = image.width || image.naturalWidth;
+      const height = image.height || image.naturalHeight;
+      validateDimensions(width,height);
+      const canvasWidth = expandCanvas ? Math.max(baseCanvas.width,width) : baseCanvas.width;
+      const canvasHeight = expandCanvas ? Math.max(baseCanvas.height,height) : baseCanvas.height;
+      validateDimensions(canvasWidth,canvasHeight);
+      const grows = canvasWidth !== baseCanvas.width || canvasHeight !== baseCanvas.height;
+      // Prepare every bitmap before changing the base or creating history.
+      // The existing image stays at its original pixel origin on transparent
+      // padding; existing annotations therefore need no coordinate conversion.
+      imageCanvas = createCanvas(width,height);
+      imageCanvas.getContext("2d").drawImage(image,0,0,width,height);
+      if(grows){
+        expandedBase = createCanvas(canvasWidth,canvasHeight);
+        expandedBase.getContext("2d").drawImage(baseCanvas,0,0);
+      }
+      const ratio = expandCanvas ? 1 : Math.min(1,baseCanvas.width/width,baseCanvas.height/height);
+      const layer = {
+        id:makeId(),
+        type:"image",
+        imageCanvas,
+        x:(canvasWidth-width*ratio)/2,
+        y:(canvasHeight-height*ratio)/2,
+        w:width*ratio,
+        h:height*ratio,
+        opacity:100,
+        visible:true
+      };
+      pushHistory(grows ? "full" : "layers");
+      if(grows){
+        baseCanvas.width = canvasWidth;
+        baseCanvas.height = canvasHeight;
+        baseContext.clearRect(0,0,canvasWidth,canvasHeight);
+        baseContext.drawImage(expandedBase,0,0);
+        state.crop = null;
+        invalidateBaseCaches();
+      }
+      state.layers.push(layer);
+      added = true;
+      selectLayers([layer]);
+      setTool("select");
+      if(grows) syncCanvas();
+      else updateSelectedControls();
+      editCanvas.focus();
+      setSingleStatus("画像を追加しました。選択して移動・サイズ変更・透明度の調整ができます。","ok");
+    }catch(error){
+      if(version !== state.loadVersion || revision !== state.baseRevision) return;
+      setSingleStatus(error.message || "追加画像の読込みに失敗しました。","warn");
+      toast(error.message || "追加画像の読込みに失敗しました。");
+    }finally{
+      if(version === state.loadVersion){
+        state.singleBusy = false;
+        syncModeControls();
+      }
+      if(image && typeof image.close === "function") image.close();
+      if(expandedBase){expandedBase.width = 0;expandedBase.height = 0;}
+      if(imageCanvas && !added){imageCanvas.width = 0;imageCanvas.height = 0;}
+    }
+  }
+
+  $("addImageLayer").addEventListener("click",() => {
+    if(state.singleBusy) return;
+    $("imageLayerInput").value = "";
+    $("imageLayerInput").click();
+  });
+
+  $("imageLayerInput").addEventListener("change",() => {
+    addImageLayer($("imageLayerInput").files?.[0]);
+  });
+
+  document.addEventListener("paste",event => {
+    if(isObjectShortcutBlocked(event)) return;
+    const imageItem = [...(event.clipboardData?.items || [])]
+      .find(item => item.kind === "file" && item.type.startsWith("image/"));
+    if(imageItem){
+      const file = imageItem.getAsFile();
+      if(!file) return;
+      event.preventDefault();
+      if(state.originalCanvas){
+        addImageLayer(file,{expandCanvas:true});
+      }else{
+        loadSingleFile(file);
+      }
+      return;
+    }
+    pasteCopiedLayer(event);
+  });
+
+
   const singleInput = $("singleInput");
 
   $("singleChoose").addEventListener("click",event => {
@@ -2606,6 +3502,7 @@ function renderLayers(){
   });
 
   $("changeSingle").addEventListener("click",() => {
+    if(state.singleBusy || state.drag || viewState.pan) return;
     singleInput.value = "";
     singleInput.click();
   });
@@ -2654,8 +3551,9 @@ function renderLayers(){
     files => loadSingleFile(files?.[0])
   );
 
-  $$(".tool").forEach(button => {
+  $$(".tool[data-tool]").forEach(button => {
     button.addEventListener("click",() => {
+      if(state.singleBusy || state.drag || viewState.pan) return;
       setTool(button.dataset.tool);
     });
   });
@@ -2678,7 +3576,8 @@ function renderLayers(){
   }
 
   function openPreview(){
-    if(!state.originalCanvas) return;
+    if(state.singleBusy || state.drag || viewState.pan || !state.originalCanvas) return;
+    finishTextEditing();
 
     drawPreview(state.originalCanvas,$("beforePreview"));
     drawPreview(compositeCanvas(),$("afterPreview"));
@@ -2686,6 +3585,8 @@ function renderLayers(){
     previewReturnFocus = document.activeElement;
     $("previewDialog").classList.remove("hidden");
     document.body.classList.add("dialog-open");
+    $("appMain").inert = true;
+    document.querySelectorAll(".appbox-header").forEach(element => {element.inert = true;});
     $("closePreview").focus();
   }
 
@@ -2693,7 +3594,11 @@ function renderLayers(){
     if($("previewDialog").classList.contains("hidden")) return;
 
     $("previewDialog").classList.add("hidden");
-    document.body.classList.remove("dialog-open");
+    if($("saveDialog").classList.contains("hidden")){
+      document.body.classList.remove("dialog-open");
+      $("appMain").inert = false;
+      document.querySelectorAll(".appbox-header").forEach(element => {element.inert = false;});
+    }
 
     if(previewReturnFocus && typeof previewReturnFocus.focus === "function"){
       previewReturnFocus.focus();
@@ -2710,6 +3615,7 @@ function renderLayers(){
   });
 
   $("previewDialog").addEventListener("keydown",event => {
+    if(event.isComposing || state.composing || event.keyCode === 229) return;
     if(event.key === "Escape"){
       event.preventDefault();
       closePreview();
@@ -2763,7 +3669,10 @@ function renderLayers(){
     const preset = presets[$("presetSelect").value];
 
     if(!preset){
-      toast("プリセットを選択してください。");
+      singleSavePreset = null;
+      $("singleTargetEnabled").checked = false;
+      $("singleTargetKB").disabled = true;
+      updateSingleFormatUI();
       return;
     }
 
@@ -2780,43 +3689,88 @@ function renderLayers(){
         : "image/jpeg")
       : preset.format;
 
+    singleSavePreset = preset;
     updateSingleFormatUI();
+    toast("保存する画像の設定を適用しました。");
+  }
 
-    try{
-      if(preset.longEdge){
-        const ratio = Math.min(
-          1,
-          preset.longEdge/Math.max(baseCanvas.width,baseCanvas.height)
-        );
+  $("presetSelect").addEventListener("change",applySinglePreset);
 
-        const width = Math.max(1,Math.round(baseCanvas.width*ratio));
-        const height = Math.max(1,Math.round(baseCanvas.height*ratio));
+  function singleSaveDimensions(width,height,preset=singleSavePreset){
+    let ratio = 1;
+    if(preset?.longEdge){
+      ratio = Math.min(1,preset.longEdge/Math.max(width,height));
+    }else if(preset?.width && preset?.height){
+      ratio = Math.min(1,preset.width/width,preset.height/height);
+    }
+    return {
+      width:Math.max(1,Math.round(width*ratio)),
+      height:Math.max(1,Math.round(height*ratio))
+    };
+  }
 
-        if(width !== baseCanvas.width || height !== baseCanvas.height){
-          resizeSingle(width,height);
-        }
-      }else if(preset.width && preset.height){
-        const ratio = Math.min(
-          preset.width/baseCanvas.width,
-          preset.height/baseCanvas.height,
-          1
-        );
+  function updateSingleSaveSize(){
+    const summary = $("singleSaveSize");
+    if(!summary || !baseCanvas.width) return;
+    const dimensions = singleSaveDimensions(baseCanvas.width,baseCanvas.height);
+    summary.textContent = `編集中: ${baseCanvas.width} × ${baseCanvas.height}px / 保存: ${dimensions.width} × ${dimensions.height}px`;
+  }
 
-        const width = Math.max(1,Math.round(baseCanvas.width*ratio));
-        const height = Math.max(1,Math.round(baseCanvas.height*ratio));
+  function openSaveSettings(){
+    if(!state.originalCanvas || state.singleBusy || state.drag || viewState.pan) return;
+    finishTextEditing();
+    saveReturnFocus = document.activeElement;
+    updateSingleSaveSize();
+    $("saveDialog").classList.remove("hidden");
+    $("appMain").inert = true;
+    document.querySelectorAll(".appbox-header").forEach(element => {element.inert = true;});
+    document.body.classList.add("dialog-open");
+    $("closeSaveSettings").focus();
+  }
 
-        if(width !== baseCanvas.width || height !== baseCanvas.height){
-          resizeSingle(width,height);
-        }
-      }
-
-      toast("プリセットを適用しました。");
-    }catch(error){
-      toast(error.message);
+  function closeSaveSettings(){
+    if($("saveDialog").classList.contains("hidden")) return;
+    $("saveDialog").classList.add("hidden");
+    if($("previewDialog").classList.contains("hidden")){
+      document.body.classList.remove("dialog-open");
+      $("appMain").inert = false;
+      document.querySelectorAll(".appbox-header").forEach(element => {element.inert = false;});
+    }
+    if(saveReturnFocus && typeof saveReturnFocus.focus === "function"){
+      saveReturnFocus.focus();
     }
   }
 
-  $("applyPreset").addEventListener("click",applySinglePreset);
+  $("showSaveSettings").addEventListener("click",openSaveSettings);
+  $("closeSaveSettings").addEventListener("click",closeSaveSettings);
+  $("saveDialog").addEventListener("click",event => {
+    if(event.target === $("saveDialog")) closeSaveSettings();
+  });
+  $("saveDialog").addEventListener("keydown",event => {
+    if(event.isComposing || state.composing || event.keyCode === 229) return;
+    if(event.key === "Escape"){
+      event.preventDefault();
+      closeSaveSettings();
+      return;
+    }
+    if(event.key !== "Tab") return;
+    const focusable = $$(
+      "#saveDialog button:not(:disabled),#saveDialog input:not(:disabled),#saveDialog select:not(:disabled),#saveDialog textarea:not(:disabled),#saveDialog [tabindex]:not([tabindex='-1'])"
+    ).filter(element => !element.closest(".hidden") && element.type !== "hidden");
+    if(!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length-1];
+    if(!focusable.includes(document.activeElement)){
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    }else if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();
+      last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();
+      first.focus();
+    }
+  });
 
   function flattenForJpeg(source,background){
     const output = createCanvas(source.width,source.height);
@@ -2975,7 +3929,8 @@ function renderLayers(){
 
   function updateSingleFormatUI(){
     const jpeg = $("singleFormat").value === "image/jpeg";
-    $("singleJpegBackgroundField").classList.toggle("hidden",!jpeg);
+    $("singleJpegNote")?.classList.toggle("hidden",!jpeg);
+    updateSingleSaveSize();
   }
 
   $("singleFormat").addEventListener("change",updateSingleFormatUI);
@@ -2985,7 +3940,9 @@ function renderLayers(){
   });
 
   $("singleSave").addEventListener("click",async () => {
-    if(state.singleBusy) return;
+    if(state.singleBusy || state.drag || !state.originalCanvas) return;
+    const version = state.loadVersion;
+    const savedRevision = state.revision;
     try{
         const type = $("singleFormat").value;
         const targetEnabled =
@@ -3002,29 +3959,38 @@ function renderLayers(){
         );
         }
 
+        state.singleBusy = true;
         $("singleSave").disabled = true;
+        $("closeSaveSettings").focus();
         setSingleStatus(
         "加工結果を書き出しています。"
         );
 
-        const output = compositeCanvas();
+        const composite = compositeCanvas();
+        const dimensions = singleSaveDimensions(composite.width,composite.height);
+        const output = dimensions.width === composite.width && dimensions.height === composite.height
+          ? composite
+          : resizeCanvasExact(composite,dimensions.width,dimensions.height);
+        const fileName =
+        `${sanitizeBaseName(
+            $("singleSaveName").value
+        )}.${extensionForType(type)}`;
 
         const result = await encodeToTarget(
         output,
         type,
         targetEnabled,
         targetKB,
-        $("singleJpegBackground").value
+        "white"
         );
 
-        const fileName =
-        `${sanitizeBaseName(
-            $("singleSaveName").value
-        )}.${extensionForType(type)}`;
-
+        if(version !== state.loadVersion) return;
         saveBlob(result.blob,fileName);
+        state.savedRevision = savedRevision;
+        closeSaveSettings();
 
         if(targetEnabled && !result.targetMet){
+        toast(`${fileName}を保存しました。目標容量には届きませんでした。`);
         setSingleStatus(
             `${fileName}を保存しましたが、` +
             `目標${targetKB}KB以下にはできませんでした。` +
@@ -3033,6 +3999,7 @@ function renderLayers(){
             "warn"
         );
         }else{
+        toast(`${fileName}を保存しました。`);
         setSingleStatus(
             `${fileName}を保存しました。` +
             `${result.width} × ${result.height}px、` +
@@ -3041,11 +4008,13 @@ function renderLayers(){
         );
         }
     }catch(error){
+        if(version !== state.loadVersion) return;
         setSingleStatus(
         error.message || "保存に失敗しました。",
         "warn"
         );
     }finally{
+        if(version === state.loadVersion) state.singleBusy = false;
         $("singleSave").disabled = false;
     }
   });
@@ -3077,6 +4046,7 @@ function renderLayers(){
 
     $("batchRedownload").disabled =
         busy || !batchState.lastZip;
+    syncModeControls();
 
     $$("#batchSettingsPanel input," +
         "#batchSettingsPanel select," +
@@ -3289,6 +4259,7 @@ function renderLayers(){
     }finally{
       if(version === batchState.addVersion){
         batchState.adding = false;
+        if(added) modeChoicesOpen = false;
         renderBatch();
 
         const skipped = skippedCapacity+skippedSize+skippedInvalid;
@@ -3641,6 +4612,20 @@ function renderLayers(){
     context.translate(output.width/2,output.height/2);
     context.rotate(degrees*Math.PI/180);
     context.drawImage(source,-source.width/2,-source.height/2);
+    return output;
+  }
+
+  function flipCanvas(source,horizontal){
+    const output = createCanvas(source.width,source.height);
+    const context = output.getContext("2d");
+    if(horizontal){
+      context.translate(output.width,0);
+      context.scale(-1,1);
+    }else{
+      context.translate(0,output.height);
+      context.scale(1,-1);
+    }
+    context.drawImage(source,0,0);
     return output;
   }
 
@@ -4244,7 +5229,9 @@ function renderLayers(){
   });
 
   function activateTab(button){
-    if(batchState.processing || batchState.adding) return;
+    if(batchState.processing || batchState.adding || state.drag || viewState.pan || state.composing) return;
+    finishTextEditing();
+    modeChoicesOpen = false;
 
     $$(".appbox-tab").forEach(tab => {
       const active = tab === button;
@@ -4256,8 +5243,23 @@ function renderLayers(){
       panel.hidden = !active;
     });
 
-    button.focus();
+    syncEditorChrome();
+    syncDisplaySize();
+    if($("processingModeTabs").hidden){
+      if(!$("singlePanel").hidden) editCanvas.focus({preventScroll:true});
+      else $("batchAdd").focus();
+    }else button.focus();
   }
+
+  $("changeProcessingMode").addEventListener("click",() => {
+    if(state.singleBusy || batchState.processing || batchState.adding || state.drag || viewState.pan || state.composing) return;
+    finishTextEditing();
+    modeChoicesOpen = true;
+    syncModeControls();
+    const active = $$(".appbox-tab").find(tab => tab.getAttribute("aria-selected") === "true");
+    (active || $("singleTab")).focus();
+    scheduleDisplayResize();
+  });
 
   $$(".appbox-tab").forEach((button,index,tabs) => {
     button.addEventListener("click",() => activateTab(button));
@@ -4286,6 +5288,14 @@ function renderLayers(){
     });
   });
 
+    window.AppBoxImageActions?.initialize({
+      $,state,editCanvas,canvasViewport,baseCanvas,toast,selectedLayers,selectLayers,
+      hitLayer,pointFromEvent,cancelSelectionGesture,setTool,renderLayers,renderEditor,
+      updateSelectedControls,pushHistory,makeId,createCanvas,saveBlob,
+      copySelectedLayers,pasteObjectClipboard,deleteSelectedLayer,reorderSelectedLayers,
+      canPaste:() => !!objectClipboard,clipboardText:() => objectClipboardText
+    });
+
     updateSingleFormatUI();
     updateBatchResizeUI();
     updateBatchFormatUI();
@@ -4297,7 +5307,8 @@ function renderLayers(){
     !$("batchTargetEnabled").checked;
 
     updateHistoryButtons();
-    updateCropActionBar();
+    updateCropControls();
+    syncEditorChrome();
     renderLayers();
     renderBatch();
 })();

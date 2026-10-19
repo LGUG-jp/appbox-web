@@ -1,0 +1,63 @@
+/* 共通操作アイコン。appbox-tokens.css の後、アプリ固有CSSの前に読み込む。 */
+@layer appbox {
+  .appbox-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    vertical-align: middle;
+    color: inherit;
+    --appbox-icon-paper: var(--appbox-icon-color-paper);
+    --appbox-icon-paper-fill: var(--appbox-icon-color-paper-fill);
+    --appbox-icon-cutout: var(--appbox-icon-color-paper-fill);
+    --appbox-icon-fill: currentColor;
+    --appbox-icon-folder-back: currentColor;
+  }
+
+  /* PDF由来のカラー操作アイコンは160単位の原図を24pxで表示する。 */
+  .appbox-icon--action { width: 24px; height: 24px; }
+  .appbox-icon--move { color: var(--appbox-icon-color-move); }
+  .appbox-icon--rotation { color: var(--appbox-icon-color-rotation); }
+  .appbox-icon--history { color: var(--appbox-icon-color-history); }
+  .appbox-icon--delete,
+  .appbox-icon--close { color: var(--appbox-icon-color-delete); }
+  .appbox-icon--save { color: var(--appbox-icon-color-save); }
+  .appbox-icon--open {
+    --appbox-icon-fill: var(--appbox-icon-color-folder);
+    --appbox-icon-folder-back: var(--appbox-icon-color-folder-back);
+  }
+
+  /* 色付きボタン上など、操作の色よりボタンの文字色を優先する場合。 */
+  .appbox-icon--inherit {
+    color: inherit;
+    --appbox-icon-fill: currentColor;
+    --appbox-icon-folder-back: currentColor;
+  }
+
+  button:disabled .appbox-icon,
+  [aria-disabled="true"] .appbox-icon {
+    color: var(--appbox-icon-color-disabled);
+    --appbox-icon-paper: var(--appbox-icon-color-disabled);
+    --appbox-icon-fill: var(--appbox-icon-color-disabled);
+    --appbox-icon-folder-back: var(--appbox-icon-color-disabled);
+  }
+
+  /* 外部use内の図形へは子孫セレクタではなく、継承変数で色を渡す。 */
+  @media (forced-colors: active) {
+    .appbox-icon {
+      color: ButtonText;
+      --appbox-icon-paper: ButtonText;
+      --appbox-icon-paper-fill: ButtonFace;
+      --appbox-icon-cutout: ButtonFace;
+      --appbox-icon-fill: ButtonText;
+      --appbox-icon-folder-back: ButtonText;
+    }
+    button:disabled .appbox-icon,
+    [aria-disabled="true"] .appbox-icon {
+      color: GrayText;
+      --appbox-icon-paper: GrayText;
+      --appbox-icon-fill: GrayText;
+      --appbox-icon-folder-back: GrayText;
+    }
+  }
+}

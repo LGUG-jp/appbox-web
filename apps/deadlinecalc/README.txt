@@ -1,4 +1,4 @@
-お役立ちアプリBOX / 期限・日数かんたん計算 v1.4.2
+共創アプリBOX / 期限・日数かんたん計算 v1.4.2
 ================================================
 
 本ツール自体の機能版数は、AppBox全体および共通assetsの版数とは別に管理します。
@@ -64,7 +64,7 @@ AppBox全体のリリース履歴はappbox\README.md / CHANGELOG.mdを参照し�
 
 ■ 4. 配置・初期設定
 
-IISの「お役立ちアプリBOX」のapps配下に deadlinecalc フォルダーを作成し、
+IISの「共創アプリBOX」のapps配下に deadlinecalc フォルダーを作成し、
 構成ファイル一式を配置してください。
 
 配置例:
@@ -96,7 +96,7 @@ IISの「お役立ちアプリBOX」のapps配下に deadlinecalc フォルダ�
           calc-core.test.cjs
           static.test.cjs
 
-お役立ちアプリBOXのポータル（appbox/index.html）から本ツールのフォルダーへ
+共創アプリBOXのポータル（appbox/index.html）から本ツールのフォルダーへ
 リンクしてください。
 
 注意事項:

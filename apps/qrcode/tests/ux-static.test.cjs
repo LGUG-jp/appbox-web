@@ -129,9 +129,10 @@ test("変更した固有CSSだけ版数を更新し、共通assetsは正本の�
   const html = read("index.html");
 
   assert.match(html, /qrcode\.css\?v=1\.4\.4/);
-  for (const file of ["qrcode-ux.css", "qr-core.js", "qrcode-app.js", "qrcode-ux.js"]) {
+  for (const file of ["qrcode-ux.css", "qr-core.js", "qrcode-ux.js"]) {
     assert.match(html, new RegExp(`${file.replace(".", "\\.")}\\?v=1\\.4\\.1`), file);
   }
+  assert.ok(html.includes("qrcode-app.js?v=1.4.5"));
 
   for (const file of [
     "appbox-tokens.css",
@@ -157,7 +158,7 @@ test("新標準のヘッダーと導入部からヘルプ・ポータルへ移�
   assert.match(html, /class="appbox-shell"/);
   assert.match(html, /class="panel create-panel appbox-panel--accent"/);
   assert.match(html, /href="\.\/help\.html" target="_blank" rel="noopener"/);
-  assert.match(html, /<footer class="appbox-footer">\s*お役立ちアプリBOX \/ QRコード作成 Version 1\.4\.4\s*<\/footer>/);
+  assert.match(html, /<footer class="appbox-footer">\s*共創アプリBOX \/ QRコード作成 Version 1\.4\.5\s*<\/footer>/);
   assert.match(html, /class="trademark-note"[^>]*>\s*「QRコード」は株式会社デンソーウェーブの登録商標です/);
   assert.doesNotMatch(css, /\.qr-shell\s*\{/);
   assert.match(css, /\.panel\s*\{[^}]*border-top:\s*4px solid var\(--primary\)/);

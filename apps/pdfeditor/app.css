@@ -158,6 +158,51 @@ body.pdf-editor-active .pdfeditor-footer,
 body.pdf-editor-active .editor-guidance {
   display: none;
 }
+body.pdf-editor-active .appbox-header__subtitle {
+  display: none;
+}
+.pdf-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.pdf-header-actions[hidden] {
+  display: none;
+}
+.pdf-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+}
+body.pdf-editor-active .appbox-header {
+  flex: none;
+}
+body.pdf-editor-active .appbox-header__inner {
+  height: auto;
+  min-height: var(--appbox-header-height);
+  padding-top: 6px;
+  padding-bottom: 6px;
+  flex-wrap: nowrap;
+  gap: 8px 16px;
+  justify-content: flex-start;
+  min-width: 0;
+}
+body.pdf-editor-active .pdf-header-actions,
+body.pdf-editor-active .appbox-header__actions {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+body.pdf-editor-active .appbox-header__actions {
+  flex: none;
+  justify-content: flex-end;
+  margin-left: auto;
+  gap: 6px;
+}
 
 /*
  * 読込み後は状態帯も作業領域から外します。
@@ -256,7 +301,6 @@ body.pdf-editor-active .status-bar {
 }
 
 
-.drop-zone:hover,
 .drop-zone:focus-visible,
 .drop-zone.drag {
   border-color: var(--accent);
@@ -301,7 +345,6 @@ body.pdf-editor-active .status-bar {
 }
 
 .drop-button {
-  pointer-events: none;
   user-select: none;
 }
 
@@ -914,6 +957,20 @@ body.pdf-editor-active .status-bar {
   cursor: move;
 }
 
+.ann-image { overflow: visible; cursor: move; }
+.ann-image:focus-visible { outline: 2px solid var(--focus); }
+.ann-image .image-resize-handle {
+  cursor: nwse-resize;
+  fill: white;
+  stroke: var(--focus);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.image-resize-handle:focus-visible { stroke-width: 3px; }
+@media (forced-colors: active) {
+  .ann-image .image-resize-handle { fill: Canvas; stroke: Highlight; }
+}
+
 .resize-handle {
   position: absolute;
   right: -6px;
@@ -1307,48 +1364,179 @@ body.pdf-editor-active .status-bar {
 }
 .page-toolbar {
   flex: none;
-  min-height: 54px;
+  min-height: 52px;
   padding: 6px 12px;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
-  z-index: 5;
+  position: relative;
+  z-index: 15;
+}
+.toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 .toolbar-group {
+  position: relative;
   gap: 3px;
   padding-right: 8px;
   border-right: 1px solid var(--line);
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 .page-toolbar button {
-  min-height: 44px;
+  min-height: 40px;
   border-radius: 8px;
-  padding: 4px 10px;
+  padding: 6px 10px;
   font-size: 12px;
   line-height: 1.3;
 }
 .page-toolbar .tool-action,
 .page-toolbar .mode-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
   white-space: nowrap;
 }
-.page-toolbar .tool-icon {
-  font-size: 23px;
-  font-weight: 600;
-  height: 25px;
-  line-height: 25px;
+.icon-button {
+  position: relative;
+  width: 40px;
+  min-width: 40px;
+  padding: 6px;
+  flex: none;
 }
-.page-toolbar #saveBtn {
-  margin-left: auto;
-  min-width: 74px;
+.page-toolbar .icon-button {
+  padding: 6px;
+}
+.pdf-header-actions #saveBtn {
+  min-width: 110px;
+  flex: none;
+  border-color: #187244;
+  color: #187244;
+  background: #e4f4e9;
+  box-shadow: none;
+}
+.pdf-header-actions #saveBtn:hover:not(:disabled) {
+  background: #d3ebdc;
+}
+.pdf-header-actions #saveBtn:disabled {
+  border-color: var(--line);
+  color: var(--muted);
+  background: #eef0f2;
+}
+/* The save button opens a menu; its items always show text so PDF and the work file are told apart. */
+.save-menu {
+  position: relative;
+  display: flex;
+  flex: none;
+}
+.save-menu-trigger::after {
+  content: "";
+  flex: none;
+  border-top: 5px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+.save-menu-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 130;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #172b4d2b;
+}
+.save-menu-list[hidden] {
+  display: none;
+}
+.save-menu .save-menu-list button {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  overflow-wrap: anywhere;
+  font: inherit;
+  cursor: pointer;
+}
+.save-menu .save-menu-list button:hover:not(:disabled),
+.save-menu .save-menu-list button:focus-visible {
+  background: var(--accent-soft);
+}
+.save-menu .save-menu-list button:disabled {
+  color: var(--muted);
+  cursor: default;
 }
 .page-toolbar #backToPagesBtn {
-  flex-direction: row;
-  font-size: 13px;
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+}
+.page-navigation {
+  gap: 6px;
+}
+.page-stepper,
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+#pageIndicator {
+  min-width: 82px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.selection-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  white-space: nowrap;
+  padding: 0 4px;
+}
+.history-actions {
+  padding-right: 0;
+  border: 0;
+}
+.toolbar-group.tools {
+  padding: 0;
+  border: 1px solid var(--line);
+  gap: 2px;
+}
+.figure-order-controls {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+}
+.tools [data-tool="select"] {
+  margin-right: 6px;
+  border-right: 1px solid var(--line);
+  border-radius: 8px 0 0 8px;
 }
 .mode-btn.active {
   color: var(--accent-dark);
@@ -1358,7 +1546,7 @@ body.pdf-editor-active .status-bar {
 .overview-status {
   flex: none;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   min-height: 36px;
   padding: 4px 20px;
@@ -1366,12 +1554,27 @@ body.pdf-editor-active .status-bar {
   color: var(--muted);
 }
 .overview-status .doc-name {
-  max-width: 35%;
+  min-width: 0;
+  max-width: 40%;
   margin-right: auto;
   color: var(--text);
 }
 .overview-hint {
   margin-left: auto;
+}
+.thumbnail-size-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.thumbnail-size-field select {
+  min-height: 32px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
 }
 .workspace-body {
   display: flex;
@@ -1389,6 +1592,23 @@ body.pdf-editor-active .status-bar {
 .editor[data-mode="overview"] .pages-panel {
   width: 100%;
   flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+.editor[data-mode="overview"] .thumb-list {
+  touch-action: pan-y;
+}
+.editor[data-mode="overview"] .thumb-list.is-selecting {
+  cursor: crosshair;
+  user-select: none;
+}
+.page-selection-marquee {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  border: 2px solid var(--page-interaction);
+  background: #1473e620;
+  box-sizing: border-box;
 }
 .thumb-list {
   min-height: 0;
@@ -1397,10 +1617,26 @@ body.pdf-editor-active .status-bar {
 }
 .editor[data-mode="overview"] .thumb-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--thumb-width)), 1fr));
   align-content: start;
   gap: 20px;
   padding: 20px;
+}
+.editor {
+  --page-interaction: #1764b5;
+  --thumb-width: 170px;
+  --thumb-image-width: 155px;
+  --thumb-image-height: 218px;
+}
+.editor[data-thumbnail-size="small"] {
+  --thumb-width: 140px;
+  --thumb-image-width: 100px;
+  --thumb-image-height: 141px;
+}
+.editor[data-thumbnail-size="large"] {
+  --thumb-width: 250px;
+  --thumb-image-width: 210px;
+  --thumb-image-height: 296px;
 }
 .thumb-item {
   position: relative;
@@ -1416,11 +1652,16 @@ body.pdf-editor-active .status-bar {
   display: block;
   width: auto !important;
   height: auto !important;
-  max-width: 100%;
-  max-height: 218px;
+  max-width: min(100%, var(--thumb-image-width));
+  max-height: var(--thumb-image-height);
   margin: auto;
   box-shadow: 0 2px 8px #1d29391a;
   background: white;
+}
+.editor[data-mode="overview"] .thumb-preview {
+  display: grid;
+  place-items: center;
+  height: var(--thumb-image-height);
 }
 .thumb-item.active {
   border-color: var(--accent);
@@ -1433,7 +1674,7 @@ body.pdf-editor-active .status-bar {
   margin-top: 10px;
 }
 .thumb-page {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
 }
@@ -1454,10 +1695,22 @@ body.pdf-editor-active .status-bar {
   cursor: pointer;
   min-height: 30px;
 }
-.page-check {
+.page-check-target {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.page-check-target:hover {
+  background: var(--accent-soft);
+}
+.page-check {
+  margin: 0;
   width: 20px;
   height: 20px;
   accent-color: var(--accent);
@@ -1472,10 +1725,25 @@ body.pdf-editor-active .status-bar {
   font-size: 20px;
 }
 .thumb-item[data-drop="before"] {
-  border-left: 5px solid var(--focus);
+  --insertion-left: -12px;
+  --insertion-right: auto;
 }
 .thumb-item[data-drop="after"] {
-  border-right: 5px solid var(--focus);
+  --insertion-left: auto;
+  --insertion-right: -12px;
+}
+.thumb-item[data-drop]::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--insertion-left);
+  right: var(--insertion-right);
+  width: 4px;
+  border-radius: 4px;
+  background: var(--page-interaction);
+  outline: 2px solid var(--surface);
+  pointer-events: none;
 }
 .thumb-item.dragging {
   opacity: 0.55;
@@ -1484,6 +1752,9 @@ body.pdf-editor-active .status-bar {
   width: 128px;
   flex: none;
   border-right: 1px solid var(--line);
+}
+.editor[data-mode="edit"][data-pages-expanded="false"] .pages-panel {
+  display: none;
 }
 .editor[data-mode="edit"] .thumb-list {
   display: flex;
@@ -1495,6 +1766,7 @@ body.pdf-editor-active .status-bar {
   padding: 8px 6px;
 }
 .editor[data-mode="edit"] .thumb-item canvas {
+  max-width: 100%;
   max-height: 142px;
 }
 .editor[data-mode="edit"] .thumb-meta {
@@ -1503,6 +1775,7 @@ body.pdf-editor-active .status-bar {
 }
 .editor[data-mode="edit"] .thumb-source,
 .editor[data-mode="edit"] .thumb-edit,
+.editor[data-mode="edit"] .page-check-target,
 .editor[data-mode="edit"] .page-check,
 .editor[data-mode="edit"] .thumb-item::before {
   display: none;
@@ -1568,6 +1841,9 @@ body.pdf-editor-active .status-bar {
   border-radius: 12px;
   background: var(--surface);
   box-shadow: 0 7px 24px #172b4d25;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
 }
 .floating-properties[data-corner="top-right"] {
   right: 12px;
@@ -1586,36 +1862,41 @@ body.pdf-editor-active .status-bar {
   bottom: 66px;
 }
 .floating-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
   border-bottom: 1px solid var(--line);
   background: #f7f9fc;
   font-size: 12px;
+  touch-action: none;
 }
-.drag-handle {
+.format-heading {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 4px 8px;
   border: 0;
+  border-radius: 0;
   background: transparent;
-  color: var(--muted);
-  font-size: 24px;
+  color: inherit;
+  font: inherit;
+  line-height: 1.4;
+  text-align: left;
   cursor: grab;
   touch-action: none;
-  padding: 0 5px;
-  min-width: 30px;
-  min-height: 30px;
+}
+.format-heading:focus-visible,
+.ann-ink:focus-visible {
+  outline: none;
 }
 .floating-properties.is-dragging {
   opacity: 0.9;
   cursor: grabbing;
 }
-.dock-label {
-  margin-left: auto;
+.floating-properties.is-dragging .format-heading {
+  cursor: grabbing;
 }
-.dock-label select {
-  font-size: 12px;
-  max-width: 75px;
-  padding: 3px;
+.floating-properties :is(label, .compact-field, button:not(.format-heading), input, select, textarea, a, [role="button"], [role="listbox"], [contenteditable]) {
+  cursor: auto;
+  user-select: auto;
 }
 .floating-properties .property-controls {
   display: flex;
@@ -1649,15 +1930,65 @@ body.pdf-editor-active .status-bar {
   max-width: 150px;
   min-width: 110px;
 }
-.figure-actions {
-  display: flex;
-  gap: 6px;
-  padding: 0 12px 10px;
+
+@media (min-width: 560px) {
+  .floating-properties[data-figure-type="text"] .property-controls {
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  .floating-properties[data-figure-type="text"] .property-controls .compact-field {
+    padding-inline: 5px;
+  }
+  .floating-properties[data-figure-type="text"] .font-picker-button {
+    min-width: 96px;
+    max-width: 112px;
+  }
+  .floating-properties[data-figure-type="text"] #fontSizeInput {
+    max-width: 58px;
+  }
+  .floating-properties[data-figure-type="text"] :is(#bgTransparentField, #outlineField) {
+    white-space: nowrap;
+  }
 }
-.figure-actions .mini-btn {
-  width: auto;
-  padding: 4px 9px;
-  font-size: 12px;
+.figure-context-menu {
+  position: fixed;
+  z-index: 120;
+  min-width: 148px;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #172b4d2b;
+}
+.figure-context-menu[hidden] {
+  display: none;
+}
+.figure-context-menu button {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.figure-context-menu button:hover:not(:disabled),
+.figure-context-menu button:focus-visible {
+  background: var(--accent-soft);
+}
+.figure-context-menu button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.figure-context-menu .danger:not(:disabled) {
+  color: #b42332;
 }
 .dock-preview {
   position: absolute;
@@ -1710,6 +2041,58 @@ body.pdf-editor-active .status-bar {
 }
 .annotation-layer.marker-active {
   pointer-events: none;
+}
+
+/* Keep page panning/pinching available with Select; object dragging stays explicit. */
+.annotation-layer[data-tool="select"] {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+.annotation-layer .ann {
+  touch-action: none;
+}
+.annotation-layer[data-tool="ink"],
+.annotation-layer[data-tool="ink-eraser"] {
+  cursor: crosshair;
+  touch-action: none;
+}
+.annotation-layer[data-tool="ink-eraser"] {
+  cursor: url("./eraser-cursor.svg?v=1.11.0") 12 12, cell;
+}
+.annotation-layer[data-tool="ink"] .ann,
+.annotation-layer[data-tool="ink-eraser"] .ann {
+  pointer-events: none;
+}
+/* New shapes can start over existing annotations, including SVG parts and handles. */
+.annotation-layer:is(
+  [data-tool="text"], [data-tool="rect"], [data-tool="ellipse"],
+  [data-tool="arrow"], [data-tool="line"]
+) :is(.ann, .ann *) {
+  pointer-events: none;
+}
+.ink-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ann-ink {
+  overflow: visible;
+}
+.ink-erasing {
+  visibility: hidden;
+}
+#inkTouchControls {
+  align-self: center;
+}
+#inkTouchControls[hidden],
+#inkStabilizationField[hidden] {
+  display: none;
+}
+@media (max-width: 560px) {
+  .floating-properties:is([data-figure-type="ink"], [data-figure-type="ink-eraser"]) {
+    max-width: min(240px, calc(100% - 24px));
+  }
 }
 .annotation-layer.marker-active .ann,
 .annotation-layer.marker-active .highlight-fragment {
@@ -1776,9 +2159,6 @@ body.pdf-editor-active .status-bar {
     gap: 4px;
     padding: 4px;
   }
-  .page-toolbar button {
-    padding: 4px 7px;
-  }
   .toolbar-group {
     padding-right: 4px;
   }
@@ -1790,17 +2170,31 @@ body.pdf-editor-active .status-bar {
   }
 }
 @media (max-width: 700px) {
-  .editor[data-mode="edit"] .pages-panel {
-    display: none;
+  body.pdf-editor-active .appbox-header__inner {
+    gap: 4px 8px;
   }
-  .page-toolbar .tool-icon {
-    font-size: 19px;
-    height: 21px;
-    line-height: 21px;
+  .pdf-header-actions {
+    gap: 4px;
   }
-  .page-toolbar button {
-    font-size: 11px;
-    min-width: 40px;
+  .pdf-header-actions > button {
+    padding-inline: 4px;
+    gap: 4px;
+  }
+  .toolbar-controls {
+    gap: 4px;
+  }
+  .toolbar-group {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .selection-actions,
+  .page-navigation {
+    gap: 4px;
+  }
+  .pdf-header-actions #saveBtn {
+    min-width: 100px;
+    padding: 6px;
+    gap: 4px;
   }
   .overview-status {
     gap: 8px;
@@ -1811,9 +2205,8 @@ body.pdf-editor-active .status-bar {
     max-width: 100%;
   }
   .editor[data-mode="overview"] .thumb-list {
-    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
-    gap: 10px;
-    padding: 10px;
+    gap: 20px;
+    padding: 16px;
   }
   .viewer-area {
     padding: 12px 12px 64px;
@@ -1829,6 +2222,34 @@ body.pdf-editor-active .status-bar {
   .floating-properties .property-controls {
     gap: 7px;
     padding: 8px;
+  }
+}
+@media (pointer: coarse) {
+  .format-heading {
+    min-height: 44px;
+  }
+  .page-toolbar button,
+  .pdf-header-actions button,
+  .figure-context-menu button {
+    min-height: 44px;
+  }
+  .icon-button {
+    width: 44px;
+    min-width: 44px;
+  }
+  .page-check-target {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .thumb-item[data-drop]::after {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+  .page-selection-marquee {
+    border-color: Highlight;
+    forced-color-adjust: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1847,6 +2268,68 @@ body:not(.pdf-editor-active) {
   overflow: auto;
 }
 
+/* At high zoom/short heights keep a usable workspace and scroll the document
+   instead of clipping the header, page tools or floating settings. */
+@media (max-height: 500px) {
+  body.pdf-editor-active {
+    height: auto;
+    min-height: 100dvh;
+    overflow: auto;
+  }
+  body.pdf-editor-active .appbox-header__inner {
+    gap: 4px 8px;
+  }
+  body.pdf-editor-active .pdf-header-actions {
+    gap: 4px;
+  }
+  body.pdf-editor-active .appbox-header__actions {
+    gap: 4px;
+  }
+  body.pdf-editor-active .pdf-app-main {
+    flex: none;
+    height: 400px;
+  }
+}
+
+@media (max-width: 760px), (max-height: 500px) {
+  body.pdf-editor-active .appbox-header__brand {
+    flex: none;
+    min-width: 32px;
+  }
+  body.pdf-editor-active .appbox-header__title,
+  body.pdf-editor-active .appbox-help-button {
+    display: none;
+  }
+  body.pdf-editor-active .appbox-collapse-toggle span {
+    display: none;
+  }
+  body.pdf-editor-active .appbox-collapse-toggle {
+    min-width: 40px;
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  body.pdf-editor-active .appbox-header__inner {
+    flex-wrap: wrap;
+  }
+  body.pdf-editor-active :is(#appendPdfBtn, #closePdfBtn, #saveBtn) > span {
+    display: none;
+  }
+  body.pdf-editor-active :is(#appendPdfBtn, #closePdfBtn) {
+    min-width: 40px;
+    width: 40px;
+    padding-inline: 6px;
+  }
+  /* The menu caret stays visible next to the icon. */
+  body.pdf-editor-active #saveBtn {
+    min-width: 52px;
+    width: 52px;
+    padding-inline: 6px;
+  }
+}
+
+
 .textLayer[data-main-rotation="90"] {
   transform: rotate(90deg) translateY(-100%);
 }
@@ -1855,4 +2338,114 @@ body:not(.pdf-editor-active) {
 }
 .textLayer[data-main-rotation="270"] {
   transform: rotate(270deg) translateX(-100%);
+}
+/* Page-number coordinates use SVG attributes rather than inline styles. */
+.page-number-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.watermark-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.page-number-dialog {
+  box-sizing: border-box;
+  width: min(600px, calc(100% - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #172033;
+  background: #fff;
+}
+.page-number-dialog::backdrop { background: rgb(15 23 42 / 45%); }
+.page-number-dialog h2 { margin: 0 0 12px; font-size: 1.35rem; }
+.page-number-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.page-number-fields label { display: grid; gap: 6px; font-weight: 700; }
+.page-number-fields input, .page-number-fields select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+}
+.page-number-preview-figure { margin: 16px 0; text-align: center; }
+.page-number-preview { position: relative; display: inline-block; max-width: 100%; border: 1px solid #cbd5e1; }
+.page-number-preview canvas { display: block; width: auto; max-width: 100%; height: auto; }
+.page-number-note { font-size: .875rem; color: #475569; }
+.page-number-error { color: #b91c1c; }
+.page-number-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.watermark-targets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 16px 0 0;
+  padding: 0;
+  border: 0;
+}
+.watermark-targets legend { margin-bottom: 8px; font-weight: 700; }
+.watermark-targets label { display: inline-flex; align-items: center; gap: 6px; }
+.watermark-range { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.watermark-range input { min-height: auto; padding: 0; }
+.watermark-range output { min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+.watermark-delete, .page-number-delete { margin-right: auto; }
+.page-number-margin-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.page-number-margin-fields[hidden] { display: none; }
+.watermark-overlay text { font-weight: 700; white-space: pre; }
+.stamp-template-row { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin: 0 0 16px; }
+.stamp-template-row label { display: grid; flex: 1 1 14em; gap: 6px; font-weight: 700; }
+.stamp-template-row input, .stamp-template-row select, .page-number-fields textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid #64748b;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+}
+.page-number-fields textarea { resize: vertical; }
+.stamp-options { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 16px 0 0; }
+.stamp-options label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
+.stamp-preview { padding: 8px; background: #fff; }
+.stamp-preview canvas { max-height: 190px; }
+/* 設定とプレビュー・配置ボタンを左右に並べ、14インチ前後のノートPC（表示領域1280×560程度）でも縦スクロールなしで収める。 */
+.stamp-dialog { width: min(960px, calc(100% - 24px)); padding-block: 20px; }
+.stamp-dialog h2 { margin-bottom: 8px; }
+.stamp-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+.stamp-dialog .stamp-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 12px; }
+.stamp-fields .stamp-wide-field { grid-column: span 2; }
+/* 文字欄は2列分に抑え、右に形・枠線を積む。文字の配置の設定は文字欄の直下に置く。 */
+.stamp-text-group { grid-column: 1 / span 2; grid-row: 1 / span 2; display: grid; gap: 8px; align-content: start; }
+.stamp-text-group .stamp-options { margin: 0; }
+.stamp-options input { width: auto; min-height: auto; padding: 0; }
+.stamp-side { display: grid; gap: 8px; }
+.stamp-side .page-number-preview-figure, .stamp-side p { margin: 0; }
+.stamp-actions > button { flex: 1 1 auto; }
+.stamp-save { margin-top: 12px; padding-top: 8px; border-top: 1px solid #cbd5e1; }
+.stamp-save > summary { min-height: 24px; font-weight: 700; cursor: pointer; }
+.stamp-save > summary:focus-visible { outline: 3px solid var(--appbox-focus-ring, rgba(20, 115, 230, 0.28)); outline-offset: 2px; }
+.stamp-save > .stamp-template-row { margin: 8px 0 0; }
+.stamp-save > p { margin: 8px 0 0; }
+@media (max-width: 900px) {
+  .stamp-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .page-number-dialog { padding: 16px; }
+  .page-number-fields, .page-number-margin-fields { grid-template-columns: 1fr; gap: 12px; }
+  .stamp-dialog .stamp-fields { grid-template-columns: minmax(0, 1fr); }
+  .stamp-fields .stamp-wide-field, .stamp-text-group { grid-column: auto; grid-row: auto; }
 }

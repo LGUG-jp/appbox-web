@@ -1084,6 +1084,7 @@ tr.unchanged td {
 
 .pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -1100,8 +1101,20 @@ tr.unchanged td {
 
 .page-controls {
   display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
   align-items: center;
   gap: 7px;
+}
+
+.page-controls > * {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.page-controls #pageSize {
+  width: auto;
+  min-width: 5rem;
 }
 
 .page-btn {

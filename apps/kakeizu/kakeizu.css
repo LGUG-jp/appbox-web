@@ -670,15 +670,27 @@ button:disabled {
   line-height: 1.5;
 }
 
-.canvas-heading {
+.canvas-topbar {
   position: absolute;
   top: 12px;
   left: 13px;
+  right: 12px;
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.canvas-heading {
   z-index: 8;
   display: flex;
+  flex: 1 1 220px;
+  flex-wrap: wrap;
+  min-width: 0;
   align-items: flex-start;
   gap: 14px;
-  max-width: calc(100% - 450px);
   padding: 8px 11px;
   border: 1px solid var(--border);
   border-radius: 9px;
@@ -690,6 +702,8 @@ button:disabled {
 
 .canvas-heading > div {
   display: grid;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .canvas-kicker {
@@ -705,10 +719,12 @@ button:disabled {
 }
 
 .canvas-guide {
+  flex: 1 1 180px;
+  min-width: 0;
   align-self: center;
   color: var(--muted);
   font-size: 10px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .canvas-guide-emphasis {
@@ -717,11 +733,11 @@ button:disabled {
 }
 
 .toolbar {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   z-index: 10;
   display: flex;
+  flex: 0 1 470px;
+  min-width: 0;
+  pointer-events: auto;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 5px;
@@ -749,11 +765,11 @@ button:disabled {
    ========================================================= */
 
 .canvas-mode-banner {
-  position: absolute;
-  top: 66px;
-  left: 50%;
   z-index: 12;
   display: flex;
+  flex: 0 1 100%;
+  margin: 0 auto;
+  pointer-events: auto;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
@@ -765,7 +781,6 @@ button:disabled {
   color: #3d2a56;
   background: rgba(246, 240, 252, 0.97);
   box-shadow: 0 9px 24px rgba(56, 41, 75, 0.14);
-  transform: translateX(-50%);
 }
 
 .canvas-mode-banner[hidden] {
@@ -1547,6 +1562,17 @@ td textarea {
 }
 
 @media (max-width: 900px) {
+  .canvas-topbar {
+    display: contents;
+  }
+
+  .canvas-heading {
+    position: absolute;
+    top: 12px;
+    left: 13px;
+    right: 12px;
+  }
+
   .app-shell {
     width: min(100% - 20px, 780px);
     padding-top: 8px;
@@ -1575,6 +1601,7 @@ td textarea {
   }
 
   .toolbar {
+    position: absolute;
     top: auto;
     right: 12px;
     bottom: 12px;
@@ -1584,6 +1611,10 @@ td textarea {
   }
 
   .canvas-mode-banner {
+    position: absolute;
+    left: 50%;
+    margin: 0;
+    transform: translateX(-50%);
     top: 66px;
   }
 }
@@ -1964,6 +1995,7 @@ td textarea {
   .appbox-header,
   #kakeizuBrand,
   aside,
+  .canvas-topbar,
   .canvas-heading,
   .canvas-mode-banner,
   .toolbar,

@@ -7,29 +7,26 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
-  <title>画像かんたん加工 ヘルプ | お役立ちアプリBOX</title>
-  <link rel="icon" href="../../assets/appbox-favicon.svg" type="image/svg+xml">
+  <title>画像かんたん加工 ヘルプ | 共創アプリBOX</title>
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
 
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.1.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.1.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
 </head>
 
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
-      <a class="appbox-header__brand" href="../../" aria-label="お役立ちアプリBOXのホームへ">
-        <div class="appbox-header__logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false">
-            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
-          </svg>
-        </div>
-        <p class="appbox-header__title">お役立ちアプリBOX <span class="appbox-header__subtitle">- INTERNAL UTILITY PORTAL -</span></p>
+      <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
+        <span class="appbox-header__brand-image" aria-hidden="true">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+        </span>
+        <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
       <nav class="appbox-header__actions" aria-label="ページ操作">
         <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
@@ -54,7 +51,7 @@
         </div>
         <p class="appbox-help-header-desc">1枚ずつの加工と、複数画像の一括処理の手順を説明します。</p>
       </div>
-      <span class="version-badge">Version 1.2.2</span>
+      <span class="version-badge">Version 1.12.3</span>
 
       <div class="help-callout help-callout-warning">
         <strong>確実に隠す必要がある箇所は黒塗りを使ってください</strong>
@@ -96,27 +93,27 @@
           <ol class="help-steps">
             <li>
               <strong>画像を選択</strong>
-              <p class="appbox-help-step-desc">対象画像を選択します。ドラッグ＆ドロップでも読み込めます。</p>
+              <p class="appbox-help-step-desc">対象画像を選択します。ドラッグ＆ドロップや、Ctrl+Vによる画像の貼り付けでも読み込めます。</p>
             </li>
             <li>
               <strong>必要に応じて構図を調整</strong>
               <p class="appbox-help-step-desc">必要に応じてトリミング、回転、反転、リサイズを行います。</p>
             </li>
             <li>
-              <strong>秘匿加工を適用</strong>
+              <strong>マスキングを適用</strong>
               <p class="appbox-help-step-desc">黒塗りやモザイクで隠したい箇所を加工します。</p>
             </li>
             <li>
-              <strong>注釈を追加</strong>
-              <p class="appbox-help-step-desc">必要に応じて文字、四角形、楕円、矢印の注釈を追加します。</p>
+              <strong>文字・図形を追加</strong>
+              <p class="appbox-help-step-desc">必要に応じて文字、四角形、円、矢印の注釈を追加します。</p>
             </li>
             <li>
               <strong>加工結果を確認</strong>
-              <p class="appbox-help-step-desc">「読込み時と現在を比較」で加工漏れがないか確認します。</p>
+              <p class="appbox-help-step-desc">ヘッダーの「比較」で読込み時と現在を比べ、加工漏れがないか確認します。</p>
             </li>
             <li>
               <strong>出力条件を設定</strong>
-              <p class="appbox-help-step-desc">保存形式、目標容量、ファイル名を設定します。定型プリセットも使えます。</p>
+              <p class="appbox-help-step-desc">ヘッダーの「保存」で保存設定を開き、用途、保存形式、目標容量、ファイル名を設定します。</p>
             </li>
             <li>
               <strong>画像を保存・目視確認</strong>
@@ -124,12 +121,18 @@
             </li>
           </ol>
 
+          <p>
+            画像の読込み後はアプリ名・導入説明が隠れ、作業領域が広がります。
+            「画像を変更」、元に戻す、やり直す、「すべて戻す」、「比較」、「保存」は画面上部のヘッダーから操作できます。
+            単体・一括とも読込み後は加工方法のタブを隠します。「加工方法を変更」で再表示でき、切り替えて戻っても編集内容は保たれます。狭い画面・低い画面ではスクロールして操作してください。
+          </p>
+
           <div class="help-callout help-callout-info">
-            <strong>定型プリセット</strong>
+            <strong>保存時の用途設定</strong>
             <p>
               「Web掲載用」「メール添付用」「庁内文書貼付用」「サムネイル用」
               「原寸・メタデータ除去」から選ぶと、出力形式、長辺、目標容量などが
-              まとめて設定されます。掲載先やメール環境の個別要件への適合を
+              保存する画像に適用されます。編集中の画像のサイズは変わりません。掲載先やメール環境の個別要件への適合を
               保証するものではないため、要件は別途確認してください。
             </p>
           </div>
@@ -162,23 +165,99 @@
               指定したブロックサイズで粗く表示します。ブロックサイズは保存前に変更できます。
             </li>
             <li>
-              <strong>注釈：</strong>
-              文字、四角形、楕円、矢印を追加できます。文字内容、色、文字サイズ、線幅を設定できます。
+              <strong>文字・図形：</strong>
+              文字、四角形、円、矢印を追加できます。文字は画像上で入力し、色、文字サイズ、線幅などは設定欄で変更できます。
             </li>
           </ul>
 
           <h3 class="appbox-help-subheading" id="layers">レイヤーと確認</h3>
           <p>
-            黒塗り、モザイク、ブラシ、文字、四角形、楕円、矢印は、
+            黒塗り、モザイク、ブラシ、文字、四角形、円、直線、矢印、手書き、追加画像・スタンプは、
             保存するまで編集可能なレイヤーとして扱われます。
           </p>
 
           <ul>
-            <li>画像上で選択して、ドラッグで移動できます。</li>
-            <li>選択枠の右下のハンドルでサイズを変更できます。</li>
-            <li>加工設定の変更、表示・非表示の切替、上下の順序変更、個別の削除ができます。</li>
-            <li>保存時は、表示中のレイヤーだけを画像へ焼き込みます。非表示のレイヤーは反映されません。</li>
+            <li>「選択」で画像上のオブジェクトを選び、ドラッグで移動できます。</li>
+            <li>選択ツールで空白から矩形をドラッグすると、範囲と交差する複数の表示中オブジェクトを選択できます。</li>
+            <li><kbd>Shift</kbd> を押しながらクリックすると選択を追加・解除でき、矩形ドラッグでは選択を追加できます。</li>
+            <li>複数選択した対象は、位置関係を保ってまとめて移動・削除・コピー・貼り付けできます。</li>
+            <li>単一選択した対象は、選択枠の右下のハンドルでサイズを変更できます。</li>
+            <li>文字ツールで配置すると、空の文字枠で入力を始められます。配置済み文字はダブルクリックで編集し、点滅するキャレットが入力位置を示します。</li>
+            <li>選択した対象に適用できる設定だけが表示され、色や線幅などは複数選択へまとめて反映できます。文字内容は画像上で1件ずつ編集します。選択ツールで未選択時は設定項目を隠します。右ペインの幅は確保し、画像位置を保ちます。</li>
+            <li>加工設定の変更や削除は、画像上で対象を選んで操作します。削除には <kbd>Delete</kbd>／<kbd>Backspace</kbd> または右クリックメニューを使います。タッチ端末でも、選択済みの対象や画像内の余白を長押しして複数選択をまとめて削除できます。</li>
+            <li>右側の設定パネル下部の「最前面」「最背面」で重なり順を一度に変更できます。複数選択でも互いの順序を維持します。</li>
+            <li>右クリック、タッチ端末では長押しで、コピー・貼り付け・削除・重なり順のメニューを開けます。</li>
+            <li>保存時は、編集したレイヤーを画像へ焼き込みます。</li>
           </ul>
+
+          <h4 class="help-subheading">右側で設定する</h4>
+          <p>
+            左側で加工ツールを選び、右側で選択中のツールや対象に必要な設定だけを表示します。
+            文字色は「テキスト」、図形の線の色は「枠」、手書きや種類の混在時は「色」です。文字と図形の塗り色は「塗り」です。
+            線の幅は「太さ」、文字サイズは「サイズ」で指定します。ツールと設定はそれぞれ縦スクロールでき、
+            <kbd>Tab</kbd> 移動でも全項目を操作できます。狭い画面ではツールを画像の上、設定を画像の下へ配置します。
+          </p>
+
+          <h4 class="help-subheading">形を揃えて描く</h4>
+          <p>
+            四角形・円の作成時に <kbd>Ctrl</kbd> または <kbd>Shift</kbd> を押すと、正方形・真円になります。
+            「円」は、縦横を変えて楕円としても配置できます。
+            四角形・円・矢印・直線は配置すると選択モードへ戻り、続けてドラッグして移動できます。
+            作成済みの図形をサイズ変更するときは、同じキーで現在の縦横比を保ちます。
+            黒塗りブラシ・モザイクブラシ・手書きも、同じキーでサイズ変更時の縦横比を保てます。
+            直線・矢印は <kbd>Ctrl</kbd> で水平・垂直へ固定できます。端点を動かすときは
+            <kbd>Shift</kbd> で元の角度を維持できます。枠線と塗り色は別々に指定できます。
+            矢印は短い線・太い線・斜め線でも軸線が先端からはみ出さず、白縁の有無にかかわらず先端が尖る形で描きます。
+          </p>
+          <h4 class="help-subheading">文字を読みやすくする</h4>
+          <p>
+            文字・矢印・直線・四角形・円には白縁取りを付けられます。新規配置では文字・矢印・直線は有効、
+            四角形・円は無効で始まり、変更した設定はツールごとに次の配置へ引き継ぎます。
+            文字・矢印・直線には厚めの白縁取りを付けます。文字は改行・幅による折り返し、フォント、
+            太字、塗り色・塗りなしを設定できます。フォントは端末内のものを使い、ない場合は代替フォントで表示します。
+            「サイズ」の−／＋で2pxずつ変更でき、数値では8〜300pxを指定できます。複数選択時は各文字のサイズ差を保って変更し、1回ずつUndoできます。
+            文字枠のサイズは画像上のハンドルで調整できます。
+            文字と図形を一緒に選ぶと「文字の塗り」「図形の塗り」を分けて表示します。
+            設定が混在する複数選択では、空欄や中間状態などを表示し、変更した項目だけを反映します。
+          </p>
+          <h4 class="help-subheading">手書きとスタンプ</h4>
+          <p>
+            「手書き」で色付きの線を描き、手ぶれ補正を「なし・弱・中・強」から選べます。
+            「消しゴム」は手書きの線を1本ずつ消します。黒塗りやモザイクには作用しません。
+            描画・消去途中の <kbd>Esc</kbd> で取り消して選択へ戻れます。
+          </p>
+          <p>
+            「スタンプ」から確認・済・回覧・至急・日付印などを配置できます。
+            大きさはpxで指定し、文字は3行まで、<code>{date}</code> で配置日を西暦・和暦で表示します。
+            設定をテンプレートファイルとして保存・読み込みでき、配置後は画像レイヤーとして編集できます。
+            見出し・閉じる操作を残したまま設定内容を縦にスクロールでき、狭い画面では1列に並びます。
+          </p>
+
+          <h4 class="help-subheading">画像を重ねる</h4>
+          <p>
+            「画像を追加」またはクリップボードからの画像貼り付けで、別の画像をレイヤーとして重ねられます。
+            透過PNGの透明部分は保たれます。移動、サイズ変更、透明度変更、重なり順変更、削除ができます。
+            複数の画像を選択すると、不透明度をまとめて変更できます。
+            ベース画像がないときの画像貼り付けは、編集するベース画像の読込みになります。
+          </p>
+          <p>
+            編集中の画像貼り付けは原寸のまま中央へ配置します。貼り付ける画像が大きい場合は、
+            既存の画像や注釈を動かさずに画像領域を広げ、右側・下側に透明な余白を追加します。
+            拡張と画像追加は「元に戻す」1回で戻せます。拡張後のサイズが上限を超える場合は貼り付けを取り消します。
+            ファイル選択の「画像を追加」は、画像領域へ収まる大きさで配置します。
+          </p>
+
+          <h4 class="help-subheading">細部を拡大して編集する</h4>
+          <p>
+            画像下部の「表示倍率」で拡大・縮小できます。「全体」は表示領域に画像全体を収め、
+            「100%」は画像の1ピクセルを表示上の1ピクセルで表示します。
+            「幅に合わせる」は横幅を表示領域へ合わせます。画像の作業領域では、ホイールを上へ回すと拡大、
+            下へ回すと縮小し、ポインターの位置を中心に倍率を変更します。<kbd>Ctrl</kbd> や <kbd>Command</kbd> は不要です。
+            作業領域の外では通常どおりページをスクロールできます。
+            拡大中は「手のひら」でドラッグするか、スクロールバーで目的の箇所へ移動してください。
+            表示倍率やページ全体の拡大・縮小で、保存する画像のサイズは変わりません。
+            保存サイズの変更には「リサイズ」または保存時の用途設定を使います。
+          </p>
 
           <div class="help-callout help-callout-info">
             <strong>レイヤー情報は保存画像に残りません</strong>
@@ -187,15 +266,16 @@
               編集可能なレイヤー情報は残らないため、後から黒塗りを外すことはできません。
             </p>
             <p>
-              モザイクは元画像を基に生成します。レイヤーの上下順序を変えると
-              見た目の重なり順は変わりますが、下にある注釈や黒塗りを
-              モザイク化し直すものではありません。
+              モザイクは元画像と、その下にある表示中の画像・注釈などへ適用されます。
+              レイヤーの上下順序を変えると加工対象も変わります。
+              モザイクより上のレイヤーは加工されません。
+              加工範囲内は白背景と合成してモザイク化し、元の細部の透けを防ぎます。範囲外の透明度は保ちます。
             </p>
           </div>
 
           <h4 class="help-subheading">比較プレビュー</h4>
           <p>
-            「読込み時と現在を比較」を押すと、読込み時の元画像と現在の加工結果を
+            「比較」を押すと、読込み時の元画像と現在の加工結果を
             左右に並べて確認できます。現在の加工結果には、表示中のレイヤーを
             合成した状態が反映されます。
           </p>
@@ -207,23 +287,26 @@
 
           <h3 class="appbox-help-subheading" id="trim">トリミング</h3>
           <p>
-            トリミングツールを選ぶと、画像上に枠が表示され、画像の直下に
-            確定用の操作バーが出ます。範囲が決まったら
-            「この範囲で切り抜く」で確定します。
+            左側の「回転・リサイズ」にある「トリミング」を選び、画像上のドラッグで位置と範囲を指定します。右側の設定欄では横幅・高さと比率を調整できます。
+            最初は枠を表示せず、画像全体が薄く暗くなります。範囲を指定すると内側は明るく、外側だけが暗くなります。
+            範囲が決まったら、右側の設定欄の「この範囲で切り抜く」で確定します。
+            範囲未指定の間は確定できません。
           </p>
 
           <ul>
             <li>枠の内側をドラッグして移動します。</li>
             <li>四隅のハンドルをドラッグしてサイズを変更します。</li>
             <li>枠の外からドラッグすると新しい枠を作れます。</li>
-            <li>X、Y、横幅、高さを数値で指定できます。</li>
-            <li>枠を中央へ配置したり、初期の枠へ戻したりできます。</li>
+            <li>横幅・高さは数値で指定でき、現在の枠の位置を保って大きさを変えます。枠がない状態では画像左上から作成します。</li>
+            <li>「中央配置」で枠を画像の中央へ移動できます。</li>
+            <li>「キャンセル」で選択ツールへ戻ります。</li>
           </ul>
 
           <p>
             確定後は、元画像と各加工レイヤーの座標と範囲を、
             新しい画像サイズに合わせて調整します。
             トリミングの枠自体は一時的な操作情報で、加工レイヤーとしては保存しません。
+            暗転はキャンセルや別ツールへの切替で解除され、元画像や保存画像には反映しません。
           </p>
 
           <h4 class="help-subheading">比率</h4>
@@ -242,6 +325,7 @@
           </div>
 
           <h3 class="appbox-help-subheading" id="size">サイズと容量</h3>
+          <p>PNG・JPEG・WebPの実体ヘッダーから縦横・総画素数を画像の展開前に確認し、展開後にも実寸を確認します。JPEG・PNGの回転情報による縦横の入替えにも対応します。上限超過・不正な画像は読み込まず、編集中の画像は保持します。</p>
 
           <div class="help-table-wrap">
             <table class="help-table">
@@ -413,7 +497,8 @@
           <p>
             拡張子が対応形式でも、ファイルが破損している場合や、
             実際の内容が対応画像ではない場合は読み込めません。
-            JPEGで保存する場合、透明部分は白または黒で合成します。
+            単体処理の標準保存形式はPNGです。単体処理のJPEGでは透明部分を白背景で合成します。
+            一括処理のJPEG背景は、従来どおり白または黒を選択できます。
           </p>
 
           <h4 class="help-subheading">ファイル名</h4>
@@ -444,7 +529,7 @@
 
           <h3 class="appbox-help-subheading" id="operations">履歴とキー操作</h3>
           <p>
-            「1つ戻す」「やり直す」「読込み時の状態へ戻す」が使えます。
+            ヘッダーの「元に戻す」「やり直す」「すべて戻す」が使えます。「すべて戻す」は読込み時の状態へ戻し、Undoで取り消せます。
             履歴はブラウザのメモリ内に保持し、ページを閉じると失われます。
           </p>
 
@@ -478,18 +563,26 @@
           </div>
 
           <p>
-            トリミング、リサイズ、回転、反転、読込み時の状態へ戻す操作は
+            トリミング、リサイズ、回転、反転、画像貼り付けによる画像領域の拡張、読込み時の状態へ戻す操作は
             画像本体を含む履歴です。レイヤーの追加、移動、サイズ変更、順序変更、
-            表示・非表示、設定変更、削除はレイヤーのみの履歴で、
+            設定変更、削除はレイヤーのみの履歴で、
             全履歴は最大40件です。
           </p>
 
           <h4 class="help-subheading">キーボード操作</h4>
           <ul>
-            <li>タブは左右の矢印キーで切り替えられます。<kbd>Home</kbd> と <kbd>End</kbd> でも移動できます。</li>
-            <li>比較ダイアログは <kbd>Esc</kbd> で閉じられます。</li>
+            <li>加工方法のタブは読込み後に隠れ、「加工方法を変更」で再表示できます。タブは左右の矢印キーで切り替えられます。<kbd>Home</kbd> と <kbd>End</kbd> でも移動できます。</li>
+            <li>オブジェクトを選択して <kbd>Delete</kbd> または <kbd>Backspace</kbd> を押すと削除します。</li>
+            <li>選択したオブジェクトは <kbd>Ctrl+C</kbd> でコピーし、<kbd>Ctrl+V</kbd> で別のオブジェクトとして貼り付けます。macOSでは <kbd>Command</kbd> を使います。</li>
+            <li><kbd>Ctrl+Z</kbd> で戻し、<kbd>Ctrl+Y</kbd> または <kbd>Ctrl+Shift+Z</kbd> でやり直します。</li>
+            <li><kbd>Ctrl+A</kbd> で表示中のオブジェクトを全選択し、<kbd>Ctrl+S</kbd> で保存設定を開きます。</li>
+            <li>選択した対象は矢印キーで1pxずつ、<kbd>Shift</kbd> を押すと10pxずつ移動できます。</li>
+            <li>入力欄や文字編集中、IME変換中は、通常の文字削除・コピー・貼り付けを優先します。</li>
+            <li>画像上の文字編集中は <kbd>Enter</kbd> で改行し、<kbd>Ctrl+Enter</kbd>（macOSは <kbd>Command+Enter</kbd>）、<kbd>Esc</kbd> または別の場所へのフォーカス移動で編集を終了します。IME変換中は文字入力を優先します。</li>
+            <li>比較・保存ダイアログは <kbd>Esc</kbd> で閉じられます。</li>
             <li>OSの「視覚効果を減らす」設定に対応しています。</li>
           </ul>
+          <p>未保存の加工がある状態で画像を変更・初期化・再読込み・閉じるときは確認します。保存のダウンロード開始までを保存済みとして扱います。</p>
         </section>
 
         <section class="help-section" id="faq" aria-labelledby="faq-title">
@@ -570,8 +663,8 @@
       </div>
     </div>
 
-    <footer class="appbox-footer">お役立ちアプリBOX / 画像かんたん加工 Version 1.2.2</footer>
+    <footer class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.12.3</footer>
   </main>
-  <script src="../../assets/appbox-help.js?v=2.1.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
 </body>
 </html>
