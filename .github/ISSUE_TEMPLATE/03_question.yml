@@ -1,0 +1,24 @@
+name: 質問・相談する
+description: 使い方の質問や、どこに投稿するか迷う内容もどうぞ。
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        使い方の質問から、ちょっとした相談まで気軽にどうぞ。短い文章でも大丈夫です。
+
+        ※投稿内容と添付画像は公開されます。
+  - type: textarea
+    id: question
+    attributes:
+      label: 聞きたいこと・相談したいこと
+      placeholder: 例：CSV差分で、行の並びが違うファイル同士を比べられますか？
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 補足（任意）
+      description: 使ったアプリや、試した操作などがあれば教えてください。
+    validations:
+      required: false

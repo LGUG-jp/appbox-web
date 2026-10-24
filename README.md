@@ -10,5 +10,11 @@ LGUGのお役立ちアプリBOXを、ブラウザですぐ使える形で公開�
 - 公開対象アプリのみ自動同期
 - 庁内専用機能やサーバ処理が必要なアプリは対象外
 
+## 不具合・ご要望・ご質問
+
+[Issueの投稿画面](https://github.com/LGUG-jp/appbox-web/issues/new/choose)から、不具合やアイデア、使い方の質問をお寄せください。短い説明だけでも大丈夫です。
+
+3つのフォームから選ぶほか、自由形式（Blank issue）でも投稿できます。投稿にはGitHubへのログインが必要です。
+
 > Local Government Underground  
 > 地下世界で生まれた、ちょっと便利なWebツール。
