@@ -1,0 +1,25 @@
+name: 不具合を知らせる
+description: 動かない、表示がおかしいなど。分かる範囲で大丈夫です。
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        短い説明だけでも大丈夫です。補足は空欄のままでも投稿できます。
+
+        ※投稿内容と添付画像は公開されます。
+  - type: textarea
+    id: problem
+    attributes:
+      label: 何が起きましたか？
+      description: 「〇〇ができない」など、気づいたことをそのまま書いてください。
+      placeholder: 例：PDF編集で保存ボタンを押しても、ファイルが保存されません。
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 補足（任意）
+      description: 使ったアプリ、操作手順、画面の画像などがあれば、こちらにどうぞ。
+    validations:
+      required: false

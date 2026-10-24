@@ -1,0 +1,25 @@
+name: アイデア・要望を伝える
+description: こんなことができたら便利、というアイデアをどうぞ。
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ひとことからどうぞ。実現方法が分からなくても大丈夫です。
+
+        ※投稿内容と添付画像は公開されます。
+  - type: textarea
+    id: idea
+    attributes:
+      label: どんなことができるとうれしいですか？
+      description: 思いついたことを自由に書いてください。
+      placeholder: 例：画像編集で、よく使う文字を保存しておきたいです。
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 補足（任意）
+      description: 今困っていることや、使いたい場面などがあれば教えてください。
+    validations:
+      required: false
