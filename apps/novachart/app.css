@@ -1,0 +1,922 @@
+/*
+  ガントチャート作成アプリ（開発名 NovaChart）固有のスタイル v1.7.1
+
+  共通CSS（appbox-tokens/themes/base/chrome/components）の後に読み込みます。
+  - ヘッダー・導入部・ボタン・入力欄の見た目は共通部品（appbox-*）を使い、ここでは
+    ツールバー向けの寸法と、一覧・ガント・ダイアログ等のアプリ固有部分だけを定義します。
+  - 色は下の :root に集約します。共通トークンに同じ意味の色があるものはそれを参照し、
+    ガントの塗り分けなど共通トークンに該当がないものだけをアプリ固有の値として持ちます。
+  - アプリ固有の要素は .nc-scope の中に置き、共通ヘッダー・導入部へ影響させません。
+*/
+
+:root {
+  /* 基本の面・文字・状態（共通トークンへ接続） */
+  --nc-bg: var(--appbox-surface);
+  --nc-border: var(--appbox-dads-neutral-300);
+  --nc-border-light: var(--appbox-dads-neutral-200);
+  /* 入力欄の枠は、部品の境界として背景に対して3:1以上にする（WCAG 1.4.11） */
+  --nc-field-border: var(--appbox-dads-neutral-600);
+  --nc-text: var(--appbox-text);
+  /* 共通の --appbox-muted は白地で4.5:1に届かないため、小さい文字にはDADSの濃い灰色を使う */
+  --nc-text-muted: var(--appbox-dads-neutral-700);
+  --nc-text-faint: var(--appbox-dads-neutral-600);
+  --nc-primary: var(--appbox-primary);
+  --nc-primary-dark: var(--appbox-primary-hover);
+  --nc-primary-bg: var(--appbox-surface-soft);
+  --nc-danger: var(--appbox-dads-error);
+  --nc-danger-bg: var(--appbox-dads-error-bg);
+  --nc-danger-border: var(--appbox-dads-error-border);
+  --nc-success: var(--appbox-dads-success);
+  --nc-warning-bg: var(--appbox-dads-warning-bg);
+  --nc-warning-border: var(--appbox-dads-warning-border);
+  --nc-focus: var(--appbox-primary-hover);
+  --nc-surface-sub: var(--appbox-dads-neutral-50);
+  --nc-head-bg: var(--appbox-dads-neutral-100);
+  --nc-hover-bg: var(--appbox-dads-neutral-100);
+  --nc-active-bg: var(--appbox-dads-neutral-200);
+  --nc-on-dark: var(--appbox-dads-white);
+
+  /* ガント・一覧の塗り分け（アプリ固有。白黒印刷・ハイコントラストでも形と線種で区別できるようにしている） */
+  --nc-major-bar: #1e40af;
+  --nc-minor-bar: #3b82f6;
+  --nc-minor-progress: #1d4ed8;
+  --nc-hatch-bg: #dbeafe;
+  --nc-hatch-line: #60a5fa;
+  --nc-row-major-bg: #eff6ff;
+  --nc-row-major-hover: #dbeafe;
+  --nc-row-hover: #f8fafc;
+  --nc-row-odd: #fafafa;
+  --nc-milestone: #7c3aed;
+  --nc-milestone-label: #4c1d95;
+  --nc-tentative-bg: #dbeafe;
+  --nc-tentative-line: #1d4ed8;
+  --nc-tentative-major-bg: #bfdbfe;
+  --nc-tentative-major-line: #1e3a8a;
+  --nc-tentative-ms-bg: #ede9fe;
+  --nc-tentative-ms-line: #5b21b6;
+  --nc-critical: #dc2626;
+  --nc-baseline: #9ca3af;
+  --nc-plan-orig-bg: #e2e8f0;
+  --nc-plan-orig-line: #64748b;
+  --nc-delay: #ea580c;
+  --nc-today: #dc2626;
+  --nc-weekend-bg: #f1f5f9;
+  --nc-holiday-bg: #fef2f2;
+  --nc-holiday-border: #fecaca;
+  --nc-holiday-text: #b91c1c;
+  --nc-grid-strong: #94a3b8;
+  --nc-grid-soft: #cbd5e1;
+  --nc-header-bucket: #334155;
+  --nc-pred-mark: #475569;
+  --nc-delta-late: #c2410c;
+  --nc-delta-early: #15803d;
+  --nc-slid-flash: #fef08a;
+  --nc-dep-arrow: #94a3b8;
+  --nc-add-hint: #64748b;
+  --nc-create-preview: rgba(37, 99, 235, 0.18);
+  --nc-drag-line: #0f172a;
+  --nc-progress-overlay: rgba(0, 0, 0, 0.28);
+  --nc-splitter-hover: #93c5fd;
+  --nc-tip-bg: #0f172a;
+  --nc-backdrop: rgba(15, 23, 42, 0.45);
+  --nc-shadow-dialog: 0 10px 40px rgba(0, 0, 0, 0.25);
+  --nc-shadow-menu: 0 6px 24px rgba(0, 0, 0, 0.18);
+  --nc-shadow-toast: 0 4px 14px rgba(0, 0, 0, 0.18);
+  --nc-shadow-tip: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --nc-summary-text: #374151;
+  --nc-print-rule: #1f2937;
+  --nc-print-meta: #374151;
+  /* 文字色は白地に対してコントラスト比4.5:1以上（旧 #d97706 は3.19:1 だった） */
+  --nc-ontrack: #15803d;
+  --nc-atrisk: #b45309;
+  --nc-delayed: #dc2626;
+  --nc-unknown: #6b7280;
+  --nc-ontrack-dot: #16a34a;
+  --nc-atrisk-dot: #d97706;
+  --nc-delayed-dot: #dc2626;
+  --nc-unknown-dot: #9ca3af;
+  --nc-delayed-on-tint: #b91c1c;
+  --nc-ontrack-on-tint: #166534;
+  --nc-atrisk-on-tint: #92400e;
+  /* 担当者別の負荷（件数が多いほど濃く。3件以上は文字も白抜き） */
+  --nc-load-1: #dbeafe;
+  --nc-load-2: #93c5fd;
+  --nc-load-3: #b91c1c;
+  --nc-load-today: #1a1a1a;
+  /* バナー（試用版から引き継いだ濃さ。文字は背景に対して7:1以上） */
+  --nc-banner-error-text: #991b1b;
+  --nc-banner-warn-text: #92400e;
+  --nc-banner-info-text: #1e3a8a;
+  --nc-banner-info-border: #bfdbfe;
+  /* トースト */
+  --nc-toast-info: #334155;
+  --nc-toast-warning: #b45309;
+
+  --nc-row-h: 30px;
+  --nc-head-h: 30px;
+}
+
+/* ---------- 画面全体（一覧とガントを画面の高さいっぱいに使う） ----------
+   作業領域は横に長い表とガントを並べるため、共通の appbox-shell の最大幅を使わず全幅にする。
+   PC幅では画面の高さに収め、一覧・ガントの中だけをスクロールさせる。
+   縦が低い画面（拡大表示を含む）では一覧・ガントの最低限の高さを優先し、ページ全体を縦にスクロールさせる。 */
+html {
+  overflow-x: hidden; /* ルート要素側が横スクロールしうるのを防ぐ */
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--appbox-page-bg);
+  color: var(--nc-text);
+}
+
+#app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  /* 中身（一覧・ガントの最低限の高さを含む）が画面より高いときは伸ばし、ページ全体をスクロールさせる */
+  min-height: min-content;
+}
+
+.nc-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.nc-noscript {
+  margin: 0 var(--appbox-space-5) var(--appbox-space-3);
+}
+
+/* ---------- アプリ固有領域の基本（.nc-scope の中だけ） ---------- */
+.nc-scope {
+  font-size: 13px;
+  color: var(--nc-text);
+}
+
+.nc-scope *,
+.nc-scope *::before,
+.nc-scope *::after {
+  box-sizing: border-box;
+}
+
+/* 以下の既定は :where() で詳細度を0にし、app.css 内の個別のクラス指定が勝つようにする。
+   なお app.css は @layer の外にあるため、詳細度0でも共通部品（@layer appbox）より優先される。
+   共通部品の見た目を残したい要素（.appbox-button 等）は :not() で対象から外している */
+:where(.nc-scope) [hidden],
+.nc-scope[hidden] { display: none !important; }
+
+/* 共通ボタンを使わない小さな操作（行の開閉・進捗・行操作・メニュー等）の既定 */
+:where(.nc-scope button:not(.appbox-button)) {
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--nc-border);
+  background: var(--nc-bg);
+  border-radius: 4px;
+  padding: 5px 9px;
+  color: var(--nc-text);
+  line-height: 1.3;
+}
+
+:where(.nc-scope button:not(.appbox-button)):hover { background: var(--nc-hover-bg); }
+:where(.nc-scope button:not(.appbox-button)):active { background: var(--nc-active-bg); }
+:where(.nc-scope button):disabled { cursor: not-allowed; }
+:where(.nc-scope button:not(.appbox-button)):disabled { opacity: .45; }
+.nc-scope button.link {
+  border: none;
+  background: none;
+  color: var(--nc-primary-dark);
+  padding: 0 2px;
+  text-decoration: underline;
+}
+
+:where(.nc-scope) :where(input:not([type=checkbox]):not([type=radio]):not(.appbox-input), select:not(.appbox-select), textarea) {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 5px 7px;
+  border: 1px solid var(--nc-field-border);
+  border-radius: 4px;
+  color: var(--nc-text);
+  background: var(--nc-bg);
+}
+
+:where(.nc-scope) :where(label) { font-size: 12px; color: var(--nc-text-muted); }
+:where(.nc-scope) :where(h2, h3) { margin: 0; }
+:where(.nc-scope) :where(a:not(.appbox-button)) { color: var(--nc-primary-dark); }
+
+/* フォーカスは box-shadow ではなく outline で示す（ハイコントラスト表示でも消えないように）。
+   共通部品のフォーカス（半透明の --appbox-focus-ring）は密な一覧・ツールバーの上で見えにくいため、
+   この画面では共通ボタン・入力欄も含めて不透明の線に上書きしている */
+:where(.nc-scope) :focus-visible {
+  outline: 2px solid var(--nc-focus);
+  outline-offset: 1px;
+}
+
+/* 共通ヘッダーのヘルプ・戻るボタンは共通CSSに専用のフォーカス表示がなく、半透明の薄い線になるため補う */
+.appbox-header .appbox-help-button:focus-visible,
+.appbox-header .appbox-back-button:focus-visible {
+  outline: 2px solid var(--nc-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- ツールバー（2段） ----------
+   操作が多く2段に詰めて並べるため、共通ボタン・入力欄の高さだけをツールバー内で小さくする。 */
+#app-toolbar {
+  background: var(--nc-surface-sub);
+  /* 上端は他のアプリと同じテーマ色の線（index.html の appbox-panel--accent）。ここでは上書きしない */
+  border-bottom: 1px solid var(--nc-border);
+  flex-shrink: 0;
+  padding: 6px var(--appbox-space-5) 4px;
+}
+
+.tb-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 4px;
+  margin-bottom: 3px;
+}
+
+.tb-row .grp {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid var(--nc-border-light);
+}
+
+.tb-row .grp:last-child { border-right: none; }
+.tb-row .grp-right { margin-left: auto; }
+
+.nc-toolbar .appbox-button {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+/* 共通操作アイコン（24px）は、ボタンの高さ32pxに合わせてツールバー内だけ20pxにし、文字との間も詰める
+   （1280px幅でツールバーを2段に収めるため） */
+.nc-toolbar .appbox-button:has(.appbox-icon) { gap: 4px; padding-left: 8px; }
+.nc-toolbar .appbox-icon--action { width: 20px; height: 20px; }
+
+.nc-toolbar .appbox-input,
+.nc-toolbar .appbox-select {
+  width: auto;
+  min-height: 32px;
+  height: 32px;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-color: var(--nc-field-border);
+}
+#project-name-input { width: 240px; max-width: 100%; font-weight: 600; }
+
+/* 消去は取り返しがつかないため、通常のボタンと形をそろえたうえで文字と枠を赤にする */
+.nc-button--danger-outline {
+  color: var(--nc-danger);
+  border-color: var(--nc-danger-border);
+}
+
+.nc-button--danger-outline:hover { background: var(--nc-danger-bg); }
+
+.save-state { font-size: 11px; white-space: nowrap; min-width: 92px; }
+.save-state.dirty { color: var(--nc-atrisk); font-weight: 600; }
+.save-state.clean { color: var(--nc-text-muted); }
+
+/* ---------- バナー ---------- */
+.banner {
+  padding: 6px var(--appbox-space-5);
+  font-size: 12px;
+  border-bottom: 1px solid;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.banner.error { background: var(--nc-danger-bg); color: var(--nc-banner-error-text); border-color: var(--nc-holiday-border); }
+.banner.warn { background: var(--nc-warning-bg); color: var(--nc-banner-warn-text); border-color: var(--nc-warning-border); }
+.banner.info { background: var(--nc-row-major-bg); color: var(--nc-banner-info-text); border-color: var(--nc-banner-info-border); }
+.banner button:not(.appbox-button) { font-size: 11px; padding: 2px 8px; }
+
+/* ---------- 一覧とガントの配置 ---------- */
+#main-layout { flex: 1; display: flex; min-height: 320px; background: var(--nc-bg); }
+#table-panel { width: clamp(420px, 52vw, 860px); flex-shrink: 1; min-width: 0; overflow: auto; background: var(--nc-bg); }
+#splitter {
+  width: 6px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--nc-border);
+  border-left: 1px solid var(--nc-grid-soft);
+  border-right: 1px solid var(--nc-grid-soft);
+  touch-action: none;
+}
+
+#splitter:hover,
+#splitter.dragging,
+#splitter:focus-visible { background: var(--nc-splitter-hover); }
+#gantt-panel { flex: 1; min-width: 240px; overflow: auto; background: var(--nc-bg); position: relative; }
+#gantt-header { position: sticky; top: 0; z-index: 3; background: var(--nc-head-bg); line-height: 0; }
+#gantt-body { line-height: 0; position: relative; }
+#gantt-header svg,
+#gantt-body svg { display: block; }
+#table-spacer,
+#gantt-spacer { height: 0; }
+
+/* ---------- WBSテーブル ---------- */
+table.wbs-table { border-collapse: collapse; width: 100%; min-width: 640px; table-layout: fixed; }
+table.wbs-table col.c-wbs { width: 46px; }
+table.wbs-table col.c-name { width: auto; }
+table.wbs-table col.c-owner { width: 76px; }
+table.wbs-table col.c-start { width: 82px; }
+table.wbs-table col.c-end { width: 82px; }
+table.wbs-table col.c-days { width: 42px; }
+table.wbs-table col.c-progress { width: 58px; }
+table.wbs-table col.c-status { width: 62px; }
+table.wbs-table col.c-ops { width: 62px; }
+table.wbs-table col.c-diff { width: 84px; }
+.pred-mark { margin-left: 4px; font-size: 10px; color: var(--nc-pred-mark); border: 1px solid var(--nc-grid-soft); border-radius: 3px; padding: 0 3px; }
+.delta-late { color: var(--nc-delta-late); font-weight: 600; }
+.delta-early { color: var(--nc-delta-early); }
+details.form-more { border: 1px solid var(--nc-border-light); border-radius: 6px; padding: 6px 10px; margin: 8px 0; }
+details.form-more > summary { cursor: pointer; font-weight: 600; color: var(--nc-summary-text); padding: 2px 0; }
+details.form-more > summary:focus-visible { outline: 2px solid var(--nc-focus); outline-offset: 2px; }
+.chk-inline,
+.nc-inline { display: inline-flex; align-items: center; gap: 4px; }
+thead.table-head th {
+  position: sticky;
+  top: 0;
+  background: var(--nc-head-bg);
+  border-bottom: 1px solid var(--nc-border);
+  border-right: 1px solid var(--nc-border-light);
+  padding: 0 6px;
+  height: var(--nc-head-h);
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--nc-text-muted);
+  z-index: 2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+tbody td {
+  border-bottom: 1px solid var(--nc-border-light);
+  border-right: 1px solid var(--nc-border-light);
+  padding: 0 6px;
+  height: var(--nc-row-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--nc-row-hover); }
+tbody tr:focus-visible { outline: 2px solid var(--nc-focus); outline-offset: -2px; }
+tbody tr.row-major { background: var(--nc-row-major-bg); font-weight: 600; }
+tbody tr.row-major:hover { background: var(--nc-row-major-hover); }
+tbody tr.row-minor td.name-cell { padding-left: 22px; }
+tbody tr.row-just-slid { animation: nc-slid-flash 3s ease-out; }
+@keyframes nc-slid-flash { 0% { background: var(--nc-slid-flash); } 100% { background: transparent; } }
+.nc-scope .toggle-btn {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin-right: 3px;
+  border: none;
+  background: none;
+  color: var(--nc-text-muted);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.nc-scope .toggle-btn:hover { background: var(--nc-row-major-hover); }
+.toggle-placeholder { display: inline-block; width: 21px; }
+.status-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.status-onTrack .status-dot { background: var(--nc-ontrack-dot); }
+.status-onTrack { color: var(--nc-ontrack); }
+.status-atRisk .status-dot { background: var(--nc-atrisk-dot); }
+.status-atRisk { color: var(--nc-atrisk); }
+.status-delayed .status-dot { background: var(--nc-delayed-dot); }
+.status-delayed { color: var(--nc-delayed); }
+.status-unknown .status-dot { background: var(--nc-unknown-dot); }
+.status-unknown { color: var(--nc-unknown); }
+tr.row-major .status-delayed { color: var(--nc-delayed-on-tint); }
+tr.row-major .status-onTrack { color: var(--nc-ontrack-on-tint); }
+tr.row-major .status-atRisk { color: var(--nc-atrisk-on-tint); }
+tr.row-major .status-unknown { color: var(--nc-text-muted); }
+.milestone-mark { color: var(--nc-milestone); margin-left: 3px; }
+.cp-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+  color: var(--nc-on-dark);
+  background: var(--nc-critical);
+  border-radius: 3px;
+  vertical-align: 1px;
+}
+
+.nc-scope .progress-btn {
+  border: 1px solid transparent;
+  background: none;
+  padding: 1px 4px;
+  font-size: 12px;
+  border-radius: 3px;
+  color: var(--nc-text);
+  min-width: 44px;
+  text-align: left;
+}
+
+.nc-scope .progress-btn:hover,
+.nc-scope .progress-btn:focus-visible { border-color: var(--nc-border); background: var(--nc-bg); }
+.progress-btn::after { content: " ▾"; color: var(--nc-text-faint); font-size: 10px; }
+.ops-cell { text-align: right; }
+.nc-scope .ops-cell button { padding: 1px 6px; font-size: 11px; margin-left: 2px; }
+/* v1.5: 一覧の最下段の追加用の行（ガント側の同じ高さの行はドラッグで作業を作る場所） */
+tbody tr.add-row { cursor: default; }
+tbody tr.add-row:hover { background: transparent; }
+tbody tr.add-row td { border-right: none; padding: 0 6px; }
+.nc-scope tr.add-row button { font-size: 11.5px; padding: 2px 8px; margin-right: 6px; }
+.empty-state { padding: 40px 20px; text-align: center; color: var(--nc-text-muted); line-height: 1.8; }
+.nc-nowrap { white-space: nowrap; }
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--appbox-space-2);
+  margin-top: var(--appbox-space-3);
+}
+
+.gantt-empty { padding: 40px 20px; color: var(--nc-text-muted); font-size: 13px; line-height: 1.6; white-space: normal; }
+
+/* ---------- ガント（SVG） ---------- */
+.gantt-row-bg-major { fill: var(--nc-row-major-bg); }
+.gantt-row-bg-odd { fill: var(--nc-row-odd); }
+.gantt-gridline { stroke: var(--nc-border-light); stroke-width: 1; }
+.gantt-weekend { fill: var(--nc-weekend-bg); }
+.gantt-holiday { fill: var(--nc-holiday-bg); }
+.gantt-today-line { stroke: var(--nc-today); stroke-width: 1.5; stroke-dasharray: 4, 3; }
+.gantt-today-label { font-size: 9.5px; fill: var(--nc-today); font-weight: 700; }
+.gantt-bar-major { fill: var(--nc-major-bar); }
+.gantt-bar-major-ext { fill: url(#ghatchPattern); stroke: var(--nc-major-bar); stroke-width: 1; }
+.gantt-bar-minor { fill: var(--nc-minor-bar); }
+.gantt-bar-minor.critical { stroke: var(--nc-critical); stroke-width: 2; }
+.gantt-bar-progress { fill: var(--nc-progress-overlay); pointer-events: none; }
+.gantt-baseline-bar { fill: var(--nc-baseline); pointer-events: none; }
+/* v1.4: 2段書き（上段＝当初計画、下段＝修正後の予定）と、当初より延びた部分 */
+.gantt-plan-orig { fill: var(--nc-plan-orig-bg); stroke: var(--nc-plan-orig-line); stroke-width: 1; pointer-events: none; }
+.gantt-bar-delay { fill: var(--nc-delay); pointer-events: none; }
+.gantt-bar-g.dragging .gantt-bar-delay { display: none; }
+.gantt-milestone-orig { fill: var(--nc-bg); stroke: var(--nc-milestone); stroke-width: 1.5; pointer-events: none; }
+/* v1.5: 日程が目安のタスク。塗りを薄くし、点線の枠で囲む（色に頼らず白黒印刷・ハイコントラストでも区別できるように） */
+.gantt-bar-minor.tentative { fill: var(--nc-tentative-bg); stroke: var(--nc-tentative-line); stroke-width: 1.5; stroke-dasharray: 4, 3; }
+.gantt-bar-major.tentative { fill: var(--nc-tentative-major-bg); stroke: var(--nc-tentative-major-line); stroke-width: 1.5; stroke-dasharray: 4, 3; }
+.gantt-milestone.tentative { fill: var(--nc-tentative-ms-bg); stroke: var(--nc-tentative-ms-line); stroke-width: 1.5; stroke-dasharray: 2, 2; }
+.gantt-bar-major-ext.tentative { stroke: var(--nc-tentative-major-line); stroke-width: 1.5; stroke-dasharray: 4, 3; }
+/* クリティカルパスの赤枠は目安でも残す（点線のまま赤） */
+.gantt-bar-minor.tentative.critical,
+.gantt-milestone.tentative.critical { stroke: var(--nc-critical); stroke-width: 2; }
+.tentative-mark {
+  margin-right: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--nc-tentative-major-line);
+  border: 1px dashed var(--nc-tentative-line);
+  border-radius: 3px;
+  padding: 0 3px;
+}
+
+.gantt-ms-label { font-size: 10.5px; font-weight: 600; fill: var(--nc-milestone-label); pointer-events: none; }
+.gantt-gridline-strong { stroke: var(--nc-grid-strong); stroke-width: 1; }
+.gantt-header-bucket { font-size: 10px; fill: var(--nc-header-bucket); }
+.gantt-milestone { fill: var(--nc-milestone); }
+.gantt-milestone.critical { stroke: var(--nc-critical); stroke-width: 2; }
+.gantt-dep-arrow { stroke: var(--nc-dep-arrow); stroke-width: 1.3; fill: none; pointer-events: none; }
+.gantt-dep-arrow.critical { stroke: var(--nc-critical); stroke-width: 1.6; }
+.gantt-bar-label { font-size: 10px; fill: var(--nc-text); pointer-events: none; }
+.gantt-header-label { font-size: 10px; fill: var(--nc-text-muted); }
+.gantt-header-label.weekend { fill: var(--nc-atrisk); }
+.gantt-header-label.holiday { fill: var(--nc-holiday-text); font-weight: 600; }
+.gantt-header-month { font-size: 11px; fill: var(--nc-text); font-weight: 600; }
+.gantt-hit { fill: transparent; cursor: pointer; }
+.gantt-add-hint { font-size: 10.5px; fill: var(--nc-add-hint); pointer-events: none; }
+.gantt-create-preview { fill: var(--nc-create-preview); stroke: var(--nc-tentative-line); stroke-width: 1.5; stroke-dasharray: 4, 3; pointer-events: none; }
+#gantt-body svg.creating { cursor: crosshair; }
+.gantt-bar-g { cursor: grab; }
+.gantt-bar-g.dragging { cursor: grabbing; opacity: .85; }
+#gantt-body svg.resize-cursor { cursor: ew-resize; }
+.gantt-bar-g.dragging .gantt-bar-minor,
+.gantt-bar-g.dragging .gantt-bar-major { stroke: var(--nc-drag-line); stroke-width: 1.5; stroke-dasharray: 3, 2; }
+/* 日付ヘッダーの面と区切り線、矢印の先、斜線の模様（JSで属性に色を書かず、ここで塗る） */
+.gantt-head-bg { fill: var(--nc-head-bg); }
+.gantt-head-line { stroke: var(--nc-grid-soft); stroke-width: 1; }
+.gantt-head-line-strong { stroke: var(--nc-grid-strong); stroke-width: 1; }
+.gantt-hatch-bg { fill: var(--nc-hatch-bg); }
+.gantt-hatch-line { stroke: var(--nc-hatch-line); stroke-width: 3; }
+.gantt-arrow-head { fill: var(--nc-dep-arrow); }
+.gantt-arrow-head.critical { fill: var(--nc-critical); }
+#drag-tip {
+  position: fixed;
+  z-index: 300;
+  background: var(--nc-tip-bg);
+  color: var(--nc-on-dark);
+  font-size: 11.5px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--nc-shadow-tip);
+}
+
+/* ---------- フッター（凡例・保存の注意・版数） ---------- */
+#footer-bar { flex-shrink: 0; border-top: 1px solid var(--nc-border); background: var(--nc-surface-sub); }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 5px var(--appbox-space-5);
+  font-size: 11px;
+  color: var(--nc-text-muted);
+  align-items: center;
+}
+
+.legend .lg-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend svg { flex-shrink: 0; }
+.legend .lg-note { color: var(--nc-text-faint); }
+/* 凡例の見本（ガント本体と同じ色をクラスで塗る） */
+.lg-fill-major { fill: var(--nc-major-bar); }
+.lg-fill-minor { fill: var(--nc-minor-bar); }
+.lg-fill-milestone { fill: var(--nc-milestone); }
+.lg-fill-baseline { fill: var(--nc-baseline); }
+.lg-fill-delay { fill: var(--nc-delay); }
+.lg-ext { fill: url(#lgHatch); stroke: var(--nc-major-bar); }
+.lg-critical { fill: var(--nc-minor-bar); stroke: var(--nc-critical); stroke-width: 2; }
+.lg-orig { fill: var(--nc-plan-orig-bg); stroke: var(--nc-plan-orig-line); }
+.lg-tentative { fill: var(--nc-tentative-bg); stroke: var(--nc-tentative-line); stroke-width: 1.5; stroke-dasharray: 4, 3; }
+.lg-today { stroke: var(--nc-today); stroke-width: 1.5; stroke-dasharray: 3, 2; }
+.lg-weekend { fill: var(--nc-weekend-bg); stroke: var(--nc-plan-orig-bg); }
+.lg-holiday { fill: var(--nc-holiday-bg); stroke: var(--nc-holiday-border); }
+.nc-footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--appbox-space-4);
+  padding: 4px var(--appbox-space-5) 5px;
+  border-top: 1px solid var(--nc-border-light);
+}
+
+#storage-note { flex: 1 1 32em; margin: 0; font-size: 12px; color: var(--nc-text-muted); line-height: 1.5; }
+#storage-note strong { color: var(--nc-text); }
+/* 共通フッターは本文の下に余白を取る前提のため、画面下端に固定するこの画面では余白を詰める。
+   灰色の帯の上では共通フッターの淡い文字色が4.5:1に届かないため、文字色も濃くする */
+.nc-footer-version { margin: 0 0 0 auto; padding: 0; border-top: none; white-space: nowrap; color: var(--nc-text-muted); }
+
+/* ---------- ダイアログ ---------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--nc-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.dialog {
+  background: var(--nc-bg);
+  border-radius: 8px;
+  box-shadow: var(--nc-shadow-dialog);
+  width: 560px;
+  max-width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+.dialog.wide { width: 960px; }
+.dialog h2 { font-size: 15px; margin-bottom: 12px; color: var(--nc-primary-dark); }
+.dialog h3 { font-size: 13px; margin: 14px 0 6px; color: var(--nc-text); }
+.dialog p,
+.dialog li { font-size: 12.5px; line-height: 1.7; }
+.dialog ul { margin: 4px 0; padding-left: 20px; }
+.dialog .appbox-button { min-height: 36px; padding: 6px 14px; font-size: 13px; }
+.form-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 3px; }
+.form-row > label { font-weight: 600; }
+.form-row .hint,
+.hint { font-size: 11.5px; color: var(--nc-text-muted); font-weight: 400; line-height: 1.5; }
+.form-row-2col { display: flex; gap: 10px; }
+.form-row-2col > .form-row { flex: 1; }
+.form-row-2col + .hint { margin: 0 0 10px; }
+.form-row input[type=text],
+.form-row input[type=date],
+.form-row select,
+.form-row textarea { width: 100%; }
+.form-row textarea { resize: vertical; min-height: 50px; }
+.form-error { color: var(--nc-danger); font-size: 12px; margin-top: 4px; min-height: 16px; white-space: pre-line; }
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--nc-border-light);
+  gap: 8px;
+  flex-wrap: wrap;
+  position: sticky;
+  bottom: -18px; /* .dialog の下余白の分だけ下げ、ダイアログの下端に付ける */
+  padding-bottom: 4px;
+  background: var(--nc-bg);
+}
+
+.form-actions .left,
+.form-actions .right { display: flex; gap: 8px; flex-wrap: wrap; }
+.checkbox-row { flex-direction: row; align-items: center; gap: 6px; }
+.checkbox-row input { width: auto; margin: 0; }
+.checkbox-row label { font-weight: 400; color: var(--nc-text); }
+.pred-box { border: 1px solid var(--nc-border); border-radius: 4px; max-height: 180px; overflow-y: auto; padding: 4px 6px; }
+.pred-group { font-size: 11px; font-weight: 700; color: var(--nc-text-muted); margin: 6px 0 2px; }
+.pred-item { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 1px 0; }
+.pred-item input { margin: 0; }
+.pred-item.disabled { color: var(--nc-text-faint); }
+.pred-item .why { font-size: 10.5px; color: var(--nc-text-faint); }
+.pred-filter { margin-bottom: 4px; }
+.radio-group { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 10px; }
+
+/* ---------- 起動時の入口・テンプレートの選択（v1.7.0） ---------- */
+.start-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+.start-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--nc-border);
+  border-radius: 8px;
+  background: var(--nc-bg);
+}
+.dialog .start-choice h3 { margin: 0; font-size: 14px; }
+.dialog .start-choice p { margin: 0; flex: 1; color: var(--nc-text-muted); }
+.start-choice__actions { display: flex; flex-direction: column; gap: 6px; }
+.start-note { margin-top: 8px; color: var(--nc-danger); font-size: 12.5px; }
+.start-note:empty { display: none; }
+
+.tpl-picker,
+.tpl-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.tpl-picker { margin-bottom: 10px; }
+.tpl-picker > legend { font-weight: 600; padding: 0; margin-bottom: 2px; }
+.tpl-group > legend { font-size: 12px; font-weight: 700; color: var(--nc-text-muted); padding: 0; margin: 8px 0 4px; }
+.tpl-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px;
+}
+.tpl-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--nc-border);
+  border-radius: 6px;
+  background: var(--nc-bg);
+  cursor: pointer;
+}
+.tpl-card:hover { background: var(--nc-hover-bg); }
+/* 選んだカードは枠を太くする（色だけに頼らず、ラジオボタンの印と枠の太さでも分かるようにする） */
+.tpl-card:has(input:checked) { border-color: var(--nc-primary); background: var(--nc-primary-bg); box-shadow: inset 0 0 0 1px var(--nc-primary); }
+.tpl-card input { flex: none; margin: 3px 0 0; }
+.tpl-card__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tpl-card__name { font-size: 13px; font-weight: 700; color: var(--nc-text); }
+.tpl-card__desc { font-size: 11.5px; line-height: 1.5; color: var(--nc-text-muted); }
+.radio-group label { font-weight: 400; color: var(--nc-text); display: flex; gap: 6px; align-items: center; font-size: 12.5px; }
+
+/* ---------- ポップオーバーメニュー ---------- */
+.menu {
+  position: fixed;
+  z-index: 250;
+  background: var(--nc-bg);
+  border: 1px solid var(--nc-border);
+  border-radius: 6px;
+  box-shadow: var(--nc-shadow-menu);
+  padding: 4px;
+  min-width: 150px;
+}
+
+.nc-scope .menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-radius: 4px;
+}
+
+.nc-scope .menu button:hover,
+.nc-scope .menu button:focus-visible { background: var(--nc-row-major-bg); }
+/* 項目の背景色だけでは、ハイコントラスト表示でフォーカス位置が分からなくなるため、枠線も残す */
+.nc-scope .menu button:focus-visible { outline: 2px solid var(--nc-focus); outline-offset: -2px; }
+.nc-scope .menu button.danger { color: var(--nc-danger); }
+.nc-scope .menu button.current { font-weight: 700; }
+.menu hr { border: none; border-top: 1px solid var(--nc-border-light); margin: 4px 0; }
+
+/* ---------- 担当者別の負荷 ---------- */
+.load-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--nc-border-light); }
+table.load-table { border-collapse: collapse; font-size: 11px; }
+table.load-table th,
+table.load-table td { border: 1px solid var(--nc-border-light); padding: 2px 4px; text-align: center; white-space: nowrap; }
+table.load-table th { background: var(--nc-head-bg); position: sticky; top: 0; z-index: 1; }
+table.load-table td.owner { text-align: left; position: sticky; left: 0; background: var(--nc-bg); font-weight: 600; cursor: pointer; }
+table.load-table td.owner:hover { text-decoration: underline; }
+table.load-table td.l1 { background: var(--nc-load-1); }
+table.load-table td.l2 { background: var(--nc-load-2); }
+table.load-table td.l3 { background: var(--nc-load-3); color: var(--nc-on-dark); font-weight: 700; }
+table.load-table td.today,
+table.load-table th.today { outline: 2px solid var(--nc-load-today); outline-offset: -2px; }
+
+/* ---------- トースト ---------- */
+#toast-container { position: fixed; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+.toast {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  box-shadow: var(--nc-shadow-toast);
+  max-width: min(380px, calc(100vw - 32px));
+  color: var(--nc-on-dark);
+  animation: nc-toast-in .18s ease-out;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+@keyframes nc-toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.toast.info { background: var(--nc-toast-info); }
+.toast.success { background: var(--nc-success); }
+.toast.warning { background: var(--nc-toast-warning); }
+.toast.error { background: var(--nc-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  tbody tr.row-just-slid,
+  .toast { animation: none; }
+}
+
+/* ---------- 狭い画面・拡大表示 ----------
+   スマホ幅や200%拡大では、ヘッダー・ツールバーが折り返して縦に伸びる。
+   画面の高さに収めると一覧とガントがほとんど見えなくなるため、ページ全体をスクロールさせ、
+   一覧とガントには一定の高さを確保する。 */
+@media screen and (max-width: 760px), screen and (max-height: 560px) {
+  html,
+  body { overflow: auto; }
+  #app-root { height: auto; min-height: 100vh; }
+  #main-layout { flex: none; height: max(360px, 80vh); }
+  #app-toolbar,
+  .banner,
+  .legend,
+  .nc-footer-row { padding-left: var(--appbox-space-4); padding-right: var(--appbox-space-4); }
+  /* 境界のドラッグで付いた幅（style属性）より、狭い画面の幅を優先する */
+  #table-panel { width: 58vw !important; min-width: 180px; }
+  #splitter { display: none; }
+  .form-row-2col { flex-direction: column; gap: 0; }
+  #gantt-panel { min-width: 120px; }
+  #project-name-input { width: 100%; }
+  .tb-row .grp { border-right: none; padding-right: 0; margin-right: 0; }
+  .tb-row .grp:first-child { flex: 1 1 100%; }
+  .tb-row .grp-right { margin-left: 0; }
+  .nc-footer-version { margin-left: 0; }
+  .save-state { white-space: normal; min-width: 0; }
+}
+
+/* ---------- ハイコントラスト表示（forced-colors） ----------
+   SVGの塗りはシステム色に置き換え、目安は点線、クリティカルパスは太い強調色の枠、
+   遅れて延びた部分と今日の線は強調色で示す（色の違いではなく形と線種で区別する）。 */
+@media (forced-colors: active) {
+  .tpl-card:has(input:checked) { border-color: Highlight; box-shadow: inset 0 0 0 1px Highlight; }
+  #gantt-header svg,
+  #gantt-body svg,
+  .legend svg { forced-color-adjust: none; }
+  .gantt-row-bg-major,
+  .gantt-row-bg-odd,
+  .gantt-weekend,
+  .gantt-holiday,
+  .gantt-head-bg,
+  .gantt-hatch-bg,
+  .lg-weekend,
+  .lg-holiday { fill: Canvas; }
+  .gantt-gridline,
+  .gantt-gridline-strong,
+  .gantt-head-line,
+  .gantt-head-line-strong,
+  .gantt-dep-arrow { stroke: GrayText; }
+  .gantt-arrow-head { fill: GrayText; }
+  .lg-weekend,
+  .lg-holiday { stroke: GrayText; }
+  .gantt-bar-minor,
+  .gantt-bar-major,
+  .gantt-milestone,
+  .lg-fill-minor,
+  .lg-fill-major,
+  .lg-fill-milestone { fill: CanvasText; stroke: none; }
+  .gantt-bar-progress { fill: GrayText; }
+  .gantt-bar-major-ext,
+  .lg-ext { fill: Canvas; stroke: CanvasText; stroke-width: 2; }
+  .gantt-hatch-line { stroke: CanvasText; }
+  .gantt-plan-orig,
+  .gantt-milestone-orig,
+  .lg-orig { fill: Canvas; stroke: CanvasText; }
+  .gantt-bar-delay,
+  .lg-fill-delay { fill: Highlight; }
+  .gantt-bar-minor.tentative,
+  .gantt-bar-major.tentative,
+  .gantt-milestone.tentative,
+  .gantt-bar-major-ext.tentative,
+  .lg-tentative { fill: Canvas; stroke: CanvasText; stroke-width: 1.5; }
+  .gantt-bar-minor.critical,
+  .gantt-milestone.critical,
+  .gantt-bar-minor.tentative.critical,
+  .gantt-milestone.tentative.critical,
+  .lg-critical { stroke: Highlight; stroke-width: 3; }
+  .lg-critical { fill: CanvasText; }
+  .gantt-dep-arrow.critical { stroke: Highlight; }
+  .gantt-arrow-head.critical { fill: Highlight; }
+  .gantt-today-line,
+  .lg-today { stroke: Highlight; }
+  .gantt-today-label { fill: Highlight; }
+  .gantt-bar-label,
+  .gantt-header-label,
+  .gantt-header-label.weekend,
+  .gantt-header-label.holiday,
+  .gantt-header-month,
+  .gantt-header-bucket,
+  .gantt-ms-label,
+  .gantt-add-hint { fill: CanvasText; }
+  .gantt-create-preview { fill: Canvas; stroke: Highlight; }
+  .gantt-bar-g.dragging .gantt-bar-minor,
+  .gantt-bar-g.dragging .gantt-bar-major { stroke: Highlight; }
+  .cp-badge,
+  .status-dot { border: 1px solid CanvasText; }
+}
+
+/* ---------- 印刷 ----------
+   画面だけの要素は appbox-print-hidden、印刷だけの見出しは appbox-print-only（共通クラス）で切り替える。 */
+/* 用紙は印刷ダイアログで選んだクラスを html に付けて切り替える（CSPで <style> の後付けができないため名前付きページを使う） */
+@page nc-a3 { size: A3 landscape; margin: 10mm; }
+@page nc-a4 { size: A4 landscape; margin: 10mm; }
+@media print {
+  html,
+  body { height: auto; overflow: visible; background: var(--nc-bg); }
+  html.nc-print-a3 body { page: nc-a3; }
+  html.nc-print-a4 body { page: nc-a4; }
+  #app-root,
+  .nc-main { display: block; height: auto; }
+  #toast-container,
+  #dialog-root,
+  #menu-root,
+  #drag-tip,
+  .banner { display: none !important; }
+  .gantt-add-hint,
+  .gantt-create-preview { display: none; }
+  #main-layout { display: block; height: auto; }
+  #table-panel { width: 100% !important; overflow: visible; }
+  table.wbs-table { min-width: 0; }
+  #gantt-panel { overflow: visible; width: 100%; break-before: page; }
+  #gantt-header { position: static; }
+  #gantt-panel svg { width: 100% !important; height: auto !important; }
+  thead.table-head th { position: static; }
+  tbody tr { break-inside: avoid; }
+  #print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 2px solid var(--nc-print-rule);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  #print-header h1 { font-size: 16px; margin: 0; }
+  #print-header .meta { font-size: 11px; color: var(--nc-print-meta); }
+  #footer-bar { border-top: none; background: none; break-inside: avoid; margin-top: 8px; }
+  .nc-scope .progress-btn,
+  .nc-scope .progress-btn:hover,
+  .nc-scope .progress-btn:focus-visible { border: none; padding: 0; background: none; }
+  .progress-btn::after { content: ""; }
+  .cp-badge { border: 1px solid var(--nc-critical); }
+}

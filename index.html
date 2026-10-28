@@ -2,174 +2,24 @@
 <html lang="ja" data-appbox-theme="portal">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
 <title>共創アプリBOX</title>
-<link rel="icon" href="./assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-<link rel="icon" href="./assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
-<!-- 共創アプリBOX v2.2.0 -->
+<link rel="icon" href="./assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+<link rel="icon" href="./assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+<!-- 共創アプリBOX v2.3.0 -->
 
-<!-- 共通アセット。以下のインラインCSSより前に読み込むこと。 -->
-<link rel="stylesheet" href="./assets/appbox-tokens.css?v=2.3.0">
-<link rel="stylesheet" href="./assets/appbox-themes.css?v=2.3.0">
-<link rel="stylesheet" href="./assets/appbox-base.css?v=2.3.0">
-<link rel="stylesheet" href="./assets/appbox-chrome.css?v=2.3.0">
+<!-- 共通アセット。ポータル専用CSSより前に読み込むこと。 -->
+<link rel="stylesheet" href="./assets/appbox-tokens.css?v=2.5.0">
+<link rel="stylesheet" href="./assets/appbox-themes.css?v=2.5.0">
+<link rel="stylesheet" href="./assets/appbox-base.css?v=2.5.0">
+<link rel="stylesheet" href="./assets/appbox-chrome.css?v=2.5.0">
 
-<script>
-document.documentElement.classList.add("portal-config-loading");
-window.__appboxConfigFallbackTimer = window.setTimeout(() => {
-  document.documentElement.classList.remove("portal-config-loading");
-}, 4000);
-</script>
+<script src="./assets/portal/config-init.js?v=2.2.1"></script>
 
-<style>
-:root{
-  --bg:#f8f9fa;
-  --surface:#ffffff;
-  --text:#1a1a1a;
-  --muted:#666666;
-  --border:#e5e5e5;
-  --shadow:0 1px 4px rgba(0,0,0,.04);
-  --purple:#eee4fb;--purple2:#7557a6;
-  --orange:#fff0dc;--orange2:#bb7138;
-  --blue:#e3efff;--blue2:#477bbd;
-  --green:#e4f4e8;--green2:#4d8961;
-  --cyan:#e4f6f7;--cyan2:#3f7f86;
-  --red:#fde9ec;--red2:#b84b5d;
-  --yellow:#fff5d8;--yellow2:#9a721b;
-  --color-purple-bg:#f7f2fd;--color-purple-border:#dfd1f5;--color-purple-accent:#6f5aa8;
-  --color-orange-bg:#fff7eb;--color-orange-border:#fcdec0;--color-orange-accent:#c45d00;
-  --color-blue-bg:#f1f7fd;--color-blue-border:#cbe0f7;--color-blue-accent:#0050a0;
-  --color-green-bg:#f1f8f3;--color-green-border:#c8e6d2;--color-green-accent:#007a3d;
-  --color-cyan-bg:#f0f9fa;--color-cyan-border:#c5ecf1;--color-cyan-accent:#237882;
-  --color-red-bg:#fdf2f4;--color-red-border:#f8cad2;--color-red-accent:#c9171e;
-  --color-yellow-bg:#fdfaf0;--color-yellow-border:#f4e4bc;--color-yellow-accent:#876208;
-}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;color:var(--text);background:var(--bg)}
-body{min-height:100vh;background:#f8f9fa}
-button,input{font:inherit}
-
-.shell{width:min(1160px,calc(100% - 32px));margin:0 auto;padding:24px 0 40px}
-.hero-copy{margin:0 0 24px;color:var(--muted);font-size:15px;line-height:1.8}
-
-.toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-.toolbar-copy strong{display:block;font-size:20px;font-weight:700;color:var(--text)}
-.toolbar-copy span{display:block;margin-top:2px;color:var(--muted);font-size:13px}
-
-/* 48px 検索バー */
-.search{width:min(360px,100%);position:relative}
-.search svg{position:absolute;left:14px;top:50%;width:20px;height:20px;transform:translateY(-50%);color:#666666;pointer-events:none}
-.search input{width:100%;height:48px;padding:0 16px 0 44px;border:1.5px solid #d9d9d9;border-radius:8px;font-size:15px;background:#ffffff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.03);transition:border-color .15s ease,box-shadow .15s ease}
-.search input:hover{border-color:#666666}
-.search input:focus{outline:none;border-color:var(--purple2);box-shadow:var(--appbox-focus-ring-double)}
-
-/* アプリグリッド（テスト正規表現に完全合致） */
-.apps-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-
-/* アプリカード */
-.app-card{position:relative;min-height:180px;display:flex;flex-direction:column;overflow:hidden;border-radius:12px;border:1px solid var(--card-border,#e5e5e5);background:var(--card-bg,#ffffff);box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;text-decoration:none;color:inherit;cursor:pointer}
-.app-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--card-accent,var(--purple2))}
-.app-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(47,52,64,0.08);border-color:var(--card-accent,#999999)}
-.app-card:focus-visible{outline:none;box-shadow:var(--appbox-focus-ring-double);border-color:var(--card-accent,var(--purple2))}
-.app-card.is-disabled{cursor:default}
-.app-card.is-disabled:hover{transform:none;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-
-/* テーマ色別（テスト正規表現に完全合致） */
-.app-card[data-color="purple"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-purple-bg) 100%);--card-border:var(--color-purple-border);--card-accent:var(--color-purple-accent);--icon-bg:#ece2fa;--icon-color:#5c388d}
-.app-card[data-color="orange"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-orange-bg) 100%);--card-border:var(--color-orange-border);--card-accent:var(--color-orange-accent);--icon-bg:#faebd7;--icon-color:#c45d00}
-.app-card[data-color="blue"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-blue-bg) 100%);--card-border:var(--color-blue-border);--card-accent:var(--color-blue-accent);--icon-bg:#e1edfc;--icon-color:#0050a0}
-.app-card[data-color="green"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-green-bg) 100%);--card-border:var(--color-green-border);--card-accent:var(--color-green-accent);--icon-bg:#e1f4e7;--icon-color:#007a3d}
-.app-card[data-color="cyan"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-cyan-bg) 100%);--card-border:var(--color-cyan-border);--card-accent:var(--color-cyan-accent);--icon-bg:#daf1f5;--icon-color:#237882}
-.app-card[data-color="red"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-red-bg) 100%);--card-border:var(--color-red-border);--card-accent:var(--color-red-accent);--icon-bg:#fae2e6;--icon-color:#c9171e}
-.app-card[data-color="yellow"]{--card-bg:linear-gradient(175deg,#ffffff 0%,var(--color-yellow-bg) 100%);--card-border:var(--color-yellow-border);--card-accent:var(--color-yellow-accent);--icon-bg:#f7eecf;--icon-color:#876208}
-
-[data-color="purple"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="orange"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="blue"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="green"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="cyan"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="red"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-[data-color="yellow"] .app-icon{background:var(--icon-bg);color:var(--icon-color)}
-
-.card-inner{flex:1;display:flex;flex-direction:column;padding:24px 22px 22px}
-.card-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;position:relative}
-.app-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;flex-shrink:0;border:1px solid rgba(0,0,0,0.06)}
-.app-icon svg{width:26px;height:26px}
-.app-title{margin:0;font-size:20px;font-weight:700;line-height:1.3;color:#1a1a1a}
-.app-title,.app-desc,.maintenance-message,.app-category{overflow-wrap:anywhere}
-.app-content{flex:1;display:flex;flex-direction:column;min-width:0}
-.app-desc{margin:0;color:#4d4d4d;font-size:13.5px;line-height:1.65}
-.app-category{align-self:flex-start;margin:9px 0 0;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.62);color:#68707c;font-size:10px;font-weight:800}
-
-.app-card.search-hidden,.app-card[hidden]{display:none}
-
-/* メンテナンス中表示 */
-.app-card.is-maintenance{cursor:default;background:#fafafa !important;border-color:#e5e5e5 !important}
-.app-card.is-maintenance::before{background:#999999 !important}
-.app-card.is-maintenance:hover{transform:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);border-color:#e5e5e5 !important}
-.app-card.is-maintenance .app-title{color:#666666}
-.app-card.is-maintenance .app-desc{color:#666666}
-.app-card.is-maintenance .app-icon{filter:grayscale(100%);background:#e5e5e5 !important;color:#888888 !important;border-color:#cccccc !important}
-.app-card.is-maintenance .app-icon svg{opacity:0.6}
-.maintenance-description{display:grid;align-items:center;justify-items:center}
-.maintenance-description>.app-desc,.maintenance-description>.maintenance-label{grid-area:1/1}
-.maintenance-description>.app-desc{justify-self:stretch}
-.maintenance-label{position:relative;z-index:1;padding:6px 12px;border:1.5px solid var(--appbox-dads-white);border-radius:4px;background:var(--appbox-dads-neutral-900);color:var(--appbox-dads-white);box-shadow:0 3px 10px rgba(0,0,0,0.32);font-size:11px;font-weight:800;line-height:1;letter-spacing:0.02em;white-space:nowrap;pointer-events:none}
-.maintenance-message{margin:10px 0 0;color:#765b20;font-size:12px;font-weight:700;line-height:1.65}
-
-.config-loading{display:none;margin:0 0 20px;padding:16px 20px;text-align:center;border:1px solid #e5e5e5;border-radius:8px;color:#666666;background:#ffffff;font-size:14px}
-.portal-config-loading .config-loading{display:block}
-.portal-config-loading .apps-grid,.portal-config-loading .qr-trademark{visibility:hidden}
-
-.config-notice{margin:0 0 20px;padding:14px 18px;border:1px solid #eedda8;border-left:5px solid #d97706;border-radius:8px;background:#fffdf5;color:#78350f;font-size:13.5px;line-height:1.6}
-.config-notice[hidden]{display:none}
-
-.empty-search{display:none;padding:48px 24px;text-align:center;background:#ffffff;border:2px dashed #d9d9d9;border-radius:12px;color:#666666;margin:20px 0}
-.empty-search.active{display:block}
-
-.bottom-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:36px}
-.info-panel{padding:22px 24px;border-radius:12px;border:1px solid #e5e5e5;background:#ffffff;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
-.info-panel h2{margin:0 0 10px;font-size:16px;font-weight:700}
-.info-list{margin:0;padding-left:20px;color:#4d4d4d;font-size:13px;line-height:1.7}
-.info-list li+li{margin-top:6px}
-.info-panel p{margin:0;color:#4d4d4d;font-size:13px;line-height:1.7}
-.info-panel strong{color:#1a1a1a}
-.info-panel .qr-trademark{margin-top:10px;font-size:12px;color:#666666}
-.qr-trademark[hidden]{display:none}
-
-footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#666666;font-size:12px;text-align:center}
-
-@media(max-width:900px){
-  .apps-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-
-@media(max-width:860px){
-  .hero{grid-template-columns:1fr;gap:16px}
-}
-
-@media(max-width:700px){
-  .apps-grid{grid-template-columns:1fr}
-}
-
-@media(max-width:620px){
-  .shell{width:min(100% - 20px,560px);padding-top:20px}
-  .toolbar{align-items:stretch;flex-direction:column}
-  .search{width:100%}
-  .card-inner{padding:20px 18px 16px}
-  .app-icon{width:44px;height:44px;border-radius:10px}
-  .app-title{font-size:18px}
-  footer{text-align:center}
-}
-
-@media(forced-colors:active){
-  .search input:focus,.app-card:focus-visible{outline:2px solid CanvasText;outline-offset:2px;box-shadow:none}
-}
-
-@media(prefers-reduced-motion:reduce){
-  *{transition:none!important;scroll-behavior:auto!important}
-}
-</style>
+<link rel="stylesheet" href="./assets/portal/portal.css?v=2.2.1">
 </head>
 
 <body>
@@ -178,8 +28,8 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
   <div class="appbox-header__inner">
     <a class="appbox-header__brand" href="./" aria-label="共創アプリBOXのホームへ">
       <span class="appbox-header__brand-image" aria-hidden="true">
-        <img class="appbox-header__brand-wordmark" src="./assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-        <img class="appbox-header__brand-mark" src="./assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+        <img class="appbox-header__brand-wordmark" src="./assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+        <img class="appbox-header__brand-mark" src="./assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
       </span>
       <h1 class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</h1>
     </a>
@@ -302,7 +152,7 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
     </div>
   </a>
 
-  <a class="app-card" href="./apps/pdfeditor/" data-app-id="pdfeditor" data-color="red" data-keywords="pdf 編集 結合 回転 並べ替え コメント テキスト 四角 枠 矢印 ページ 番号 連番 画像 PNG JPEG 貼り付け 手書き ペン フリーハンド 消しゴム" aria-label="PDFかんたん編集を開く">
+  <a class="app-card" href="./apps/pdfeditor/" data-app-id="pdfeditor" data-color="red" data-keywords="pdf 編集 結合 回転 並べ替え コメント テキスト 四角 枠 矢印 ページ 番号 連番 画像 PNG JPEG 貼り付け 手書き ペン フリーハンド 消しゴム 墨消し マスキング 黒塗り 白塗り" aria-label="PDFかんたん編集を開く">
     <div class="card-inner">
       <div class="card-head">
         <div class="app-icon" aria-hidden="true">
@@ -316,12 +166,12 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
         <h2 class="app-title">PDFかんたん編集</h2>
       </div>
       <div class="app-content">
-        <p class="app-desc">PDFのページをまとめたり並べ替えたり、手書き・画像・スタンプ・ページ番号・透かしなどを加えたいときに。</p>
+        <p class="app-desc">PDFのページをまとめたり並べ替えたり、墨消しや手書き・画像・スタンプ・ページ番号・透かしを加えたいときに。</p>
       </div>
     </div>
   </a>
 
-  <a class="app-card" href="./apps/imageedit/" data-app-id="imageedit" data-color="yellow" data-keywords="画像 加工 編集 トリミング 切り抜き リサイズ 圧縮 容量 jpeg jpg png webp 変換 モザイク 黒塗り 回転 反転 exif 注釈 合成 レイヤー ズーム 貼り付け 複数選択" aria-label="画像かんたん加工を開く">
+  <a class="app-card" href="./apps/imageedit/" data-app-id="imageedit" data-color="yellow" data-keywords="作業ファイル 編集再開 画像 加工 編集 トリミング 切り抜き リサイズ 圧縮 容量 jpeg jpg png webp 変換 モザイク 黒塗り 回転 反転 exif 注釈 合成 レイヤー ズーム 貼り付け 複数選択" aria-label="画像かんたん加工を開く">
     <div class="card-inner">
       <div class="card-head">
         <div class="app-icon" aria-hidden="true">
@@ -335,7 +185,7 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
         <h2 class="app-title">画像かんたん加工</h2>
       </div>
       <div class="app-content">
-        <p class="app-desc">画像の切り抜きやモザイク、文字・図形・手書き・スタンプの追加をサッと済ませたいときに。</p>
+        <p class="app-desc">画像の切り抜きやモザイク、文字・図形・手書き・スタンプの追加をサッと済ませたいときに。作業の保存・再開にも対応。</p>
       </div>
     </div>
   </a>
@@ -369,7 +219,7 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
         <h2 class="app-title">相続関係図（ジェノグラム）作成ツール</h2>
       </div>
       <div class="app-content">
-        <p class="app-desc">相続人や親族の関係を整理して、相続関係図を作りたいときに。</p>
+        <p class="app-desc">人物や親族の関係を図上で作成し、詳細モードで相続相談に必要な情報も整理したいときに。</p>
       </div>
     </div>
   </a>
@@ -410,6 +260,53 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
     </div>
   </a>
 
+  <a class="app-card" href="./apps/videoedit/" data-app-id="videoedit" data-color="red" data-keywords="動画 video mp4 トリム トリミング クロップ 切り出し 編集 BGM ナレーション 音声 試用" aria-label="動画かんたん編集を開く">
+    <div class="card-inner">
+      <div class="card-head">
+        <div class="app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <path d="m10 9 5 3-5 3z"/>
+          </svg>
+        </div>
+        <h2 class="app-title">動画かんたん編集</h2>
+      </div><div class="app-content">
+        <p class="app-desc">動画の切り出しや画面のトリミング、BGM・ナレーションの追加に。試用版・HTTPS等が必要です。</p>
+      </div>
+    </div>
+  <a class="app-card" href="./apps/novachart/" data-app-id="novachart" data-color="blue" data-keywords="ガントチャート ガント 工程表 工程 wbs スケジュール 進捗 進捗管理 日程 計画 段取り プロジェクト 作業 テンプレート イベント 広報 契約 工事 教育委員会 excel pdf novachart" aria-label="ガントチャート作成アプリを開く">
+    <div class="card-inner">
+      <div class="card-head">
+        <div class="app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M4 4v16h16"/>
+            <path d="M7 8h6"/>
+            <path d="M10 12h7"/>
+            <path d="M8 16h5"/>
+          </svg>
+        </div>
+        <h2 class="app-title">ガントチャート作成アプリ</h2>
+      </div>
+      <div class="app-content">
+        <p class="app-desc">作業の段取りと日程を工程表（ガントチャート）にまとめ、Excel・PDFで共有したいときに。</p>
+      </div>
+    </div>
+  </a>
+
+  <a class="app-card" href="./apps/audioedit/" data-app-id="audioedit" data-color="cyan" data-keywords="音声 録音 会議 研修 トリム トリミング 切り出し 分割 試聴 MP3 M4A WAV audioedit" aria-label="音声かんたん編集を開く">
+    <div class="card-inner">
+      <div class="card-head">
+        <div class="app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 10v4m4-8v12m5-16v20m5-16v12m4-8v4"/></svg>
+        </div>
+        <h2 class="app-title">音声かんたん編集</h2>
+      </div>
+      <div class="app-content">
+        <p class="app-desc">録音の必要な範囲を切り出し、聴いて保存したいときに。一定時間ごとの分割にも対応（試用版）。</p>
+      </div>
+    </div>
+  </a>
+
 </section>
 
 <div class="empty-search" id="emptySearch" role="status" aria-live="polite">
@@ -428,299 +325,12 @@ footer{margin-top:24px;padding:20px 3px 0;border-top:1px solid #e5e5e5;color:#66
 </section>
 
 <footer class="appbox-footer">
-  共創アプリBOX v2.2.0
+  共創アプリBOX v2.3.0
 </footer>
 
 </main>
 
-<script>
-(() => {
-  "use strict";
-
-  const input = document.getElementById("appSearch");
-  const grid = document.getElementById("appsGrid");
-  const empty = document.getElementById("emptySearch");
-  const notice = document.getElementById("configNotice");
-  const qrTrademark = document.getElementById("qrTrademark");
-  const standardCards = new Map(
-    Array.from(grid.querySelectorAll(".app-card[data-app-id]"))
-      .map((card) => [card.dataset.appId, card])
-  );
-  const allowedStatuses = new Set(["available", "maintenance", "hidden"]);
-  const additionalColors = ["cyan", "orange", "blue", "purple", "green", "red"];
-  const defaultMaintenanceMessage = "現在、メンテナンス中のため利用できません。";
-
-  class ConfigError extends Error {}
-
-  function isPlainObject(value) {
-    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-  }
-
-  function optionalString(value, fieldName) {
-    if (value === undefined) return "";
-    if (typeof value !== "string") {
-      throw new ConfigError(`${fieldName} must be a string`);
-    }
-    return value.trim();
-  }
-
-  function requiredString(value, fieldName) {
-    const result = optionalString(value, fieldName);
-    if (!result) throw new ConfigError(`${fieldName} is required`);
-    return result;
-  }
-
-  function validateStatus(value) {
-    const status = value === undefined ? "available" : value;
-    if (typeof status !== "string" || !allowedStatuses.has(status)) {
-      throw new ConfigError(`unsupported status: ${String(status)}`);
-    }
-    return status;
-  }
-
-  function validatePath(value) {
-    const path = requiredString(value, "path");
-    if (
-      /[\\\u0000-\u001f\u007f]/.test(path) ||
-      /^[a-zA-Z][a-zA-Z\d+.-]*:/.test(path) ||
-      path.startsWith("//")
-    ) {
-      throw new ConfigError("path must be a same-site relative path");
-    }
-
-    let resolved;
-    try {
-      resolved = new URL(path, document.baseURI);
-    } catch {
-      throw new ConfigError("path is not a valid URL path");
-    }
-    if (resolved.origin !== window.location.origin) {
-      throw new ConfigError("path must not point to another origin");
-    }
-    return path;
-  }
-
-  function validateConfig(rawConfig) {
-    if (!isPlainObject(rawConfig)) {
-      throw new ConfigError("config root must be an object");
-    }
-    if (rawConfig.schemaVersion !== 1) {
-      throw new ConfigError("schemaVersion must be 1");
-    }
-    if (rawConfig.apps !== undefined && !isPlainObject(rawConfig.apps)) {
-      throw new ConfigError("apps must be an object");
-    }
-    if (rawConfig.additionalApps !== undefined && !Array.isArray(rawConfig.additionalApps)) {
-      throw new ConfigError("additionalApps must be an array");
-    }
-    return {
-      apps: rawConfig.apps || {},
-      additionalApps: rawConfig.additionalApps || []
-    };
-  }
-
-  function setNotice(message) {
-    notice.textContent = message;
-    notice.hidden = false;
-  }
-
-  function markMaintenance(card, message) {
-    const title = card.querySelector(".app-title")?.textContent?.trim() || "このアプリ";
-    card.removeAttribute("href");
-    card.classList.add("is-maintenance");
-    card.setAttribute("aria-disabled", "true");
-    card.setAttribute("aria-label", `${title}はメンテナンス中です`);
-
-    const description = card.querySelector(".app-desc");
-    if (description && !description.closest(".maintenance-description")) {
-      const descriptionLayer = document.createElement("div");
-      descriptionLayer.className = "maintenance-description";
-      description.before(descriptionLayer);
-      descriptionLayer.appendChild(description);
-
-      const label = document.createElement("span");
-      label.className = "maintenance-label";
-      label.setAttribute("aria-hidden", "true");
-      label.textContent = "メンテナンス中";
-      descriptionLayer.appendChild(label);
-    }
-
-    let messageElement = card.querySelector(".maintenance-message");
-    if (!messageElement) {
-      messageElement = document.createElement("p");
-      messageElement.className = "maintenance-message";
-      card.querySelector(".app-content")?.appendChild(messageElement);
-    }
-    messageElement.textContent = message || defaultMaintenanceMessage;
-  }
-
-  function applyStatus(card, status, message) {
-    if (status === "hidden") {
-      card.hidden = true;
-    } else if (status === "maintenance") {
-      markMaintenance(card, message);
-    }
-  }
-
-  function createAdditionalCard(app, index) {
-    const card = document.createElement("a");
-    card.className = "app-card";
-    card.href = app.path;
-    card.dataset.appId = app.id;
-    card.dataset.color = additionalColors[index % additionalColors.length];
-    card.dataset.keywords = app.category;
-    card.setAttribute("aria-label", `${app.name}を開く`);
-
-    const inner = document.createElement("div");
-    inner.className = "card-inner";
-    const head = document.createElement("div");
-    head.className = "card-head";
-    const icon = document.createElement("div");
-    icon.className = "app-icon";
-    icon.setAttribute("aria-hidden", "true");
-    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 7v10M7 12h10"/></svg>';
-    const title = document.createElement("h2");
-    title.className = "app-title";
-    title.textContent = app.name;
-    head.append(icon, title);
-
-    const content = document.createElement("div");
-    content.className = "app-content";
-    const description = document.createElement("p");
-    description.className = "app-desc";
-    description.textContent = app.description || "追加アプリです。";
-    content.append(description);
-
-    if (app.category) {
-      const category = document.createElement("span");
-      category.className = "app-category";
-      category.textContent = app.category;
-      content.appendChild(category);
-    }
-    inner.append(head, content);
-    card.appendChild(inner);
-    applyStatus(card, app.status, app.message);
-    return card;
-  }
-
-  function applyConfig(rawConfig) {
-    const config = validateConfig(rawConfig);
-    const usedIds = new Set(standardCards.keys());
-    const additionalApps = [];
-    let hasItemErrors = false;
-
-    Object.entries(config.apps).forEach(([id, appConfig]) => {
-      try {
-        if (!standardCards.has(id)) throw new ConfigError("unknown standard app id");
-        if (!isPlainObject(appConfig)) throw new ConfigError("app setting must be an object");
-        applyStatus(
-          standardCards.get(id),
-          validateStatus(appConfig.status),
-          optionalString(appConfig.message, "message")
-        );
-      } catch (error) {
-        hasItemErrors = true;
-        console.warn(`[portal-config] apps.${id}: ${error.message}`);
-      }
-    });
-
-    config.additionalApps.forEach((item, configIndex) => {
-      try {
-        if (!isPlainObject(item)) throw new ConfigError("app definition must be an object");
-        const app = {
-          id: requiredString(item.id, "id"),
-          name: requiredString(item.name, "name"),
-          path: validatePath(item.path),
-          description: optionalString(item.description, "description"),
-          status: validateStatus(item.status),
-          message: optionalString(item.message, "message"),
-          category: optionalString(item.category, "category"),
-          order: item.order,
-          configIndex
-        };
-        if (usedIds.has(app.id)) throw new ConfigError("duplicate app id");
-        if (app.order !== undefined && !Number.isFinite(app.order)) {
-          throw new ConfigError("order must be a finite number");
-        }
-        usedIds.add(app.id);
-        additionalApps.push(app);
-      } catch (error) {
-        hasItemErrors = true;
-        console.warn(`[portal-config] additionalApps[${configIndex}]: ${error.message}`);
-      }
-    });
-
-    additionalApps.sort((left, right) => {
-      const leftOrder = left.order === undefined ? Number.POSITIVE_INFINITY : left.order;
-      const rightOrder = right.order === undefined ? Number.POSITIVE_INFINITY : right.order;
-      return leftOrder - rightOrder || left.configIndex - right.configIndex;
-    });
-    additionalApps.forEach((app, index) => grid.appendChild(createAdditionalCard(app, index)));
-
-    if (hasItemErrors) {
-      setNotice("一部の設定を適用できなかったため、有効な設定だけを反映しています。");
-    }
-  }
-
-  function normalizeText(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFKC")
-      .replace(/\s+/g, "");
-  }
-
-  function filterApps() {
-    const keyword = normalizeText(input.value);
-    let visibleCount = 0;
-
-    grid.querySelectorAll(".app-card").forEach((card) => {
-      const searchableText = normalizeText(
-        card.textContent + " " + (card.dataset.keywords || "")
-      );
-
-      const matches = !keyword || searchableText.includes(keyword);
-
-      card.classList.toggle("search-hidden", !matches);
-
-      if (!card.hidden && matches) {
-        visibleCount++;
-      }
-    });
-
-    empty.classList.toggle("active", visibleCount === 0);
-  }
-
-  input.addEventListener("input", filterApps);
-
-  async function loadConfig() {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3000);
-    try {
-      const response = await fetch("./portal-config.json", {
-        cache: "no-cache",
-        headers: { Accept: "application/json" },
-        signal: controller.signal
-      });
-      if (response.status === 404) return;
-      if (!response.ok) throw new ConfigError(`HTTP ${response.status}`);
-      applyConfig(await response.json());
-    } catch (error) {
-      console.error("[portal-config] 設定を読み込めませんでした。", error);
-      setNotice("設定を読み込めなかったため、同梱構成で表示しています。");
-    } finally {
-      window.clearTimeout(timeout);
-      window.clearTimeout(window.__appboxConfigFallbackTimer);
-      // 設定によるhiddenだけに連動し、検索によるsearch-hiddenとは切り離す。
-      const qrCard = standardCards.get("qrcode");
-      qrTrademark.hidden = !qrCard || qrCard.hidden;
-      document.documentElement.classList.remove("portal-config-loading");
-      filterApps();
-    }
-  }
-
-  loadConfig();
-})();
-</script>
+<script src="./assets/portal/portal.js?v=2.2.1"></script>
 
 </body>
 </html>

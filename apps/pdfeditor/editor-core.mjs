@@ -42,7 +42,11 @@ export function translate(a, dx, dy) {
   return a;
 }
 export function rotateAnnotation(a, size, delta) {
-  if (a.type === "image") a.rotation = ((a.rotation || 0) + delta + 360) % 360;
+  if (a.type === "image" || (a.type === "text" && !a.watermark)) {
+    const rotation = ((a.rotation || 0) + delta + 360) % 360;
+    if (a.type === "text" && rotation === 0) delete a.rotation;
+    else a.rotation = rotation;
+  }
   const point = (x, y) => (delta > 0 ? { x: size.height - y, y: x } : { x: y, y: size.width - x });
   if (a.type === "ink") {
     a.points = a.points.map(p => point(p.x, p.y));

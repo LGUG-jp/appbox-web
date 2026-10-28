@@ -2,21 +2,23 @@
 <html lang="ja" data-appbox-theme="purple">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
   <title>QRコード作成 ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
 
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=2.5.0">
 </head>
 
 <body class="appbox-help-theme-background">
@@ -24,8 +26,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -52,7 +54,7 @@
         </div>
         <p class="appbox-help-header-desc">用途を選び、QRコードを作成して保存する方法を説明します。色や画像は必要な場合だけ調整できます。</p>
       </div>
-      <span class="version-badge">Version 1.4.5</span>
+      <span class="version-badge">Version 1.4.6</span>
 
       <div class="help-callout help-callout-warning">
         <strong>保存後は、実際に使う機器で読み取り確認をしてください。</strong>
@@ -71,6 +73,7 @@
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#purposes">用途の選び方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#save">保存形式の選び方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#customize">詳細カスタマイズ</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#edit">作り直し・初期化</a></li>
             </ul>
           </li>
           <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
@@ -88,11 +91,12 @@
           <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
           <ol class="help-steps">
             <li><strong>用途を選ぶ</strong><p class="appbox-help-step-desc">「URL」「メール」「電話」「テキスト」から1つ選びます。</p></li>
-            <li><strong>内容を入力する</strong><p class="appbox-help-step-desc">「QRコードにしたい内容」へ入力します。</p></li>
+            <li><strong>内容を入力する</strong><p class="appbox-help-step-desc">「QRコードにしたい内容」へ入力します。Webページを案内する場合は「URL」を選び、https:// または http:// から始まるURLを貼り付けます。</p></li>
             <li><strong>QRコードを作成する</strong><p class="appbox-help-step-desc">「QRコードを作成」を押し、右側のプレビューを確認します。</p></li>
-            <li><strong>PNGまたはSVGで保存する</strong><p class="appbox-help-step-desc">必要に応じて保存ファイル名を変更します。</p></li>
-            <li><strong>読み取りを確認する</strong><p class="appbox-help-step-desc">実際に使うスマートフォンや読取機器で、保存したQRコードを読み取ります。</p></li>
+            <li><strong>PNGまたはSVGで保存する</strong><p class="appbox-help-step-desc">プレビューの下で「保存ファイル名」を確認し、「PNGで保存」または「SVGで保存」を押します。迷った場合はPNGを選んでください。</p></li>
+            <li><strong>読み取りを確認する</strong><p class="appbox-help-step-desc">文書に貼り付けたり印刷したりした後も、実際に使うスマートフォンや読取機器で読み取り、内容が正しいことを確認します。</p></li>
           </ol>
+          <p>入力は最大700文字です。700文字以内でも、文字の種類や誤り訂正レベルによっては作成できません。長い文章は、文章を掲載したページのURLをQRコードにする方法も検討してください。</p>
         </section>
         <section class="help-section" id="advanced" aria-labelledby="advanced-title">
           <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
@@ -105,15 +109,15 @@
               <tbody>
                 <tr>
                   <th scope="row">URL</th>
-                  <td>URLとして形式を確認します。http:// または https:// で始まっているか、空白・改行・全角記号などを確認します。</td>
+                  <td>Webページを案内するときに選びます。例：<code>https://example.jp/</code>。URLは https:// または http:// から入力し、余分な空白・改行を取り除いてください。全角のURL記号や、ユーザー名・パスワードを含むURLは使えません。庁内のURLも使えますが、接続先を開けるかどうかは確認しません。</td>
                 </tr>
                 <tr>
                   <th scope="row">メール</th>
-                  <td>メールアドレスを入力します。mailto: がない場合は自動で付けてQRコード化します。</td>
+                  <td>メールの宛先を案内するときに選び、<code>contact@example.jp</code>のように入力します。メール用の目印 <code>mailto:</code> は自動で付きます。件名を付けた <code>mailto:contact@example.jp?subject=Inquiry</code> のような形式も使えます。</td>
                 </tr>
                 <tr>
                   <th scope="row">電話</th>
-                  <td>電話番号を入力します。tel: がない場合は自動で付けてQRコード化します。</td>
+                  <td>電話番号を案内するときに選びます。数字を1文字以上含め、半角の数字と +・()・- などで入力してください。電話用の目印 <code>tel:</code> は自動で付きます。読み取った後の動作は、端末や読取アプリによって異なります。</td>
                 </tr>
                 <tr>
                   <th scope="row">テキスト</th>
@@ -142,11 +146,11 @@
           <dl class="help-definition-list">
             <div>
               <dt>PNG最大画像サイズ</dt>
-              <dd>最大256px、384px、512px、768pxから選べます。初期値は最大768pxです。</dd>
+              <dd>保存するPNGの縦横の上限を、256px、384px、512px、768pxから選べます。初期値は最大768pxです。実際の画像サイズは、QRコードのマス目が崩れないよう上限以内に調整されます。</dd>
             </div>
             <div>
               <dt>誤り訂正レベル</dt>
-              <dd>初期値はHです。通常はHのままで利用してください。内容が長くHで格納できない場合だけQまたはMを検討してください。</dd>
+              <dd>汚れや一部の欠けがあっても読み取れるようにするための設定です。通常は初期値のHを使います。内容が長くHで作成できない場合は、内容を短くするかQ・Mを検討してください。HからQ・Mへ下げると、汚れや欠けに対する強さも下がります。</dd>
             </div>
             <div>
               <dt>QRコード色・背景色</dt>
@@ -154,33 +158,44 @@
             </div>
             <div>
               <dt>背景透明</dt>
-              <dd>トグルでON / OFFします。既にQRコードが表示されている場合はプレビューへ即時反映され、PNG・SVG保存にも反映されます。透明部分はプレビュー上で市松模様として確認できます。</dd>
+              <dd>「背景透明」を押すたびにON / OFFが切り替わります。既にQRコードが表示されている場合はプレビューへ即時反映され、PNG・SVG保存にも反映されます。透明部分はプレビュー上で市松模様として確認できます。文書や印刷物の背景色によって読み取りやすさが変わるため、貼り付け後にも確認してください。</dd>
             </div>
             <div>
               <dt>中央画像</dt>
-              <dd>PNG、JPEG、WebPの画像（5MiB以下・各辺4,096px以下・1,600万画素以下）を中央へ追加できます。展開前に実体ヘッダーを確認し、不正な画像は読み込みません。JPEG・PNGの回転情報に対応し、アニメーションWebPも静止PNGとして取り込みます。中央画像を使う場合は誤り訂正レベルがHに固定されます。</dd>
+              <dd>「中央に画像を入れる」にチェックし、PNG、JPEG、WebPの画像（5MiB以下・各辺4,096px以下・1,600万画素以下）を選びます。「中央エリアの大きさ」で画像を置く範囲を、「画像倍率」でその中の画像の大きさを調整します。動くWebPも静止画像として取り込みます。中央画像を使う場合は誤り訂正レベルがHに固定されます。</dd>
             </div>
           </dl>
+          <h3 class="appbox-help-subheading" id="edit">作り直し・初期化</h3>
+          <ul>
+            <li>内容・用途・誤り訂正レベルを変更した後は、「QRコードを作成」をもう一度押してください。作り直すまでは保存できません。</li>
+            <li>画像サイズ・色・背景透明などの見た目の変更は、作成済みのプレビューへ反映されます。変更後に保存し直してください。</li>
+            <li>「すべて初期化」は、入力内容・中央画像・設定・プレビューを初期状態へ戻します。初期化前に必要なQRコードを保存してください。</li>
+            <li>入力欄で <kbd>Ctrl</kbd> + <kbd>Enter</kbd> を押すことでも作成できます。</li>
+          </ul>
         </section>
         <section class="help-section" id="faq" aria-labelledby="faq-title">
           <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
           <details class="appbox-help-faq-item"><summary>普通に使う場合、詳細カスタマイズは触る必要がありますか？</summary><div class="appbox-help-faq-answer">ありません。通常は初期設定のまま利用できます。</div></details>
           <details class="appbox-help-faq-item"><summary>背景透明にしたのにQRコードが見えます</summary><div class="appbox-help-faq-answer">透明部分を分かりやすくするため、プレビューでは市松模様の上に表示します。保存したPNG・SVGでは背景が透明になります。</div></details>
           <details class="appbox-help-faq-item"><summary>PNGとSVGのどちらを選べばよいですか？</summary><div class="appbox-help-faq-answer">迷った場合はPNGがおすすめです。大きく拡大して印刷する場合などはSVGが向いています。</div></details>
+          <details class="appbox-help-faq-item"><summary>QRコードを作成できません。</summary><div class="appbox-help-faq-answer">入力欄の近くに出るメッセージを確認してください。URL・メール・電話では、先頭や末尾の空白・改行を削除します。長すぎる内容は短くしてください。テキスト用途では空白や改行も含まれますが、空白だけの入力では作成できません。</div></details>
+          <details class="appbox-help-faq-item"><summary>保存ボタンが押せません。</summary><div class="appbox-help-faq-answer">最初に「QRコードを作成」を押してください。作成後に内容・用途・誤り訂正レベルを変えた場合も、再作成が必要です。画像や保存の処理中は、完了してから操作してください。</div></details>
+          <details class="appbox-help-faq-item"><summary>読み取れますが、案内先のページが開きません。</summary><div class="appbox-help-faq-answer">このアプリはURLの書き方を確認しますが、接続先への通信確認は行いません。URLの入力間違いと、読み取った端末から接続先へアクセスできるかを確認してください。庁内限定のページは、庁外のスマートフォン等から開けない場合があります。</div></details>
         </section>
         <section class="help-section" id="other" aria-labelledby="other-title">
           <h2 class="appbox-help-h2" id="other-title">その他</h2>
           <h3 class="appbox-help-subheading" id="privacy">プライバシー</h3>
           <p>入力内容と中央画像はブラウザ内で処理し、QRコード作成のために外部APIや外部クラウドへ送信しません。</p>
           <p>保存したQRコードには入力した情報が含まれます。個人情報、非公開URL、認証情報、パスワードなどの取扱いには注意してください。</p>
+          <p>JavaScriptが有効なMicrosoft Edgeで利用してください。アプリには入力内容や設定を保存して後から再開する機能はありません。必要なQRコードは、画面を閉じる前にPNGまたはSVGで保存してください。</p>
         </section>
         <div class="help-footer-actions">
           <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
         </div>
       </div>
     </div>
-    <footer class="appbox-footer">共創アプリBOX / QRコード作成 Version 1.4.5</footer>
+    <footer class="appbox-footer">共創アプリBOX / QRコード作成 Version 1.4.6</footer>
   </main>
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

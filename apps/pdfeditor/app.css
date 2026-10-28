@@ -908,6 +908,7 @@ body.pdf-editor-active .status-bar {
 }
 
 .annotation-layer.tool-rect,
+.annotation-layer.tool-redact,
 .annotation-layer.tool-arrow {
   cursor: crosshair;
 }
@@ -932,6 +933,7 @@ body.pdf-editor-active .status-bar {
 }
 
 .ann-text {
+  transform-origin: top left;
   overflow: hidden;
   padding: 3px 4px;
   line-height: 1.32;
@@ -939,6 +941,15 @@ body.pdf-editor-active .status-bar {
   word-break: break-word;
   cursor: move;
 }
+
+/* Keep the editable box at its original width, and the resize handle at the
+   displayed bottom-right corner for every page rotation. */
+.ann-text[data-rotation="90"] { transform: rotate(90deg); }
+.ann-text[data-rotation="180"] { transform: rotate(180deg); }
+.ann-text[data-rotation="270"] { transform: rotate(270deg); }
+.ann-text[data-rotation="90"] .resize-handle { top: -6px; bottom: auto; }
+.ann-text[data-rotation="180"] .resize-handle { top: -6px; left: -6px; right: auto; bottom: auto; }
+.ann-text[data-rotation="270"] .resize-handle { left: -6px; right: auto; }
 
 .ann-text.editing {
   overflow: auto;
@@ -951,6 +962,16 @@ body.pdf-editor-active .status-bar {
   cursor: move;
   background: transparent;
 }
+
+.ann-redact {
+  background: #000;
+  forced-color-adjust: none;
+  cursor: move;
+  overflow: visible;
+}
+.ann-redact[data-redaction-color="white"] { background: #fff; }
+/* A white range must remain discoverable on a white page; this outline is editing UI only. */
+.ann-redact::after { content: ""; position: absolute; inset: 0; border: 1px dashed #64748b; pointer-events: none; }
 
 .ann-arrow {
   overflow: visible;
@@ -1465,6 +1486,7 @@ body.pdf-editor-active .status-bar {
 .save-menu-list[hidden] {
   display: none;
 }
+.save-menu-note { max-width: 22em; margin: 4px 8px; color: var(--muted); font-size: .8rem; }
 .save-menu .save-menu-list button {
   display: block;
   width: 100%;
@@ -1781,6 +1803,7 @@ body.pdf-editor-active .status-bar {
   display: none;
 }
 .workspace {
+  --viewer-toolbar-space: 120px;
   position: relative;
   flex: 1;
   min-height: 0;
@@ -1793,7 +1816,7 @@ body.pdf-editor-active .status-bar {
   min-height: 0;
   width: 100%;
   overflow: auto;
-  padding: 24px 24px 70px;
+  padding: 24px 24px var(--viewer-toolbar-space);
   background: #e6eaf0;
 }
 .page-host {
@@ -1806,7 +1829,11 @@ body.pdf-editor-active .status-bar {
   right: 16px;
   z-index: 7;
   padding: 5px 8px;
+  height: auto;
   min-height: 0;
+  max-width: calc(100% - 32px);
+  flex-direction: column;
+  gap: 6px;
   border: 1px solid var(--line);
   border-radius: 10px;
   box-shadow: 0 3px 12px #172b4d20;
@@ -1818,6 +1845,19 @@ body.pdf-editor-active .status-bar {
 }
 .viewer-controls .zoom-field {
   margin: 0;
+}
+.viewer-toolbar .page-stepper {
+  justify-content: center;
+  flex-wrap: nowrap;
+  align-self: stretch;
+  padding-top: 5px;
+  border-top: 1px solid var(--line);
+}
+.viewer-toolbar .page-stepper .icon-button {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border-radius: 8px;
 }
 .canvas-hint {
   position: absolute;
@@ -1834,7 +1874,7 @@ body.pdf-editor-active .status-bar {
   z-index: 10;
   width: max-content;
   max-width: min(540px, calc(100% - 24px));
-  max-height: calc(100% - 90px);
+  max-height: calc(100% - var(--viewer-toolbar-space) - 24px);
   overflow: auto;
   padding: 0;
   border: 1px solid #d5dce5;
@@ -1855,11 +1895,11 @@ body.pdf-editor-active .status-bar {
 }
 .floating-properties[data-corner="bottom-right"] {
   right: 12px;
-  bottom: 66px;
+  bottom: var(--viewer-toolbar-space);
 }
 .floating-properties[data-corner="bottom-left"] {
   left: 12px;
-  bottom: 66px;
+  bottom: var(--viewer-toolbar-space);
 }
 .floating-head {
   border-bottom: 1px solid var(--line);
@@ -1922,6 +1962,8 @@ body.pdf-editor-active .status-bar {
 .property-controls select {
   max-width: 150px;
 }
+#redactionColorField { margin: 10px 12px; }
+#redactionColorField[hidden] { display: none; }
 .property-controls .compact-check {
   min-height: 30px;
   font-size: 12px;
@@ -2010,11 +2052,11 @@ body.pdf-editor-active .status-bar {
 }
 .dock-preview[data-corner="bottom-right"] {
   right: 10px;
-  bottom: 66px;
+  bottom: var(--viewer-toolbar-space);
 }
 .dock-preview[data-corner="bottom-left"] {
   left: 10px;
-  bottom: 66px;
+  bottom: var(--viewer-toolbar-space);
 }
 .ann-ellipse {
   border-radius: 50%;
@@ -2209,7 +2251,7 @@ body.pdf-editor-active .status-bar {
     padding: 16px;
   }
   .viewer-area {
-    padding: 12px 12px 64px;
+    padding: 12px 12px var(--viewer-toolbar-space);
   }
   .workspace .viewer-toolbar {
     right: 6px;
@@ -2229,6 +2271,7 @@ body.pdf-editor-active .status-bar {
     min-height: 44px;
   }
   .page-toolbar button,
+  .viewer-toolbar .page-stepper .icon-button,
   .pdf-header-actions button,
   .figure-context-menu button {
     min-height: 44px;
@@ -2309,10 +2352,8 @@ body:not(.pdf-editor-active) {
   }
 }
 
-@media (max-width: 560px) {
-  body.pdf-editor-active .appbox-header__inner {
-    flex-wrap: wrap;
-  }
+/* Keep action labels above 600px; use icons when horizontal space is limited. */
+@media (max-width: 600px) {
   body.pdf-editor-active :is(#appendPdfBtn, #closePdfBtn, #saveBtn) > span {
     display: none;
   }
@@ -2326,6 +2367,13 @@ body:not(.pdf-editor-active) {
     min-width: 52px;
     width: 52px;
     padding-inline: 6px;
+  }
+}
+
+/* On phones, the operations and navigation may use separate rows. */
+@media (max-width: 560px) {
+  body.pdf-editor-active .appbox-header__inner {
+    flex-wrap: wrap;
   }
 }
 
@@ -2367,6 +2415,19 @@ body:not(.pdf-editor-active) {
 }
 .page-number-dialog::backdrop { background: rgb(15 23 42 / 45%); }
 .page-number-dialog h2 { margin: 0 0 12px; font-size: 1.35rem; }
+.pdf-save-dialog { width: min(560px, calc(100% - 24px)); font-size: 1rem; line-height: 1.5; }
+.pdf-save-dialog h3 { margin: 0 0 6px; font-size: 1rem; }
+.pdf-save-summary { margin: 0 0 16px; font-weight: 700; }
+.pdf-save-selection-notice { margin: 0 0 16px; }
+.pdf-save-cautions { padding: 12px 16px; margin: 0 0 16px; border: 1px solid #e6c365; border-radius: 8px; background: #fff9e8; }
+.pdf-save-cautions ul { margin: 0; padding-left: 1.3em; }
+.pdf-save-cautions li + li { margin-top: 4px; }
+.pdf-save-review { margin-bottom: 20px; }
+.pdf-save-review p { margin: 0; }
+.pdf-save-dialog [hidden] { display: none; }
+@media (forced-colors: active) {
+  .pdf-save-cautions { border-color: CanvasText; background: Canvas; }
+}
 .page-number-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .page-number-fields label { display: grid; gap: 6px; font-weight: 700; }
 .page-number-fields input, .page-number-fields select {

@@ -1,6 +1,6 @@
 'use strict';
 
-const { NODE_W, NODE_H, calculateAutoLayout } = KakeizuLayout;
+const { calculateAutoLayout } = KakeizuLayout;
 
 let people = [];
 let selectedId = null;
@@ -8,6 +8,7 @@ let selectedIds = new Set();
 
 let families = [];
 let familyModelInitialized = false;
+let selectedRelation = null;
 
 let chartMemo = "";
 
@@ -60,17 +61,13 @@ const undoStack = [];
 const redoStack = [];
 const UNDO_LIMIT = 50;
 
-const AUTO_SAVE_ENABLED_KEY =
-  "fixedTaxInheritanceChart_autoSaveEnabled_v2";
-
-const AUTO_SAVE_DATA_KEY =
-  "fixedTaxInheritanceChart_autoSaveData_v2";
-
-const AUTO_SAVE_DELAY_MS = 5000;
-
-let autoSaveTimer = null;
-let autoSaveReady = false;
-let autoSaveLastSavedAt = "";
+// 旧データは本人による退避・削除のための読取りに限る。
+const AUTO_SAVE_ENABLED_KEY = "fixedTaxInheritanceChart_autoSaveEnabled_v2";
+const AUTO_SAVE_DATA_KEY = "fixedTaxInheritanceChart_autoSaveData_v2";
+const LEGACY_AUTO_SAVE_NOTICE_KEY = "fixedTaxInheritanceChart_legacyNoticeSeen_v1";
+let saveOperationSequence = 0;
+let savedContentKey = null;
+let legacyAutoSaveRestored = false;
 
 // 大きな連番でも数値精度を失わず採番する。
 function nextSequentialId(prefix, items) {
@@ -131,6 +128,57 @@ function toFiniteNumber(value, fallback) {
 }
 
 
+// 旧JSONのスラッシュ区切りもカレンダーへ表示する。日付以外の旧情報は消さない。
+function calendarDate(value) {
+  const match = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(String(value || ""));
+  if (!match) return "";
+  const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (year < 1 || month < 1 || month > 12 || day < 1 || day > days[month - 1]) return "";
+  return `${match[1]}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function isDeceased(p) {
+  return !!(p && (p.deceased || p.death));
+}
+
+function legacyDeathText(p) {
+  return p?.death && !calendarDate(p.death) ? p.death : p?.deathNote || "";
+}
+
+function validDateInput(input) {
+  return !input?.validity?.badInput && !input?.validity?.rangeOverflow &&
+    !input?.validity?.rangeUnderflow && (!input?.value || !!calendarDate(input.value));
+}
+
+function clearPersonDeath(p) {
+  p.deceased = false;
+  p.death = "";
+  p.deathNote = "";
+}
+
+function applyPersonDates(p, birthInput, deathInput, deceasedInput, legacyInput) {
+  const clearDeath = isDeceased(p) && deceasedInput?.checked === false;
+  if (!validDateInput(birthInput) || (!clearDeath && !validDateInput(deathInput))) return false;
+  // 空のカレンダーに表示できない旧生年月日も、他の欄を編集しただけでは消さない。
+  p.birth = birthInput?.value ? calendarDate(birthInput.value) :
+    (p.birth && !calendarDate(p.birth) ? p.birth : "");
+  if (clearDeath) {
+    clearPersonDeath(p);
+    if (deathInput) deathInput.value = "";
+    if (legacyInput) legacyInput.value = "";
+    return true;
+  }
+  const legacy = legacyInput ? legacyInput.value : legacyDeathText(p);
+  const date = calendarDate(deathInput?.value);
+  p.death = date || legacy;
+  p.deathNote = date ? legacy : "";
+  p.deceased = !!(deceasedInput?.checked || p.death);
+  if (deceasedInput) deceasedInput.checked = p.deceased;
+  return true;
+}
+
 function createPerson(base = {}) {
   return {
     id: base.id || nextId(),
@@ -140,6 +188,8 @@ function createPerson(base = {}) {
     address: base.address || "",
     birth: base.birth || "",
     death: base.death || "",
+    deceased: !!(base.deceased || base.death),
+    deathNote: base.deathNote || "",
     renunciation:
       base.renunciation || "未確認",
     representative: !!base.representative,
@@ -164,70 +214,19 @@ function createPerson(base = {}) {
 
 
 function sampleData() {
-  people = [];
-  families = [];
-  annotations = [];
+  resetSample("basic");
+}
 
-  selectedId = null;
-  selectedIds.clear();
-
+function resetSample(kind) {
+  const sample = KakeizuSamples.createSample(kind);
+  people = sample.people.map(createPerson);
+  families = sample.families.map(createFamily);
+  annotations = sample.annotations.map(createAnnotation);
+  chartMemo = kind === "blank" ? "" : "架空の人物によるサンプルデータです。";
+  familyModelInitialized = true;
+  clearSelection();
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
-
-  annotationTool = null;
-  annotationContextTargetId = null;
-  annotationCreating = null;
-
-  chartMemo =
-    "サンプルデータです。実際の業務データ作成時は全消去してから入力してください。";
-
-  const a = createPerson({
-    id: "P001",
-    name: "被相続人",
-    relation: "所有者・死亡",
-    death: "不明",
-    renunciation: "なし",
-    x: 320,
-    y: 120
-  });
-
-  const b = createPerson({
-    id: "P002",
-    name: "配偶者",
-    relation: "配偶者",
-    representative: true,
-    share: "1/2",
-    taxpayer: true,
-    x: 540,
-    y: 120
-  });
-
-  const c = createPerson({
-    id: "P003",
-    name: "子",
-    relation: "長男・長女等",
-    renunciation: "未確認",
-    share: "1/2",
-    parents: ["P001", "P002"],
-    x: 430,
-    y: 300
-  });
-
-  people = [a, b, c];
-
-  families = [
-    createFamily({
-      id: "F001",
-      parents: ["P001", "P002"],
-      children: ["P003"]
-    })
-  ];
-
-  familyModelInitialized = true;
-
-  selectedId = "P001";
-  selectedIds = new Set(["P001"]);
-
   normalizeRelations();
 }
 
@@ -403,10 +402,10 @@ normalizeFamilies();
 syncPeopleRelationsFromFamilies();
 }
 
-function newPerson() {
-  const p = createPerson();
-
+function newPerson(point) {
+  const p = createPerson(point ? { x: point.x, y: point.y } : {});
   people.push(p);
+  updateCanvasToolStatus();
   activateNewPersonForEditing(p.id);
 }
 
@@ -416,6 +415,7 @@ const p = person(id);
 if (!p) return;
 
 if (!confirm(`${p.name || id} を削除しますか？`)) return;
+hideNodeContextMenu();
 
 /*
  * 人物を配列から削除する前に、
@@ -457,8 +457,7 @@ annotations.forEach(item => {
   }
 });
 
-selectedId = people[0]?.id || null;
-selectedIds = selectedId ? new Set([selectedId]) : new Set();
+clearSelection();
 
 relationClicks = relationClicks.filter(pid => pid !== id);
 
@@ -470,7 +469,7 @@ function deleteSelected() {
 if (selectedId) deletePerson(selectedId);
 }
 
-function selectPerson(id) {
+function selectPerson(id, showProperties = true) {
   selectedId = id || null;
   selectedIds = id
     ? new Set([id])
@@ -478,6 +477,8 @@ function selectPerson(id) {
 
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
+  selectedRelation = null;
+  setSelectionPanelVisible(showProperties);
 
   sync();
 }
@@ -491,6 +492,7 @@ function selectOnly(id) {
 
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
+  selectedRelation = null;
 }
 
 function togglePersonSelection(id) {
@@ -500,6 +502,7 @@ function togglePersonSelection(id) {
 
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
+  selectedRelation = null;
 
   if (selectedIds.has(id)) {
     selectedIds.delete(id);
@@ -519,6 +522,7 @@ function togglePersonSelection(id) {
 function clearSelection() {
 selectedId = null;
 selectedIds.clear();
+  selectedRelation = null;
 }
 
 function clearSelectionAndRender() {
@@ -541,20 +545,23 @@ return selectedIds.has(id) || selectedId === id;
 function savePersonForm() {
 const p = person(selectedId);
 if (!p) return;
+const birthInput = document.getElementById("birth");
+const deathInput = document.getElementById("death");
+const deceasedInput = document.getElementById("deceased");
+const clearDeath = isDeceased(p) && !deceasedInput.checked;
+if (!validDateInput(birthInput) || (!clearDeath && !validDateInput(deathInput))) return;
 
-p.name = document.getElementById("name").value;
-p.gender = document.getElementById("gender").value;
-p.relation = document.getElementById("relation").value;
-p.address = document.getElementById("address").value;
-p.birth = document.getElementById("birth").value;
-p.death = document.getElementById("death").value;
-p.renunciation = document.getElementById("renunciation").value;
-p.representative = document.getElementById("representative").checked;
-p.share = document.getElementById("share").value;
-p.taxpayer = document.getElementById("taxpayer").checked;
-p.manager = document.getElementById("manager").checked;
-
-sync();
+applyPropertyChange("person", () => {
+  for (const key of ["name", "gender", "relation", "address", "renunciation", "share"]) {
+    p[key] = document.getElementById(key).value;
+  }
+  for (const key of ["representative", "taxpayer", "manager"]) {
+    p[key] = document.getElementById(key).checked;
+  }
+  applyPersonDates(p, birthInput, deathInput,
+    deceasedInput, document.getElementById("deathLegacy"));
+  document.getElementById("deathLegacyField").hidden = !legacyDeathText(p);
+});
 }
 
 function loadPersonForm() {
@@ -577,7 +584,7 @@ function loadPersonForm() {
         `${p.name || "無名"}を主に選択中です。` +
         `${selectedIds.size}人を複数選択しています。`;
     } else {
-      status.textContent = `${p.name || "無名"}の情報を編集中です。`;
+      status.textContent = "";
     }
   }
 
@@ -585,8 +592,11 @@ function loadPersonForm() {
   document.getElementById("gender").value = p?.gender || "";
   document.getElementById("relation").value = p?.relation || "";
   document.getElementById("address").value = p?.address || "";
-  document.getElementById("birth").value = p?.birth || "";
-  document.getElementById("death").value = p?.death || "";
+  document.getElementById("birth").value = calendarDate(p?.birth);
+  document.getElementById("death").value = calendarDate(p?.death);
+  document.getElementById("deceased").checked = isDeceased(p);
+  document.getElementById("deathLegacy").value = legacyDeathText(p);
+  document.getElementById("deathLegacyField").hidden = !legacyDeathText(p);
   document.getElementById("renunciation").value =
     p?.renunciation || "未確認";
   document.getElementById("representative").checked =
@@ -594,15 +604,14 @@ function loadPersonForm() {
   document.getElementById("share").value = p?.share || "";
   document.getElementById("taxpayer").checked = !!p?.taxpayer;
   document.getElementById("manager").checked = !!p?.manager;
+  updateSelectionProperties(true);
 }
 
 function updateChartMemoFromInput() {
 const el = document.getElementById("chartMemo");
 chartMemo = el ? el.value : "";
 
-if (typeof scheduleAutoSave === "function") {
-  scheduleAutoSave();
-}
+// 未保存判定はページ離脱時に保存済みの実データと比較する。
 }
 
 function loadChartMemoToInput() {
@@ -620,58 +629,17 @@ if (el.value !== chartMemo) {
 
 
 
-function addSpouse() {
-const otherId = document.getElementById("spouseSelect").value;
-const p = person(selectedId);
-const s = person(otherId);
 
-if (!p || !s || p.id === s.id) return;
 
-getOrCreateFamily([p.id, s.id]);
 
-// 座標は動かさない
-sync();
-}
-
-function addChild() {
-const childId = document.getElementById("childSelect").value;
-const otherParentId = document.getElementById("otherParentSelect").value;
-
-const parent1 = person(selectedId);
-const child = person(childId);
-const parent2 = person(otherParentId);
-
-if (!parent1 || !child || parent1.id === child.id) return;
-
-const parentIds = [parent1.id];
-
-if (parent2 && parent2.id !== parent1.id && parent2.id !== child.id) {
-  parentIds.push(parent2.id);
-} else {
-  const spouseIds = parent1.spouses || [];
-
-  if (spouseIds.length === 1 && spouseIds[0] !== child.id) {
-    parentIds.push(spouseIds[0]);
-  }
-}
-
-const f = getOrCreateFamily(parentIds);
-
-if (!f.children.includes(child.id)) {
-  f.children.push(child.id);
-}
-
-// 座標は動かさない
-sync();
-}
 
 function beginRelationMode(mode, initialPersonIds = []) {
+  cancelCanvasTool();
   relationMode = mode;
   relationClicks = initialPersonIds.filter(id => person(id));
   relationPreviewMouse = null;
 
   hideNodeContextMenu();
-  switchSideTab("relation");
   updateRelationModeStatus();
   renderChart();
 }
@@ -691,35 +659,7 @@ function cancelRelationMode() {
 }
 
 function updateRelationModeStatus(message) {
-  const el = document.getElementById("relationModeStatus");
-  if (!el) return;
-
-  el.classList.remove("active", "warning");
-
-  if (message) {
-    el.textContent = message;
-    el.classList.add("warning");
-    return;
-  }
-
-  const progress = getRelationModeProgress();
-
-  if (!progress) {
-    el.textContent = "関係作成モードは未選択です。";
-    return;
-  }
-
-  el.classList.add("active");
-
-  const selectedNames = progress.selectedNames.length
-    ? `選択中: ${progress.selectedNames.join("、")}。`
-    : "";
-
-  el.textContent =
-    `${progress.definition.title} ` +
-    `（${progress.selectedCount}/${progress.definition.total}人選択済み）。` +
-    `${selectedNames}${progress.instruction} Escまたは「関係作成を中止」でキャンセルできます。`;
-
+  relationWarningMessage = message && relationMode ? message : "";
   updateRelationToolUi();
 }
 
@@ -854,10 +794,8 @@ function handleChildTwoParentsRelationClick(id) {
 
 }
 
-function sync() {
-normalizeRelations();
-renderList();
-renderSelects();
+function sync({ preserveSnapshot = false } = {}) {
+if (!preserveSnapshot) normalizeRelations();
 
 const relationModal = document.getElementById("relationListModalBackdrop");
 
@@ -872,7 +810,8 @@ if (
 
 loadPersonForm();
 loadChartMemoToInput();
-renderChart();
+renderChart({ preserveSnapshot });
+if (typeof refreshPersonSearch === "function") refreshPersonSearch();
 
   // チェック結果が表示中なら、最新状態で再チェックする
   // const result = document.getElementById("validationResult");
@@ -881,74 +820,10 @@ renderChart();
   //  renderValidationResult(validationIssues);
   // }
 
-scheduleAutoSave();
 }
 
-function renderList() {
-  const box = document.getElementById("personList");
-  box.innerHTML = "";
 
-  if (!people.length) {
-    const emptyState = document.createElement("p");
-    emptyState.className = "person-list-empty";
-    emptyState.textContent =
-      "人物が登録されていません。「人物を追加」から始めてください。";
-    box.appendChild(emptyState);
-    return;
-  }
 
-  people.forEach(p => {
-    const btn = document.createElement("button");
-    const flags = [];
-    const selected = isSelected(p.id);
-    const isMultiSelected = selectedIds.size > 1 && selected;
-
-    if (p.death) flags.push("死亡");
-    if (p.renunciation === "放棄済") flags.push("放棄");
-    if (p.representative) flags.push("代表");
-    if (p.share) flags.push(p.share);
-
-    btn.textContent =
-      `${p.name || "無名"}` +
-      `${p.relation ? " / " + p.relation : ""}` +
-      `${flags.length ? " [" + flags.join("・") + "]" : ""}`;
-    btn.classList.toggle("selected", selected);
-    btn.classList.toggle("multi-selected", isMultiSelected);
-    btn.classList.toggle(
-      "primary-selected",
-      isMultiSelected && p.id === selectedId
-    );
-    btn.setAttribute("aria-pressed", String(selected));
-    btn.onclick = () => selectPerson(p.id);
-    box.appendChild(btn);
-  });
-}
-
-function renderSelects() {
-const selects = [
-  document.getElementById("spouseSelect"),
-  document.getElementById("childSelect"),
-  document.getElementById("otherParentSelect")
-];
-
-selects.forEach(sel => {
-  sel.innerHTML = "";
-
-  const empty = document.createElement("option");
-  empty.value = "";
-  empty.textContent = "選択してください";
-  sel.appendChild(empty);
-
-  people.forEach(p => {
-    if (p.id === selectedId && sel !== document.getElementById("otherParentSelect")) return;
-
-    const opt = document.createElement("option");
-    opt.value = p.id;
-    opt.textContent = `${p.id} ${p.name || "無名"}`;
-    sel.appendChild(opt);
-  });
-});
-}
 
 function toggleTable() {
 document.getElementById("tableWrap").classList.toggle("open");
@@ -995,11 +870,16 @@ people.forEach(p => {
     </td>
 
     <td>
-      <input data-field="birth" value="${escapeAttr(p.birth || "")}" placeholder="例: 1950/01/01">
+      <input type="date" max="9999-12-31" aria-label="生年月日" data-field="birth" value="${escapeAttr(calendarDate(p.birth))}">
+      ${p.birth && !calendarDate(p.birth) ? `<span>以前の生年月日: ${escapeHtml(p.birth)}</span>` : ""}
     </td>
 
     <td>
-      <input data-field="death" value="${escapeAttr(p.death || "")}" placeholder="例: 2024/01/01、不明">
+      <div class="bulk-death-input">
+        <label><input type="checkbox" data-field="deceased" ${isDeceased(p) ? "checked" : ""}>死亡</label>
+        <input type="date" max="9999-12-31" aria-label="死亡年月日" data-field="death" value="${escapeAttr(calendarDate(p.death))}">
+      </div>
+      ${legacyDeathText(p) ? `<label>以前の死亡情報・補足<input data-field="deathLegacy" value="${escapeAttr(legacyDeathText(p))}"></label>` : ""}
     </td>
 
   `;
@@ -1008,39 +888,64 @@ people.forEach(p => {
 });
 }
 
+function createBulkPersonSelect(field, value, label) {
+  const select = document.createElement("select");
+  select.dataset.field = field;
+  select.setAttribute("aria-label", label);
+  const addOption = (id, text) => {
+    const item = document.createElement("option");
+    item.value = id;
+    item.textContent = text;
+    select.appendChild(item);
+  };
+  addOption("", "未設定");
+  people.forEach(p => addOption(p.id, `${p.id}:${p.name || "（氏名未入力）"}`));
+  // 読み込んだ参照が不正でも黙って消さず、既存の入力チェックへ渡す。
+  if (value && !person(value)) addOption(value, `${value}:（該当する人物なし）`);
+  select.value = value;
+  return select;
+}
+
+function appendBulkSpouseSelect(container, personId, value = "") {
+  const select = createBulkPersonSelect("spouse", value, `${personId}の配偶者`);
+  select.addEventListener("change", () => {
+    if (![...container.querySelectorAll("select")].some(input => !input.value)) {
+      appendBulkSpouseSelect(container, personId);
+    }
+  });
+  container.appendChild(select);
+}
+
+function getBulkSpouseIds(tr) {
+  return [...tr.querySelectorAll('[data-field="spouse"]')]
+    .map(input => normalizeIdInput(input.value)).filter(Boolean);
+}
+
 function renderBulkRelationTable() {
-const tbody = document.getElementById("bulkRelationTbody");
-if (!tbody) return;
-
-tbody.innerHTML = "";
-
-people.forEach(p => {
-  const parents = getParentsForBulkEdit(p.id);
-  const parent1 = parents[0] || "";
-  const parent2 = parents[1] || "";
-
-  const tr = document.createElement("tr");
-  tr.dataset.id = p.id;
-
-  tr.innerHTML = `
-    <td class="bulk-id-cell">${escapeHtml(p.id)}</td>
-    <td class="bulk-name-readonly">${escapeHtml(p.name || "")}</td>
-
-    <td>
-      <input data-field="parent1" value="${escapeAttr(parent1)}" placeholder="例: P001">
-    </td>
-
-    <td>
-      <input data-field="parent2" value="${escapeAttr(parent2)}" placeholder="例: P002">
-    </td>
-
-    <td>
-      <input data-field="spouses" value="${escapeAttr((p.spouses || []).join(","))}" placeholder="例: P003,P004">
-    </td>
-  `;
-
-  tbody.appendChild(tr);
-});
+  const tbody = document.getElementById("bulkRelationTbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  people.forEach(p => {
+    const parents = getParentsForBulkEdit(p.id);
+    const tr = document.createElement("tr");
+    tr.dataset.id = p.id;
+    tr.innerHTML = `
+      <td class="bulk-id-cell">${escapeHtml(p.id)}</td>
+      <td class="bulk-name-readonly">${escapeHtml(p.name || "")}</td>`;
+    for (const [index, field] of ["parent1", "parent2"].entries()) {
+      const cell = document.createElement("td");
+      cell.appendChild(createBulkPersonSelect(field, parents[index] || "", `${p.id}の親${index + 1}`));
+      tr.appendChild(cell);
+    }
+    const spouses = document.createElement("td");
+    const choices = document.createElement("div");
+    choices.className = "bulk-spouse-selects";
+    (p.spouses || []).forEach(id => appendBulkSpouseSelect(choices, p.id, id));
+    appendBulkSpouseSelect(choices, p.id);
+    spouses.appendChild(choices);
+    tr.appendChild(spouses);
+    tbody.appendChild(tr);
+  });
 }
 
 function renderBulkBusinessTable() {
@@ -1145,6 +1050,9 @@ if (typeof validateData === "function") {
   }
 }
 
+renderBulkEditTables();
+bulkEditBaseline = getBulkEditDraftKey();
+
 alert("一括編集表の内容を反映しました。");
 
 return true;
@@ -1169,13 +1077,25 @@ const errors = [];
 const warnings = [];
 const ids = new Set(people.map(p => p.id));
 
+document.querySelectorAll("#bulkPersonTbody tr").forEach(tr => {
+  for (const field of ["birth", "death"]) {
+    const input = tr.querySelector(`[data-field="${field}"]`);
+    if (field === "death" && isDeceased(person(tr.dataset.id)) &&
+        tr.querySelector('[data-field="deceased"]')?.checked === false) continue;
+    if (!validDateInput(input)) {
+      markBulkInputError(input);
+      errors.push({ severity: "error", tab: "person", input,
+        message: `${personLabel(tr.dataset.id)} の日付を正しく入力してください。` });
+    }
+  }
+});
+
 document.querySelectorAll("#bulkRelationTbody tr").forEach(tr => {
   const targetId = tr.dataset.id;
   const targetLabel = personLabel(targetId);
 
   const parent1Input = tr.querySelector('[data-field="parent1"]');
   const parent2Input = tr.querySelector('[data-field="parent2"]');
-  const spousesInput = tr.querySelector('[data-field="spouses"]');
 
   const parent1 = normalizeIdInput(parent1Input?.value || "");
   const parent2 = normalizeIdInput(parent2Input?.value || "");
@@ -1222,14 +1142,11 @@ document.querySelectorAll("#bulkRelationTbody tr").forEach(tr => {
     });
   }
 
-  const spouseRawList = String(spousesInput?.value || "")
-    .split(",")
-    .map(x => x.trim())
-    .filter(Boolean);
-
   const spouseSeen = new Set();
 
-  spouseRawList.forEach(spouseId => {
+  tr.querySelectorAll('[data-field="spouse"]').forEach(spousesInput => {
+    const spouseId = normalizeIdInput(spousesInput.value);
+    if (!spouseId) return;
     if (!ids.has(spouseId)) {
       markBulkInputError(spousesInput);
       errors.push({
@@ -1380,8 +1297,9 @@ document.querySelectorAll("#bulkPersonTbody tr").forEach(tr => {
   p.gender = tr.querySelector('[data-field="gender"]')?.value || "";
   p.relation = tr.querySelector('[data-field="relation"]')?.value || "";
   p.address = tr.querySelector('[data-field="address"]')?.value || "";
-  p.birth = tr.querySelector('[data-field="birth"]')?.value || "";
-  p.death = tr.querySelector('[data-field="death"]')?.value || "";
+  applyPersonDates(p, tr.querySelector('[data-field="birth"]'),
+    tr.querySelector('[data-field="death"]'), tr.querySelector('[data-field="deceased"]'),
+    tr.querySelector('[data-field="deathLegacy"]'));
 });
 }
 
@@ -1429,8 +1347,7 @@ document.querySelectorAll("#bulkRelationTbody tr").forEach(tr => {
     }
   }
 
-  const spousesText = tr.querySelector('[data-field="spouses"]')?.value || "";
-  const spouseIds = parseIdList(spousesText)
+  const spouseIds = unique(getBulkSpouseIds(tr))
     .filter(sid => sid !== childId)
     .filter(sid => person(sid));
 
@@ -1607,7 +1524,8 @@ if (!f) return;
 const child = person(childId);
 const childName = child ? `${child.id} ${child.name || "無名"}` : childId;
 
-if (!confirm(`${childName} をこの親・夫婦関係から外しますか？\n人物ノード自体は削除されません。`)) {
+const parentsText = f.parents.map(personLabel).join("・");
+if (!confirm(`親子関係を解除しますか？\n親：${parentsText}\n子：${childName}\nこの親ペアと対象の子の関係を解除します。人物自体や他の子の関係は削除しません。`)) {
   return;
 }
 
@@ -1620,6 +1538,7 @@ families = families.filter(x => x.children.length || x.parents.length >= 2);
 
 normalizeRelations();
 sync();
+return true;
 }
 
 function removeFamily(familyId) {
@@ -1644,6 +1563,7 @@ families = families.filter(x => x.id !== familyId);
 
 normalizeRelations();
 sync();
+return true;
 }
 
 
@@ -2060,7 +1980,7 @@ function checkParentChildCycles(issues) {
 
 function checkBusinessFlags(issues) {
 people.forEach(p => {
-  if (p.death && p.representative) {
+  if (isDeceased(p) && p.representative) {
     addIssue(
       issues,
       "warning",
@@ -2070,7 +1990,7 @@ people.forEach(p => {
     );
   }
 
-  if (p.death && p.taxpayer) {
+  if (isDeceased(p) && p.taxpayer) {
     addIssue(
       issues,
       "warning",
@@ -2188,6 +2108,7 @@ result.innerHTML = `
     ${issues.map((issue, index) => renderValidationItem(issue, index)).join("")}
   </div>
 `;
+bindMarkupActions(result);
 }
 
 function renderValidationItem(issue, index) {
@@ -2214,7 +2135,7 @@ return `
     ${meta ? `<div class="hint">${escapeHtml(meta)}</div>` : ""}
     <div class="validation-actions">
       ${issue.relatedIds && issue.relatedIds.length
-        ? `<button onclick="focusValidationIssue(${index})">関連人物へ移動</button>`
+        ? `<button type="button" data-kakeizu-click="focusValidationIssue" data-validation-index="${index}">関連人物へ移動</button>`
         : ""}
     </div>
   </div>
@@ -2234,14 +2155,16 @@ selectedId = validIds[0];
 
 selectedAnnotationId = null;
 selectedAnnotationIds.clear();
+selectedRelation = null;
+closeWorkspaceDialog("validationDialog");
 
-renderList();
 loadPersonForm();
 renderChart();
 
 if (typeof focusSelected === "function") {
   focusSelected();
 }
+svg.focus({ preventScroll: true });
 }
 
 function option(value, current, label) {
@@ -2304,7 +2227,8 @@ rows.forEach(tr => {
   p.name = name;
   p.gender = gender;
   p.relation = relation;
-  p.death = deathCheck ? (p.death || "不明") : "";
+  if (deathCheck) p.deceased = true;
+  else clearPersonDeath(p);
   p.renunciation = renunciation;
   p.representative = representative;
   p.share = share;
@@ -2330,8 +2254,7 @@ normalizeRelations();
 sync();
 }
 
-function renderChart() {
-  updateAllAttachedArrows();
+function renderChart({ preserveSnapshot = false } = {}) {
   const activeInlineEditor =
     document.activeElement?.id === "annotationInlineEditor"
       ? document.activeElement
@@ -2347,20 +2270,7 @@ function renderChart() {
     emptyState.hidden = people.length > 0;
   }
 
-  const rect = svg.getBoundingClientRect();
-  const width = Math.max(
-    1,
-    rect.width || 1000
-  );
-  const height = Math.max(
-    1,
-    rect.height || 700
-  );
-
-  svg.setAttribute(
-    "viewBox",
-    `0 0 ${width} ${height}`
-  );
+  updateCanvasViewportSize();
 
   viewport.setAttribute(
     "transform",
@@ -2373,8 +2283,8 @@ function renderChart() {
   drawRelationPreview();
   drawNodes();
   drawAnnotations("front");
-  drawAnnotationCreatePreview();
   drawNodeHitTargets();
+  drawPersonMenuButtons();
   drawAnnotationSelectionOverlays();
 
   /*
@@ -2395,6 +2305,8 @@ function renderChart() {
       }
     }
   }
+  if (typeof refreshPlacementPreview === "function") refreshPlacementPreview();
+  if (typeof updateViewportControls === "function") updateViewportControls();
 }
 
 function drawMarqueeSelection() {
@@ -2438,28 +2350,27 @@ function drawRelations() {
       const left = sorted[0];
       const right = sorted[1];
 
-      const x1 = left.x + NODE_W;
+      const x1 = left.x + getNodeDimensions(left).width;
       const x2 = right.x;
-      const y = (left.y + NODE_H / 2 + right.y + NODE_H / 2) / 2;
+      const y = (nodeCenter(left).y + nodeCenter(right).y) / 2;
 
-      const l1 = drawLine(x1, y - 4, x2, y - 4, "spouse-line");
-      const l2 = drawLine(x1, y + 4, x2, y + 4, "spouse-line");
+      const isSpouseSelected = selectedRelation?.type === "family" && selectedRelation.familyId === f.id;
+      const spouseClass = "spouse-line" + (isSpouseSelected ? " selected" : "");
 
-      attachRelationContextMenu(l1, {
+      const l1 = drawLine(x1, y - 4, x2, y - 4, spouseClass);
+      const l2 = drawLine(x1, y + 4, x2, y + 4, spouseClass);
+
+      const hitSpouse = drawLine(x1, y, x2, y, "relation-hit-target");
+      hitSpouse.setAttribute("stroke-width", "14");
+      attachRelationEvents(hitSpouse, {
         type: "family",
         familyId: f.id
-      });
-
-      attachRelationContextMenu(l2, {
-        type: "family",
-        familyId: f.id
-      });
-
+      }, [l1, l2]);
     }
 
     // 子への線
     children.forEach(child => {
-      const endX = child.x + NODE_W / 2;
+      const endX = nodeCenter(child).x;
       const endY = child.y;
 
       const startX = anchor.x;
@@ -2467,81 +2378,117 @@ function drawRelations() {
 
       const midY = (startY + endY) / 2;
 
-      const childPath = drawPath(
+      const childD =
         `M ${startX} ${startY}
         L ${startX} ${midY}
         L ${endX} ${midY}
-        L ${endX} ${endY}`,
-        "child-line"
-      );
+        L ${endX} ${endY}`;
 
-      attachRelationContextMenu(childPath, {
+      const isChildSelected = selectedRelation?.type === "child" && selectedRelation.familyId === f.id && selectedRelation.childId === child.id;
+      const childClass = "child-line" + (isChildSelected ? " selected" : "");
+
+      const childPath = drawPath(childD, childClass);
+
+      const hitChild = drawPath(childD, "relation-hit-target");
+      hitChild.setAttribute("stroke-width", "14");
+      attachRelationEvents(hitChild, {
         type: "child",
         familyId: f.id,
         childId: child.id
-      });
+      }, [childPath]);
     });
   });
 }
 
-function attachRelationContextMenu(el, info) {
-if (!el) return;
-
-el.addEventListener("contextmenu", e => {
-  e.preventDefault();
-  e.stopPropagation();
-
-  if (info.type === "family") {
-    const f = families.find(x => x.id === info.familyId);
-    if (!f) return;
-
-    const parentsText = f.parents.map(personLabel).join(" + ") || "親なし";
-    const childrenText = f.children.map(personLabel).join("、") || "子なし";
-
-    const message =
-      `この夫婦・親ペア関係を削除しますか？\n\n` +
-      `親・夫婦: ${parentsText}\n` +
-      `子: ${childrenText}\n\n` +
-      `人物ノード自体は削除されません。\n` +
-      `このfamilyに含まれる親子関係も解除されます。`;
-
-    if (!confirm(message)) return;
-
-    pushUndo("夫婦・親ペア関係削除前");
-    families = families.filter(x => x.id !== info.familyId);
-
-    normalizeRelations();
-    sync();
-    return;
+function selectRelation(info) {
+  if (relationMode || personToolActive || annotationTool) return;
+  selectedId = null;
+  selectedIds.clear();
+  selectedAnnotationId = null;
+  selectedAnnotationIds.clear();
+  selectedRelation = info;
+  setSelectionPanelVisible(true);
+  loadPersonForm();
+  renderChart();
+  if (typeof updateSelectionProperties === "function") {
+    updateSelectionProperties();
   }
-
-  if (info.type === "child") {
-    const f = families.find(x => x.id === info.familyId);
-    if (!f) return;
-
-    const childName = personLabel(info.childId);
-    const parentsText = f.parents.map(personLabel).join(" + ") || "親なし";
-
-    const message =
-      `この親子関係を解除しますか？\n\n` +
-      `親・夫婦: ${parentsText}\n` +
-      `子: ${childName}\n\n` +
-      `人物ノード自体は削除されません。`;
-
-    if (!confirm(message)) return;
-
-    pushUndo("親子関係削除前");
-    f.children = f.children.filter(id => id !== info.childId);
-
-    // 子なしの1親familyは不要なので削除する。
-    // ただし、親が2人以上いるfamilyは夫婦関係として残す。
-    families = families.filter(x => x.children.length || x.parents.length >= 2);
-
-    normalizeRelations();
-    sync();
-  }
-});
 }
+
+// DOMの重なり順は維持し、透明な面の直下にある関係線だけ操作を優先する。
+const relationHitTargets = new WeakMap();
+
+function relationThroughTransparentShape(event, group, item) {
+  if (
+    relationMode || personToolActive || annotationTool ||
+    !["rect", "ellipse"].includes(item.type) ||
+    !["none", "transparent"].includes(item.fill)
+  ) return null;
+
+  const shape = group.querySelector(".annotation-shape");
+  if (event.target !== shape) return null; // 図形内の文字は図形側で操作する。
+  for (const element of document.elementsFromPoint(event.clientX, event.clientY)) {
+    if (group.contains(element)) continue;
+    const relation = relationHitTargets.get(element);
+    if (relation) {
+      const point = svg.createSVGPoint();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      // 枠線自体は図形をつかむ。拡大縮小後もSVGの実際の線幅で判定する。
+      return shape.isPointInStroke(point.matrixTransform(shape.getScreenCTM().inverse()))
+        ? null : relation;
+    }
+    // 別の図形・人物・操作ハンドルを飛び越えて裏の関係線を選ばない。
+    if (element.closest?.(".annotation, .node, .node-hit-target, .annotation-selection-overlay")) {
+      return null;
+    }
+  }
+  return null;
+}
+
+function relationPointerDown(event) {
+  commitPropertyFieldBeforeCanvasAction();
+  if (!relationMode && !personToolActive && !annotationTool) event.stopPropagation();
+}
+
+function relationClick(event, info) {
+  if (relationMode || personToolActive || annotationTool) return;
+  event.stopPropagation();
+  selectRelation(info);
+}
+
+function attachRelationEvents(el, info, lines = []) {
+  if (!el) return;
+  relationHitTargets.set(el, { info, lines });
+  el.addEventListener("pointerenter", () => lines.forEach(line => line.classList.add("hovered")));
+  el.addEventListener("pointerleave", () => lines.forEach(line => line.classList.remove("hovered")));
+
+  el.addEventListener("pointerdown", relationPointerDown);
+  el.addEventListener("click", event => relationClick(event, info));
+
+  el.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 関係の解除は左クリック選択後のDeleteに統一する。
+  });
+}
+
+function deleteSelectedRelation() {
+  if (!selectedRelation) return;
+  const info = selectedRelation;
+  if (info.type === "family") {
+    if (!removeFamily(info.familyId)) return;
+  } else if (info.type === "child") {
+    if (!removeChildFromFamily(info.familyId, info.childId)) return;
+  }
+  selectedRelation = null;
+  renderChart();
+  if (typeof updateSelectionProperties === "function") {
+    updateSelectionProperties();
+  }
+}
+
+
 
 function drawRelationPreview() {
 if (!relationMode || !relationClicks.length || !relationPreviewMouse) return;
@@ -2563,8 +2510,8 @@ if (relationMode === "child1") {
   if (!parent) return;
 
   const start = {
-    x: parent.x + NODE_W / 2,
-    y: parent.y + NODE_H
+    x: nodeCenter(parent).x,
+    y: parent.y + getNodeDimensions(parent).height
   };
 
   drawPreviewPath(`M ${start.x} ${start.y} L ${start.x} ${(start.y + mouse.y) / 2} L ${mouse.x} ${(start.y + mouse.y) / 2} L ${mouse.x} ${mouse.y}`);
@@ -2598,32 +2545,32 @@ if (relationMode === "child2") {
 
 function nodeCenter(p) {
   return {
-    x: p.x + NODE_W / 2,
-    y: p.y + NODE_H / 2
+    x: p.x + getNodeDimensions(p).width / 2,
+    y: p.y + getNodeDimensions(p).height / 2
   };
 }
 
 function getPersonAnchorPoint(p, anchorName) {
   const anchors = {
     top: {
-      x: p.x + NODE_W / 2,
+      x: nodeCenter(p).x,
       y: p.y
     },
     right: {
-      x: p.x + NODE_W,
-      y: p.y + NODE_H / 2
+      x: p.x + getNodeDimensions(p).width,
+      y: nodeCenter(p).y
     },
     bottom: {
-      x: p.x + NODE_W / 2,
-      y: p.y + NODE_H
+      x: nodeCenter(p).x,
+      y: p.y + getNodeDimensions(p).height
     },
     left: {
       x: p.x,
-      y: p.y + NODE_H / 2
+      y: nodeCenter(p).y
     },
     center: {
-      x: p.x + NODE_W / 2,
-      y: p.y + NODE_H / 2
+      x: nodeCenter(p).x,
+      y: nodeCenter(p).y
     }
   };
 
@@ -2705,6 +2652,14 @@ function updateAttachedArrowCoordinates(item) {
   item.height = endY - startY;
 }
 
+// 接続済み矢印も表示寸法だけで解決し、モード切替では保存済み座標を更新しない。
+function getAnnotationDisplayItem(item) {
+  if (item.type !== "arrow" || (!item.startPersonId && !item.endPersonId)) return item;
+  const displayItem = { ...item };
+  updateAttachedArrowCoordinates(displayItem);
+  return displayItem;
+}
+
 function updateAllAttachedArrows() {
   annotations.forEach(item => {
     updateAttachedArrowCoordinates(item);
@@ -2739,20 +2694,20 @@ if (!parents.length) {
 }
 
 if (parents.length >= 2) {
-  const avgX = parents.reduce((sum, p) => sum + p.x + NODE_W / 2, 0) / parents.length;
-  const maxY = Math.max(...parents.map(p => p.y));
+  const avgX = parents.reduce((sum, p) => sum + nodeCenter(p).x, 0) / parents.length;
+  const maxY = Math.max(...parents.map(p => nodeCenter(p).y));
 
   return {
     x: avgX,
-    y: maxY + NODE_H / 2 + 12
+    y: maxY + 12
   };
 }
 
 const p = parents[0];
 
 return {
-  x: p.x + NODE_W / 2,
-  y: p.y + NODE_H
+  x: nodeCenter(p).x,
+  y: p.y + getNodeDimensions(p).height
 };
 }
 
@@ -2776,7 +2731,32 @@ people.forEach(p => {
 return pairs;
 }
 
+// 寸法と表示行はUI専用。保存モデル・座標・履歴には追加しない。
+function getNodeDetailRows(p = {}) {
+  const flags = [
+    p.renunciation && p.renunciation !== "なし" ? "放棄:" + p.renunciation : "",
+    p.representative ? "代表相続人" : "",
+    p.share ? "持分 " + p.share : ""
+  ].filter(Boolean).join(" / ");
+  const candidates = [
+    p.taxpayer ? "納税義務者候補" : "",
+    p.manager ? "納税管理人候補" : ""
+  ].filter(Boolean).join(" / ");
+  return [
+    { text: buildNodeDateText(p), className: isDeceased(p) ? "sub important" : "sub" },
+    { text: buildNodeAddressText(p), className: "sub" },
+    { text: flags, className: "sub" },
+    { text: candidates, className: "sub" }
+  ].filter(row => row.text);
+}
+
+function getNodeDimensions(p = {}) {
+  const detailed = typeof uiMode !== "undefined" && uiMode === "consultation";
+  return { width: 190, height: 60 + (detailed ? getNodeDetailRows(p).length * 18 : 0) };
+}
+
 function drawNodes() {
+updateSelectionProperties();
 people.forEach(p => {
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
   g.classList.add("node");
@@ -2811,106 +2791,62 @@ people.forEach(p => {
     g.classList.add("unknown-gender");
   }
 
-  if (p.death) g.classList.add("deceased");
-  if (p.renunciation === "放棄済") g.classList.add("renounced");
-  if (p.representative) g.classList.add("representative");
-  if (p.taxpayer) g.classList.add("taxpayer");
+  if (isDeceased(p)) g.classList.add("deceased");
+  if (typeof uiMode !== "undefined" && uiMode === "consultation") {
+    if (p.renunciation === "放棄済") g.classList.add("renounced");
+    if (p.representative) g.classList.add("representative");
+    if (p.taxpayer) g.classList.add("taxpayer");
+  }
 
   g.setAttribute("transform", `translate(${p.x}, ${p.y})`);
 
   const rect = svgEl("rect", {
     x: 0,
     y: 0,
-    width: NODE_W,
-    height: NODE_H
+    width: getNodeDimensions(p).width,
+    height: getNodeDimensions(p).height
   });
 
   const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
   title.textContent = buildNodeTooltipText(p);
 
+  const relation = (p.relation || "").trim();
   const line1 = svgText(
-    compactNodeText(p.name || "無名", 13),
+    compactNodeText(relation || p.name || "無名", 9),
     10,
-    20,
+    19,
     "name"
   );
 
-  const relationGenderText = [
-    p.relation || "",
-    p.gender ? `性別:${p.gender}` : ""
-  ].filter(Boolean).join(" / ");
+  const secondaryText = relation ? p.name || "無名" : "";
 
   const line2 = svgText(
-    compactNodeText(relationGenderText, 24),
+    compactNodeText(secondaryText, 10),
     10,
-    38,
-    "sub"
-  );
-
-  const dateText = buildNodeDateText(p);
-
-  const line3 = svgText(
-    compactNodeText(dateText, 28),
-    10,
-    56,
-    p.death ? "sub important" : "sub"
-  );
-
-  const addressText = buildNodeAddressText(p);
-
-  const line4 = svgText(
-    compactNodeText(addressText, 24),
-    10,
-    74,
-    "sub"
-  );
-
-  const flags = [];
-
-  if (p.renunciation && p.renunciation !== "なし") {
-    flags.push("放棄:" + p.renunciation);
-  }
-
-  if (p.representative) {
-    flags.push("代表相続人");
-  }
-
-  if (p.share) {
-    flags.push("持分 " + p.share);
-  }
-
-  const line5 = svgText(
-    compactNodeText(flags.join(" / "), 26),
-    10,
-    92,
-    "sub"
-  );
-
-  const flags2 = [];
-
-  if (p.taxpayer) {
-    flags2.push("納税義務者候補");
-  }
-
-  if (p.manager) {
-    flags2.push("納税管理人候補");
-  }
-
-  const line6 = svgText(
-    compactNodeText(flags2.join(" / "), 26),
-    10,
-    110,
+    36,
     "sub"
   );
 
   g.appendChild(title);
   g.appendChild(rect);
+  if (isDeceased(p)) {
+    const { width, height } = getNodeDimensions(p);
+    g.appendChild(svgEl("path", {
+      class: "deceased-mark",
+      d: `M 12 8 L ${width - 12} ${height - 8} M ${width - 12} 8 L 12 ${height - 8}`,
+      fill: "none", stroke: "#5b4d59", "stroke-width": 5,
+      "stroke-linecap": "round", opacity: 0.22, "pointer-events": "none",
+      "aria-hidden": "true"
+    }));
+  }
   g.appendChild(line1);
   g.appendChild(line2);
-  g.appendChild(line3);
-  g.appendChild(line4);
-  g.appendChild(line5);
-  g.appendChild(line6);
+  g.appendChild(svgText(p.gender ? `性別:${p.gender}` : "", 10, 52, "sub"));
+  if (typeof uiMode !== "undefined" && uiMode === "consultation") {
+    getNodeDetailRows(p).forEach((row, index) => {
+      g.appendChild(svgText(compactNodeText(row.text, 26), 10, 74 + index * 18, row.className));
+    });
+  }
 
   bindPersonNodeEvents(g, p.id);
   viewport.appendChild(g);
@@ -2919,10 +2855,32 @@ people.forEach(p => {
 
 function bindPersonNodeEvents(target, id) {
   target.dataset.id = id;
+  if (target.classList?.contains("node")) {
+    target.setAttribute("tabindex", "0");
+    target.setAttribute("role", "button");
+    target.setAttribute("aria-label", `${personLabel(id)}の情報を編集`);
+    target.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (!commitPropertyFieldBeforeCanvasAction()) return;
+      if (relationMode) {
+        handleRelationNodeClick(id, event);
+      } else if (!personToolActive && !annotationTool) {
+        selectPerson(id);
+        svg.focus({ preventScroll: true });
+      }
+    });
+    target.addEventListener("focus", () => highlightPersonMenu(id));
+  }
   target.addEventListener("pointerdown", startDrag);
 
   target.addEventListener("click", e => {
     e.stopPropagation();
+    if (suppressNextSvgClick) {
+      suppressNextSvgClick = false;
+      return;
+    }
 
     /*
      * 関係作成モードでは、クリックを関係登録に使う。
@@ -2930,13 +2888,65 @@ function bindPersonNodeEvents(target, id) {
      */
     if (relationMode) {
       handleRelationNodeClick(id, e);
+      return;
+    }
+    if (!personToolActive && !annotationTool &&
+        !e.ctrlKey && !e.shiftKey && !e.metaKey && !isSelected(id) &&
+        commitPropertyFieldBeforeCanvasAction()) {
+      selectPerson(id);
     }
   });
 
   target.addEventListener("contextmenu", e => {
     e.preventDefault();
     e.stopPropagation();
-    showNodeContextMenu(id, e.clientX, e.clientY);
+    if (!commitPropertyFieldBeforeCanvasAction()) return;
+    if (relationMode || personToolActive || annotationTool) return;
+    if (!isSelected(id)) selectPerson(id, false);
+    showNodeContextMenu(id, e.clientX, e.clientY, true);
+  });
+}
+
+function highlightPersonMenu(id) {
+  viewport.querySelectorAll(".person-menu-button").forEach(button => {
+    button.classList.toggle("hovered", button.dataset.id === id);
+  });
+}
+
+function openPersonMenu(id, event) {
+  event.preventDefault();
+  event.stopPropagation();
+  if (!commitPropertyFieldBeforeCanvasAction()) return;
+  if (relationMode || personToolActive || annotationTool) return;
+  if (!isSelected(id)) selectPerson(id, false);
+  const p = person(id);
+  const rect = svg.getBoundingClientRect();
+  showNodeContextMenu(id,
+    rect.left + offsetX + (p.x + getNodeDimensions(p).width) * scale,
+    rect.top + offsetY + p.y * scale, true);
+}
+
+function drawPersonMenuButtons() {
+  people.forEach(p => {
+    const button = svgEl("g", {
+      class: "person-menu-button" + (isSelected(p.id) ? " selected" : ""),
+      transform: `translate(${p.x + getNodeDimensions(p).width - 44}, ${p.y + 3})`,
+      tabindex: 0, role: "button", "aria-haspopup": "menu",
+      "aria-label": `${personLabel(p.id)}の操作メニュー`
+    });
+    button.dataset.id = p.id;
+    button.appendChild(svgEl("rect", { x: 0, y: 0, width: 40, height: 40, rx: 6 }));
+    button.appendChild(svgText("•••", 20, 25, ""));
+    button.addEventListener("pointerdown", event => {
+      // SVG側の人物ドラッグ・パン・範囲選択へ伝播させない。
+      event.stopPropagation();
+    });
+    button.addEventListener("click", event => openPersonMenu(p.id, event));
+    button.addEventListener("contextmenu", event => openPersonMenu(p.id, event));
+    button.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") openPersonMenu(p.id, event);
+    });
+    viewport.appendChild(button);
   });
 }
 
@@ -2947,8 +2957,8 @@ function drawNodeHitTargets() {
     const target = svgEl("rect", {
       x: p.x,
       y: p.y,
-      width: NODE_W,
-      height: NODE_H,
+      width: getNodeDimensions(p).width,
+      height: getNodeDimensions(p).height,
       rx: 8,
       ry: 8,
       fill: "transparent",
@@ -2985,45 +2995,39 @@ viewport.appendChild(path);
 return path;
 }
 
+function commitPropertyFieldBeforeCanvasAction() {
+  if (typeof commitActivePropertyField === "function") {
+    return commitActivePropertyField();
+  }
+  if (typeof finishPropertyComposition === "function") {
+    return finishPropertyComposition();
+  }
+  return true;
+}
+
 let dragging = null;
 
 function startDrag(e) {
-  if (relationMode) {
+  if (!commitPropertyFieldBeforeCanvasAction()) { e.preventDefault(); e.stopPropagation(); return; }
+  if (e.button !== undefined && e.button !== 0) return;
+  suppressNextSvgClick = false;
+  hideNodeContextMenu();
+  if (relationMode || personToolActive || annotationTool) {
     e.stopPropagation();
     return;
   }
-
-  if (
-    e.button !== undefined &&
-    e.button !== 0
-  ) {
-    return;
-  }
-
+  if (dragging) return;
   e.preventDefault();
   e.stopPropagation();
-
+  svg.focus({ preventScroll: true });
   const id = e.currentTarget.dataset.id;
-  const p = person(id);
-
-  if (!p) {
-    return;
-  }
-
-  const isMultiKey =
-    e.ctrlKey ||
-    e.shiftKey ||
-    e.metaKey;
-
+  if (!person(id)) return;
+  setSelectionPanelVisible(true);
+  const isMultiKey = e.ctrlKey || e.shiftKey || e.metaKey;
   if (isMultiKey) {
     togglePersonSelection(id);
-
-    /*
-     * 選択済み人物を解除した場合は、
-     * その人物のドラッグを開始しない。
-     */
     if (!selectedIds.has(id)) {
-      renderList();
+      suppressNextSvgClick = true;
       loadPersonForm();
       renderChart();
       return;
@@ -3033,99 +3037,93 @@ function startDrag(e) {
   } else {
     selectedId = id;
   }
-
-  const point = clientToWorld(
-    e.clientX,
-    e.clientY
-  );
-
-  const targetIds = selectedIds.size
-    ? [...selectedIds]
-    : [id];
-
+  const point = clientToWorld(e.clientX, e.clientY);
+  const targetIds = selectedIds.size ? [...selectedIds] : [id];
   dragging = {
-    ids: targetIds,
+    id,
+    pointerId: e.pointerId,
+    isMultiKey,
+    startClientX: e.clientX,
+    startClientY: e.clientY,
     startWorldX: point.x,
     startWorldY: point.y,
-    beforeSnapshot: makeSnapshot("ノード移動前"),
+    beforeSnapshot: null,
     moved: false,
-
-    items: targetIds
-      .map(personId => {
-        const target = person(personId);
-
-        if (!target) {
-          return null;
-        }
-
-        return {
-          id: personId,
-          x: target.x,
-          y: target.y
-        };
-      })
-      .filter(Boolean)
+    items: targetIds.map(person).filter(Boolean).map(p => ({
+      id: p.id, x: p.x, y: p.y
+    }))
   };
-
   svg.setPointerCapture(e.pointerId);
-  svg.addEventListener(
-    "pointermove",
-    dragMove
-  );
-  svg.addEventListener(
-    "pointerup",
-    endDrag
-  );
-
-  renderList();
+  svg.addEventListener("pointermove", dragMove);
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", cancelPersonDrag);
   loadPersonForm();
   renderChart();
 }
 
-
 function dragMove(e) {
-if (!dragging) return;
-
-const pt = clientToWorld(e.clientX, e.clientY);
-const dx = pt.x - dragging.startWorldX;
-const dy = pt.y - dragging.startWorldY;
-
-if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-  dragging.moved = true;
-}
-
-dragging.items.forEach(item => {
-  const p = person(item.id);
-  if (!p) return;
-
-  p.x = item.x + dx;
-  p.y = item.y + dy;
-});
-
-renderChart();
+  if (!dragging || e.pointerId !== dragging.pointerId) return;
+  if (!dragging.moved) {
+    if (Math.hypot(
+      e.clientX - dragging.startClientX,
+      e.clientY - dragging.startClientY
+    ) < 5) return;
+    dragging.beforeSnapshot = makeSnapshot("ノード移動前");
+    dragging.moved = true;
+    hideNodeContextMenu();
+    setSelectionPanelVisible(false);
+  }
+  const point = clientToWorld(e.clientX, e.clientY);
+  const dx = point.x - dragging.startWorldX;
+  const dy = point.y - dragging.startWorldY;
+  dragging.items.forEach(item => {
+    const p = person(item.id);
+    if (!p) return;
+    p.x = item.x + dx;
+    p.y = item.y + dy;
+  });
+  renderChart();
 }
 
 function endDrag(e) {
-if (dragging && dragging.moved && dragging.beforeSnapshot) {
-  undoStack.push(dragging.beforeSnapshot);
-
-  if (undoStack.length > UNDO_LIMIT) {
-    undoStack.shift();
+  if (!dragging || e.pointerId !== dragging.pointerId) return;
+  // 最後のpointermoveが省略された場合も画面上の最終位置で判定する。
+  dragMove(e);
+  const state = dragging;
+  finishPersonDrag(e);
+  if (state.moved) {
+    undoStack.push(state.beforeSnapshot);
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    redoStack.length = 0;
+  } else if (!state.isMultiKey) {
+    selectOnly(state.id);
   }
-
-  redoStack.length = 0;
+  sync();
 }
 
-dragging = null;
+function cancelPersonDrag(e) {
+  if (!dragging || e.pointerId !== dragging.pointerId) return;
+  dragging.items.forEach(item => {
+    const p = person(item.id);
+    if (p) {
+      p.x = item.x;
+      p.y = item.y;
+    }
+  });
+  finishPersonDrag(e);
+  hideNodeContextMenu();
+  sync();
+}
 
-try {
-  svg.releasePointerCapture(e.pointerId);
-} catch {}
-
-svg.removeEventListener("pointermove", dragMove);
-svg.removeEventListener("pointerup", endDrag);
-
-sync();
+function finishPersonDrag(e) {
+  dragging = null;
+  suppressNextSvgClick = true;
+  try {
+    svg.releasePointerCapture(e.pointerId);
+  } catch {}
+  svg.removeEventListener("pointermove", dragMove);
+  svg.removeEventListener("pointerup", endDrag);
+  svg.removeEventListener("pointercancel", cancelPersonDrag);
 }
 
 let panning = null;
@@ -3133,6 +3131,8 @@ let marqueeSelecting = null;
 let suppressNextSvgClick = false;
 
 function startPan(e) {
+  suppressNextSvgClick = false;
+  if (personToolActive) return;
   /*
    * 図形追加モード中は、パンではなく図形作成を開始する。
    * テキストだけはclickイベントで作成する。
@@ -3358,10 +3358,11 @@ function endMarqueeSelection(event) {
 
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
+  selectedRelation = null;
+  setSelectionPanelVisible(true);
 
   suppressNextSvgClick = true;
 
-  renderList();
   loadPersonForm();
   renderChart();
 }
@@ -3403,8 +3404,8 @@ function getPeopleInMarquee(bounds) {
       const personBounds = {
         minX: p.x,
         minY: p.y,
-        maxX: p.x + NODE_W,
-        maxY: p.y + NODE_H
+        maxX: p.x + getNodeDimensions(p).width,
+        maxY: p.y + getNodeDimensions(p).height
       };
 
       return boundsIntersect(
@@ -3511,7 +3512,7 @@ function arrangeSelectedFamily() {
     .forEach((parent, index) => {
       parent.x =
         baseX +
-        index * (NODE_W + SPOUSE_GAP);
+        index * (getNodeDimensions(parent).width + SPOUSE_GAP);
 
       parent.y = baseY;
     });
@@ -3524,13 +3525,13 @@ function arrangeSelectedFamily() {
       parents.length
         ? parents.reduce(
             (sum, parent) =>
-              sum + parent.x + NODE_W / 2,
+              sum + nodeCenter(parent).x,
             0
           ) / parents.length
-        : baseX + NODE_W / 2;
+        : baseX + getNodeDimensions().width / 2;
 
     const totalChildrenWidth =
-      children.length * NODE_W +
+      children.reduce((sum, child) => sum + getNodeDimensions(child).width, 0) +
       Math.max(
         0,
         children.length - 1
@@ -3545,10 +3546,10 @@ function arrangeSelectedFamily() {
       .forEach((child, index) => {
         child.x =
           childStartX +
-          index * (NODE_W + CHILD_GAP);
+          index * (getNodeDimensions(child).width + CHILD_GAP);
 
         child.y =
-          baseY + LEVEL_GAP;
+          baseY + Math.max(...parents.map(parent => getNodeDimensions(parent).height), getNodeDimensions().height) + 100;
       });
   }
 
@@ -3599,7 +3600,8 @@ function arrangeSelectedPeople() {
     selectedFamilies,
     {
       startX: bounds.minX,
-      startY: bounds.minY
+      startY: bounds.minY,
+      getNodeDimensions
     }
   );
 
@@ -3631,8 +3633,8 @@ function captureLayoutReference() {
         {
           x: p.x,
           y: p.y,
-          centerX: p.x + NODE_W / 2,
-          centerY: p.y + NODE_H / 2
+          centerX: nodeCenter(p).x,
+          centerY: nodeCenter(p).y
         }
       ])
     ),
@@ -3995,7 +3997,7 @@ function arrangeAll() {
   const layoutReference =
     captureLayoutReference();
   const positions =
-    calculateAutoLayout(people, families);
+    calculateAutoLayout(people, families, { getNodeDimensions });
 
   people.forEach(p => {
     const position = positions.get(p.id);
@@ -4019,7 +4021,23 @@ function arrangeAll() {
 
   return true;
 }
+// 表示位置・選択等は無視し、編集された業務データだけを照合する。
+function getCurrentContentKey() {
+  return JSON.stringify({
+    people, families, annotations, chartMemo,
+    familyModelInitialized: !!familyModelInitialized
+  });
+}
+function hasUnsavedChanges() {
+  return savedContentKey !== null && savedContentKey !== getCurrentContentKey();
+}
+function markContentSaved(key = getCurrentContentKey()) {
+  savedContentKey = key;
+  legacyAutoSaveRestored = false;
+  updateLegacyAutoSaveMigrationUi();
+}
 async function saveData() {
+const saveOperation = ++saveOperationSequence;
 const data = {
   version: 7,
   savedAt: new Date().toISOString(),
@@ -4057,6 +4075,7 @@ try {
   return;
 }
 const fileName = makeSaveFileName();
+const contentAtSaveStart = getCurrentContentKey();
 
 // 対応ブラウザでは「名前を付けて保存」ダイアログを使う
 if (window.showSaveFilePicker) {
@@ -4076,7 +4095,9 @@ if (window.showSaveFilePicker) {
     const writable = await handle.createWritable();
     await writable.write(new Blob([json], { type: "application/json;charset=utf-8" }));
     await writable.close();
-
+    if (saveOperation === saveOperationSequence) {
+      markContentSaved(contentAtSaveStart);
+    }
     return;
   } catch (e) {
     // 利用者がキャンセルした場合は何もしない
@@ -4087,8 +4108,22 @@ if (window.showSaveFilePicker) {
   }
 }
 
-// 未対応ブラウザ向けの通常ダウンロード
-downloadJsonFile(json, fileName);
+// 通常ダウンロードの完了はAPIで確認できないので利用者に確認する。
+try {
+  downloadJsonFile(json, fileName);
+  window.setTimeout(() => {
+    if (saveOperation !== saveOperationSequence) return;
+    if (window.confirm(
+      "JSONファイルが保存先に作成されたことを確認できましたか？\n" +
+      "確認できた場合は、今回の内容を保存済みとして扱います。"
+    )) {
+      markContentSaved(contentAtSaveStart);
+    }
+  }, 0);
+} catch (error) {
+  console.error(error);
+  alert("ダウンロードを開始できませんでした。");
+}
 }
 
 function makeSaveFileName() {
@@ -4123,256 +4158,90 @@ input.value = "";
 input.click();
 }
 
-function isAutoSaveEnabled() {
-return localStorage.getItem(AUTO_SAVE_ENABLED_KEY) === "true";
+// 旧localStorageの個人情報は明示的な退避・削除のためだけに読み出す。
+function hasLegacyAutoSaveBackup() {
+  try { return localStorage.getItem(AUTO_SAVE_DATA_KEY) !== null; }
+  catch { return false; }
 }
-
-function setAutoSaveEnabled(enabled) {
-localStorage.setItem(AUTO_SAVE_ENABLED_KEY, enabled ? "true" : "false");
-}
-
-function initAutoSave() {
-const checkbox = document.getElementById("autoSaveEnabled");
-
-if (checkbox) {
-  checkbox.checked = isAutoSaveEnabled();
-}
-
-updateAutoSaveStatus();
-
-// 起動時の復元確認
-checkAutoSaveBackupOnStartup();
-
-// ここから先の sync() で自動保存を動かす
-autoSaveReady = true;
-}
-
-function toggleAutoSave() {
-const checkbox = document.getElementById("autoSaveEnabled");
-if (!checkbox) return;
-
-if (checkbox.checked) {
-  const ok = confirm(
-    "自動保存を有効にします。\n\n" +
-    "作業中の相続関係図データが、この端末のブラウザ内に一時保存されます。\n" +
-    "氏名・住所・相続関係などの個人情報を含む可能性があります。\n\n" +
-    "共用端末では使用に注意してください。\n\n" +
-    "自動保存を有効にしますか？"
-  );
-
-  if (!ok) {
-    checkbox.checked = false;
-    setAutoSaveEnabled(false);
-    updateAutoSaveStatus();
-    return;
-  }
-
-  setAutoSaveEnabled(true);
-  updateAutoSaveStatus("自動保存を有効にしました。");
-
-  // 有効化直後に現在状態を保存
-  saveAutoSaveNow("自動保存ON直後");
-  return;
-}
-
-setAutoSaveEnabled(false);
-
-if (autoSaveTimer) {
-  clearTimeout(autoSaveTimer);
-  autoSaveTimer = null;
-}
-
-const hasBackup = hasAutoSaveBackup();
-
-if (hasBackup) {
-  const deleteBackup = confirm(
-    "自動保存を無効にしました。\n\n" +
-    "既存の自動保存データも削除しますか？\n\n" +
-    "削除しない場合、後から「自動保存から復元」で復元できます。"
-  );
-
-  if (deleteBackup) {
-    localStorage.removeItem(AUTO_SAVE_DATA_KEY);
-    autoSaveLastSavedAt = "";
-  }
-}
-
-updateAutoSaveStatus("自動保存を無効にしました。");
-}
-
-function scheduleAutoSave() {
-if (!autoSaveReady) return;
-if (!isAutoSaveEnabled()) return;
-
-if (autoSaveTimer) {
-  clearTimeout(autoSaveTimer);
-}
-
-autoSaveTimer = setTimeout(() => {
-  saveAutoSaveNow("変更後自動保存");
-}, AUTO_SAVE_DELAY_MS);
-}
-
-function saveAutoSaveNow(reason = "") {
-  if (!isAutoSaveEnabled()) return;
-
+function getLegacyAutoSaveBackup() {
   try {
-    const data = makeAutoSaveData(reason);
-    const json = JSON.stringify(data);
-    try {
-      validateKakeizuSavedJson(data, json);
-    } catch (error) {
-      // 内容・容量による一時的な不正では設定をOFFにしない。
-      // 次の編集で修正できれば自動保存を再試行する。
-      updateAutoSaveStatus(
-        "自動保存を保留しました: " +
-          (error && error.message ? error.message : "保存データを確認してください。"),
-        "warning"
-      );
-      return;
-    }
-
-    localStorage.setItem(
-      AUTO_SAVE_DATA_KEY,
-      json
-    );
-
-    autoSaveLastSavedAt = data.savedAt;
-    updateAutoSaveStatus();
-  } catch (error) {
-    console.error(error);
-
-    setAutoSaveEnabled(false);
-
-    const checkbox =
-      document.getElementById("autoSaveEnabled");
-
-    if (checkbox) {
-      checkbox.checked = false;
-    }
-
-    if (autoSaveTimer) {
-      clearTimeout(autoSaveTimer);
-      autoSaveTimer = null;
-    }
-
-    updateAutoSaveStatus(
-      "自動保存に失敗して停止しました。内容を修正し、再度有効にしてください。",
-      "error"
-    );
-    alert("自動保存に失敗したため、自動保存を停止しました。\n\n" +
-      (error && error.message ? error.message : "保存領域の空き容量を確認してください。") +
-      "\n\n入力内容や保存容量を確認し、修正後に自動保存を再度有効にしてください。");
-  }
-}
-
-
-function makeAutoSaveData(reason = "") {
-  return {
-    version: 7,
-    source: "autoSave",
-    reason,
-    savedAt: new Date().toISOString(),
-
-    people: JSON.parse(JSON.stringify(people || [])),
-    families: JSON.parse(JSON.stringify(families || [])),
-    annotations: JSON.parse(JSON.stringify(annotations || [])),
-
-    chartMemo,
-
-    selectedId,
-    selectedIds: selectedIds ? [...selectedIds] : [],
-    selectedAnnotationId,
-    selectedAnnotationIds: [...selectedAnnotationIds],
-
-    scale,
-    offsetX,
-    offsetY,
-
-    familyModelInitialized: !!familyModelInitialized
-  };
-}
-
-
-function hasAutoSaveBackup() {
-  return localStorage.getItem(AUTO_SAVE_DATA_KEY) !== null;
-}
-
-function getAutoSaveBackup() {
-  const text = localStorage.getItem(AUTO_SAVE_DATA_KEY);
-  if (text === null) return null;
-  try {
-    if (new Blob([text]).size > KAKEIZU_JSON_MAX_BYTES) return null;
+    const text = localStorage.getItem(AUTO_SAVE_DATA_KEY);
+    if (text === null || new Blob([text]).size > KAKEIZU_JSON_MAX_BYTES) return null;
     const data = JSON.parse(text);
     validateKakeizuImport(data);
     return data;
-  } catch {
-    return null;
+  } catch { return null; }
+}
+function updateLegacyAutoSaveMigrationUi() {
+  const box = document.getElementById("legacyAutoSaveMigration");
+  if (!box) return;
+  box.hidden = !hasLegacyAutoSaveBackup();
+  if (box.hidden) return;
+  const details = document.getElementById("legacyAutoSaveDetails");
+  const backup = getLegacyAutoSaveBackup();
+  if (details) details.textContent = backup
+    ? `保存日時: ${formatAutoSaveDateTime(backup.savedAt)} / 人物: ${backup.people.length}人 / 関係: ${(backup.families || []).length}件`
+    : "旧データは形式が不正か、サイズ・項目数の上限を超えるため復元できません。";
+}
+function openLegacyAutoSaveMigration() {
+  if (typeof openLegacyMigrationDialog === "function") {
+    openLegacyMigrationDialog();
   }
 }
-
-function checkAutoSaveBackupOnStartup() {
-  if (!isAutoSaveEnabled()) {
-    updateAutoSaveStatus();
+function initLegacyAutoSaveMigration() {
+  // 旧データは削除しない。以前のON/OFF設定だけを撤去する。
+  try { localStorage.removeItem(AUTO_SAVE_ENABLED_KEY); } catch {}
+  updateLegacyAutoSaveMigrationUi();
+  if (!hasLegacyAutoSaveBackup()) return;
+  try {
+    if (localStorage.getItem(LEGACY_AUTO_SAVE_NOTICE_KEY) === "true") return;
+  } catch { /* 読めないときは案内する */ }
+  const openMigration = confirm(
+    "以前の自動保存データが残っています。\n\n" +
+    "このバージョンでは自動保存を廃止しました。\n" +
+    "現在表示している図は旧データではなく、サンプルデータです。\n" +
+    "必要なデータはJSONファイルに退避してください。\n\n" +
+    "「OK」で移行画面を開きます。「キャンセル」で後から確認できます。"
+  );
+  // 利用者がダイアログを確認した後で、非個人情報の案内済みフラグのみ記録。
+  try { localStorage.setItem(LEGACY_AUTO_SAVE_NOTICE_KEY, "true"); } catch {}
+  if (openMigration) openLegacyAutoSaveMigration();
+}
+function restoreLegacyAutoSaveManually() {
+  const backup = getLegacyAutoSaveBackup();
+  if (!backup) {
+    alert("旧自動保存データを復元できません。不要なら削除できます。");
     return;
-}
-
-const backup = getAutoSaveBackup();
-
-if (!backup) {
-  updateAutoSaveStatus();
-  return;
-}
-
-const savedText = formatAutoSaveDateTime(backup.savedAt);
-
-const ok = confirm(
-  "前回の自動保存データがあります。\n\n" +
-  `保存日時: ${savedText}\n` +
-  `人物数: ${(backup.people || []).length}人\n` +
-  `関係数: ${(backup.families || []).length}件\n\n` +
-  "この自動保存データを復元しますか？"
-);
-
-if (ok) {
+  }
+  if (!confirm(
+    "旧自動保存データを復元します。\n" +
+    "今の作業内容は置き換わります（元に戻すことができます）。\n" +
+    "復元後は「データを保存」でJSONファイルに退避してください。\n\n復元しますか？"
+  )) return;
+  ++saveOperationSequence; // 未完了のファイル保存より新しい読込みを優先
+  pushUndo("旧自動保存データ復元前");
   restoreAutoSaveData(backup);
-  updateAutoSaveStatus("自動保存データを復元しました。");
-} else {
-  updateAutoSaveStatus("自動保存データがあります。必要に応じて復元できます。", "warning");
+  legacyAutoSaveRestored = true;
 }
+function deleteLegacyAutoSaveBackup() {
+  if (!hasLegacyAutoSaveBackup()) { updateLegacyAutoSaveMigrationUi(); return; }
+  if (legacyAutoSaveRestored && hasUnsavedChanges()) {
+    alert("旧データを復元中です。削除する前にJSONファイルへ保存してください。");
+    return;
+  }
+  if (!confirm(
+    "旧自動保存データを削除します。\n" +
+    "必要なデータをJSONファイルへ退避したか、不要かを確認してください。\n" +
+    "削除後は復元できません。削除しますか？"
+  )) return;
+  try {
+    localStorage.removeItem(AUTO_SAVE_DATA_KEY);
+    localStorage.removeItem(LEGACY_AUTO_SAVE_NOTICE_KEY);
+  } catch { alert("旧自動保存データを削除できませんでした。"); return; }
+  updateLegacyAutoSaveMigrationUi();
 }
-
-function restoreAutoSaveManually() {
-const backup = getAutoSaveBackup();
-
-if (!backup) {
-  alert(hasAutoSaveBackup()
-    ? "自動保存データは残っていますが、形式または安全上限の問題で復元できません。不要な場合は「自動保存データを削除」から削除できます。"
-    : "復元できる自動保存データがありません。");
-  updateAutoSaveStatus();
-  return;
-}
-
-const savedText = formatAutoSaveDateTime(backup.savedAt);
-
-const ok = confirm(
-  "自動保存データを復元します。\n\n" +
-  "現在の画面上のデータは置き換えられます。\n\n" +
-  `自動保存日時: ${savedText}\n` +
-  `人物数: ${(backup.people || []).length}人\n` +
-  `関係数: ${(backup.families || []).length}件\n\n` +
-  "復元してよろしいですか？"
-);
-
-if (!ok) return;
-
-pushUndo("自動保存復元前");
-
-restoreAutoSaveData(backup);
-updateAutoSaveStatus("自動保存データを復元しました。");
-}
-
 function restoreAutoSaveData(data) {
+  personToolActive = false;
   if (!data || !Array.isArray(data.people)) {
     return;
   }
@@ -4460,6 +4329,7 @@ function restoreAutoSaveData(data) {
   relationMode = null;
   relationClicks = [];
   relationPreviewMouse = null;
+  selectedRelation = null;
 
   annotationTool = null;
   annotationContextTargetId = null;
@@ -4480,67 +4350,6 @@ function restoreAutoSaveData(data) {
   fitAllAfterRestore();
 }
 
-
-function deleteAutoSaveBackup() {
-  if (!hasAutoSaveBackup()) {
-    alert("削除する自動保存データはありません。");
-    updateAutoSaveStatus();
-    return;
-  }
-  const backup = getAutoSaveBackup();
-  const savedText = backup
-    ? formatAutoSaveDateTime(backup.savedAt)
-    : "不明（復元できないデータ）";
-  const ok = confirm(
-    "自動保存データを削除します。\n\n保存日時: " + savedText + "\n\n" +
-    (backup ? "" : "このデータは現在の形式では復元できません。\n") +
-    "削除してよろしいですか？"
-  );
-  if (!ok) return;
-  localStorage.removeItem(AUTO_SAVE_DATA_KEY);
-  autoSaveLastSavedAt = "";
-  updateAutoSaveStatus("自動保存データを削除しました。");
-}
-
-function updateAutoSaveStatus(message = "", level = "") {
-const el = document.getElementById("autoSaveStatus");
-if (!el) return;
-
-const enabled = isAutoSaveEnabled();
-const hasBackup = hasAutoSaveBackup();
-const backup = hasBackup ? getAutoSaveBackup() : null;
-
-let html = "";
-
-if (enabled) {
-  html += `<span class="autosave-on">自動保存: ON</span>`;
-} else {
-  html += `<span class="autosave-off">自動保存: OFF</span>`;
-}
-
-if (backup && backup.savedAt) {
-  html += "<br>最終自動保存: " + escapeHtml(formatAutoSaveDateTime(backup.savedAt));
-} else if (hasBackup) {
-  html += '<br><span class="autosave-error">自動保存データ: 復元不可（削除可能）</span>';
-} else {
-  html += "<br>自動保存データ: なし";
-}
-
-if (message) {
-  const cls =
-    level === "error"
-      ? "autosave-error"
-      : level === "warning"
-        ? "autosave-warning"
-        : enabled
-          ? "autosave-on"
-          : "autosave-off";
-
-  html += `<br><span class="${cls}">${escapeHtml(message)}</span>`;
-}
-
-el.innerHTML = html;
-}
 
 function formatAutoSaveDateTime(value) {
 if (!value) return "不明";
@@ -4879,9 +4688,9 @@ function validateKakeizuImport(data) {
     const label = "people[" + index + "]";
     for (const field of [
       "name", "relation", "gender", "address", "birth", "death",
-      "renunciation", "share", "note"
+      "renunciation", "share", "note", "deathNote"
     ]) text(p[field], label + "." + field);
-    for (const field of ["representative", "taxpayer", "manager"]) {
+    for (const field of ["representative", "taxpayer", "manager", "deceased"]) {
       flag(p[field], label + "." + field);
     }
     for (const field of ["x", "y"]) {
@@ -4987,7 +4796,7 @@ function validateKakeizuImport(data) {
   }
 }
 
-// ファイル保存・自動保存に共通する、復元可能性とUTF-8容量の検証。
+// JSONファイル保存時の復元可能性とUTF-8容量の検証。
 function validateKakeizuSavedJson(data, json) {
   validateKakeizuImport(data);
   if (new Blob([json]).size > KAKEIZU_JSON_MAX_BYTES) {
@@ -5044,6 +4853,7 @@ function handleJsonFile(event) {
       /*
        * 実際にデータを書き換える直前に履歴を保存する。
        */
+      ++saveOperationSequence; // 未完了の保存結果による基準上書きを防ぐ
       pushUndo("JSONファイル復元前");
 
       people = (data.people || []).map(createPerson);
@@ -5235,6 +5045,8 @@ function handleJsonFile(event) {
         normalizeChartOrigin();
       }
 
+      selectedRelation = null;
+      personToolActive = false;
       updateRelationModeStatus();
       updateAnnotationToolUi();
       sync();
@@ -5243,6 +5055,7 @@ function handleJsonFile(event) {
       * 新旧を問わず、復元後は全体表示する。
       */
       fitAllAfterRestore();
+      markContentSaved();
 
       alert(
         "データを復元しました。\n\n" +
@@ -5273,157 +5086,11 @@ function handleJsonFile(event) {
   reader.readAsText(file, "utf-8");
 }
 
-function clearAll() {
-  const targetSummary = [
-    `人物: ${people.length}人`,
-    `関係: ${families.length}件`,
-    `図形・注釈: ${annotations.length}件`
-  ].join("\n");
-
-  const confirmed = confirm(
-    "全データを消去しますか？\n\n" +
-    targetSummary +
-    "\n\n" +
-    "人物、関係、図形・注釈、全体メモを消去します。\n" +
-    "この操作は「元に戻す」で取り消せます。"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  /*
-   * clearAllはinstallUndoWrappers()の対象です。
-   * そのため、ここではpushUndo()を呼びません。
-   * 二重に履歴へ追加されるのを防ぎます。
-   */
-  people = [];
-  families = [];
-  annotations = [];
-
-  chartMemo = "";
-
-  selectedId = null;
-  selectedIds.clear();
-
-  selectedAnnotationId = null;
-  selectedAnnotationIds.clear();
-
-  familyModelInitialized = true;
-
-  relationMode = null;
-  relationClicks = [];
-  relationPreviewMouse = null;
-
-  annotationTool = null;
-  annotationContextTargetId = null;
-  annotationCreating = null;
-  arrowEndpointDragging = null;
-  annotationResizing = null;
-  annotationDragging = null;
-
-  annotationClipboard = null;
-  annotationPasteCount = 0;
-
-  hideNodeContextMenu();
-  hideAnnotationContextMenu();
-
-  updateRelationModeStatus();
-  updateAnnotationToolUi();
-
-  sync();
-}
 
 
-function downloadSvg() {
-  updateAllAttachedArrows();
-  renderChart();
 
-  const bounds = getAllChartBounds();
-
-  if (
-    !people.length &&
-    !annotations.length
-  ) {
-    alert("出力する人物または図形がありません。");
-    return;
-  }
-
-  const padding = 30;
-  const clone = svg.cloneNode(true);
-  sanitizeSvgClone(clone);
-
-  clone.setAttribute(
-    "xmlns",
-    "http://www.w3.org/2000/svg"
-  );
-
-  clone.querySelectorAll(
-    [
-      ".node-hit-target",
-      ".annotation-selection-box",
-      ".annotation-resize-handle",
-      ".annotation-arrow-endpoint",
-      ".annotation-create-preview",
-      ".annotation-create-start",
-      ".preview-line",
-      ".preview-anchor"
-    ].join(",")
-  ).forEach(element => {
-    element.remove();
-  });
-
-  clone.querySelectorAll(
-    ".selected, .multi-selected, .pending, .arrow-snap-target"
-  ).forEach(element => {
-    element.classList.remove(
-      "selected",
-      "multi-selected",
-      "pending",
-      "arrow-snap-target"
-    );
-  });
-
-  const x = bounds.minX - padding;
-  const y = bounds.minY - padding;
-  const width = Math.max(
-    1,
-    bounds.width + padding * 2
-  );
-  const height = Math.max(
-    1,
-    bounds.height + padding * 2
-  );
-
-  clone.setAttribute(
-    "viewBox",
-    `${x} ${y} ${width} ${height}`
-  );
-
-  clone.setAttribute("width", width);
-  clone.setAttribute("height", height);
-
-  /*
-   * 画面のパン・ズーム変換を除去し、
-   * ワールド座標をそのまま出力する。
-   */
-  const clonedViewport =
-    clone.querySelector("#viewport");
-
-  if (clonedViewport) {
-    clonedViewport.removeAttribute("transform");
-  }
-
-  /*
-   * 外部CSSがない環境でも表示できるように、
-   * 出力用の必要最小限のスタイルをSVGへ埋め込む。
-   */
-  const styleElement = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "style"
-  );
-
-  styleElement.textContent = `
+function getSvgExportStyles() {
+  return `
     .node rect {
       fill: #ffffff;
       stroke: #333333;
@@ -5511,6 +5178,17 @@ function downloadSvg() {
       vector-effect: non-scaling-stroke;
     }
 
+    .annotation-text text {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Yu Gothic UI",
+        Meiryo,
+        sans-serif;
+      white-space: pre;
+    }
+
     .annotation-arrow .annotation-shape,
     .annotation-cross .annotation-shape {
       fill: none;
@@ -5534,36 +5212,133 @@ function downloadSvg() {
       text-anchor: middle;
     }
   `;
+}
 
-  clone.insertBefore(
-    styleElement,
-    clone.firstChild
-  );
+function prepareSvgCloneForExport({ refresh = true } = {}) {
+  if (refresh) renderChart({ preserveSnapshot: true });
+
+  const bounds = getAllChartBounds();
+  if (!people.length && !annotations.length) {
+    alert("出力する人物または図形がありません。");
+    return null;
+  }
+
+  const padding = 30;
+  const clone = svg.cloneNode(true);
+  sanitizeSvgClone(clone);
+
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.querySelectorAll([
+    ".node-hit-target",
+    ".person-menu-button",
+    ".relation-hit-target",
+    ".annotation-hit-target",
+    ".placement-preview-layer",
+    ".annotation-selection-box",
+    ".annotation-resize-handle",
+    ".annotation-arrow-endpoint",
+    ".annotation-create-preview",
+    ".annotation-create-start",
+    ".preview-line",
+    ".preview-anchor",
+    ".marquee-selection"
+  ].join(",")).forEach(element => element.remove());
+
+  clone.querySelectorAll(".selected, .multi-selected, .pending, .arrow-snap-target, .hovered, .relation-through-hover")
+    .forEach(element => element.classList.remove("selected", "multi-selected", "pending", "arrow-snap-target", "hovered", "relation-through-hover"));
+
+  const x = bounds.minX - padding;
+  const y = bounds.minY - padding;
+  const width = Math.max(1, bounds.width + padding * 2);
+  const height = Math.max(1, bounds.height + padding * 2);
+
+  clone.setAttribute("viewBox", `${x} ${y} ${width} ${height}`);
+  clone.setAttribute("width", width);
+  clone.setAttribute("height", height);
+
+  const clonedViewport = clone.querySelector("#viewport");
+  if (clonedViewport) clonedViewport.removeAttribute("transform");
+
+  const styleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
+  styleElement.textContent = getSvgExportStyles();
+  clone.insertBefore(styleElement, clone.firstChild);
+
+  return { clone, width, height };
+}
+
+function downloadSvg() {
+  const prepared = prepareSvgCloneForExport();
+  if (!prepared) return;
+  const { clone } = prepared;
 
   const serializer = new XMLSerializer();
-  const source =
-    serializer.serializeToString(clone);
-
-  const blob = new Blob(
-    [source],
-    {
-      type: "image/svg+xml;charset=utf-8"
-    }
-  );
-
+  const source = serializer.serializeToString(clone);
+  const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-
   link.href = url;
   link.download = "相続関係図.svg";
-
   document.body.appendChild(link);
   link.click();
   link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
 
-  setTimeout(() => {
+function downloadPng() {
+  const prepared = prepareSvgCloneForExport();
+  if (!prepared) return;
+  const { clone, width, height } = prepared;
+
+  const serializer = new XMLSerializer();
+  const source = serializer.serializeToString(clone);
+  const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  if (typeof Image === "undefined" || typeof document.createElement("canvas").getContext !== "function") {
     URL.revokeObjectURL(url);
-  }, 0);
+    return;
+  }
+
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const canvas = document.createElement("canvas");
+      const exportScale = Math.min(2, 4096 / Math.max(width, height));
+      canvas.width = Math.max(1, Math.round(width * exportScale));
+      canvas.height = Math.max(1, Math.round(height * exportScale));
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(pngBlob => {
+        if (!pngBlob) {
+          URL.revokeObjectURL(url);
+          alert("PNG画像の生成に失敗しました。");
+          return;
+        }
+        const pngUrl = URL.createObjectURL(pngBlob);
+        const link = document.createElement("a");
+        link.href = pngUrl;
+        link.download = "相続関係図.png";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => {
+          URL.revokeObjectURL(pngUrl);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }, "image/png");
+    } catch {
+      URL.revokeObjectURL(url);
+      alert("PNG画像の出力中にエラーが発生しました。");
+    }
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    alert("画像の変換に失敗しました。");
+  };
+  img.src = url;
 }
 
 function sanitizeSvgClone(root) {
@@ -5612,186 +5387,101 @@ function sanitizeSvgClone(root) {
 
 
 
-let printViewState = null;
 let printPreparationActive = false;
-let printAutoFitApplied = false;
 
 function printChart() {
   preparePrintLayout();
-
-  setTimeout(() => {
-    renderChart();
-
-    if (
-      document.getElementById("printAutoFit")
-        ?.checked &&
-      !printAutoFitApplied
-    ) {
-      fitAllForPrint();
-      printAutoFitApplied = true;
-    }
-
-    setTimeout(() => {
-      window.print();
-    }, 100);
-  }, 100);
+  try {
+    window.print();
+  } finally {
+    restoreAfterPrint();
+  }
 }
 
+function getPrintSettings() {
+  const scalePercent = Number(document.getElementById("printScalePercent")?.value ?? 100);
+  const rawMargin = document.getElementById("printMarginMm")?.value;
+  if (rawMargin === "") return null;
+  const margin = Number(rawMargin ?? 8);
+  if (!Number.isInteger(scalePercent) || scalePercent < 10 || scalePercent > 400 ||
+      !Number.isInteger(margin) || margin < 0 || margin > 30) return null;
+  return {
+    scalePercent,
+    margin,
+    orientation: document.getElementById("printOrientation")?.value === "portrait" ? "portrait" : "landscape",
+    target: document.getElementById("printTarget")?.value === "viewport" ? "viewport" : "all"
+  };
+}
+
+function updatePrintSheet() {
+  const sheet = document.getElementById("printPreviewSheet");
+  if (!sheet) return;
+  const settings = getPrintSettings();
+  if (!settings) return;
+  sheet.dataset.orientation = settings.orientation;
+  const title = document.getElementById("printTitle")?.value || "相続関係図";
+  document.getElementById("printPreviewTitle").textContent = title;
+  // Keep the preview's creation date when the same sheet is sent to print.
+  if (!sheet.dataset.creationDate) {
+    const now = new Date();
+    sheet.dataset.creationDate =
+      `${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, "0")}月${String(now.getDate()).padStart(2, "0")}日`;
+  }
+  document.getElementById("printPreviewMeta").textContent = `作成日：${sheet.dataset.creationDate}`;
+  document.getElementById("printPreviewLegend").hidden =
+    !document.getElementById("printShowLegend")?.checked;
+
+  sheet.style.setProperty("--print-margin", `${settings.margin}mm`);
+  const wrap = document.getElementById("printPreviewSvgWrap");
+  wrap.replaceChildren();
+  if (people.length || annotations.length) {
+    const prepared = prepareSvgCloneForExport({ refresh: false });
+    if (prepared) {
+      const clone = prepared.clone;
+      clone.id = "printPreviewSvg";
+      clone.removeAttribute("tabindex");
+      clone.removeAttribute("aria-describedby");
+      clone.setAttribute("aria-label", title);
+      clone.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      clone.setAttribute("overflow", "hidden");
+      let [x, y, width, height] = clone.getAttribute("viewBox").split(/\s+/).map(Number);
+      if (settings.target === "viewport") {
+        const rect = svg.getBoundingClientRect();
+        x = -offsetX / scale;
+        y = -offsetY / scale;
+        width = Math.max(1, rect.width / scale);
+        height = Math.max(1, rect.height / scale);
+      }
+      const zoom = settings.scalePercent / 100;
+      clone.setAttribute("viewBox",
+        `${x + width / 2 - width / zoom / 2} ${y + height / 2 - height / zoom / 2} ${width / zoom} ${height / zoom}`);
+      clone.style.width = "100%";
+      clone.style.height = "100%";
+      wrap.appendChild(clone);
+    }
+  }
+}
 
 function preparePrintLayout() {
-  /*
-   * printChart()とbeforeprintの両方から呼ばれても、
-   * 元の表示状態を1回だけ保存する。
-   */
-  if (!printPreparationActive) {
-    printViewState = {
-      scale,
-      offsetX,
-      offsetY
-    };
-
-    printPreparationActive = true;
+  if (printPreparationActive) return;
+  // Both native browser printing and the dialog use this exact sheet and clone.
+  if (!document.getElementById("printDialog")?.open) {
+    const sheet = document.getElementById("printPreviewSheet");
+    if (sheet) delete sheet.dataset.creationDate;
+    updatePrintSheet();
   }
-
-  updateChartMemoFromInput();
-  applyPrintSettingsToDom();
-  updatePrintMemoBox();
-  applyPrintPageStyle();
-
-  document.body.classList.toggle(
-    "print-no-legend",
-    !document.getElementById(
-      "printShowLegend"
-    )?.checked
-  );
-
-  document.body.classList.toggle(
-    "print-no-memo",
-    !document.getElementById(
-      "printShowMemo"
-    )?.checked
-  );
+  const sheet = document.getElementById("printPreviewSheet");
+  const host = document.getElementById("printOutputHost");
+  if (sheet && host) host.appendChild(sheet);
+  printPreparationActive = true;
 }
-
 
 function restoreAfterPrint() {
-  if (printViewState) {
-    scale = printViewState.scale;
-    offsetX = printViewState.offsetX;
-    offsetY = printViewState.offsetY;
-  }
-
-  printViewState = null;
+  if (!printPreparationActive) return;
+  const sheet = document.getElementById("printPreviewSheet");
+  const preview = document.getElementById("printPreviewContainer");
+  if (sheet && preview) preview.appendChild(sheet);
   printPreparationActive = false;
-  printAutoFitApplied = false;
-
-  document.body.classList.remove(
-    "print-no-legend"
-  );
-
-  document.body.classList.remove(
-    "print-no-memo"
-  );
-
-  renderChart();
-}
-
-
-function applyPrintSettingsToDom() {
-const title = document.getElementById("printTitle")?.value || "相続関係図";
-const subject = document.getElementById("printSubject")?.value || guessPrintSubject();
-const paperText = getPrintPaperLabel();
-
-const now = new Date();
-const dateText =
-  `${now.getFullYear()}年` +
-  `${String(now.getMonth() + 1).padStart(2, "0")}月` +
-  `${String(now.getDate()).padStart(2, "0")}日`;
-
-const titleEl = document.getElementById("printHeaderTitle");
-const subjectEl = document.getElementById("printHeaderSubject");
-const metaEl = document.getElementById("printHeaderMeta");
-
-if (titleEl) titleEl.textContent = title;
-if (subjectEl) subjectEl.textContent = subject;
-if (metaEl) {
-  const targetText = getPrintTargetLabel();
-  const scalePercent = document.getElementById("printScalePercent")?.value || "100";
-
-  metaEl.innerHTML = `
-    作成日: ${escapeHtml(dateText)}<br>
-    用紙: ${escapeHtml(paperText)} / 対象: ${escapeHtml(targetText)} / 倍率: ${escapeHtml(scalePercent)}%<br>
-  `;
-}
-}
-
-function getPrintTargetLabel() {
-const value = document.getElementById("printTarget")?.value || "all";
-
-const labels = {
-  all: "図全体",
-  selected: "選択人物",
-  current: "現在表示"
-};
-
-return labels[value] || "図全体";
-}
-
-function guessPrintSubject() {
-const deceased = people.find(p =>
-  (p.relation || "").includes("被相続人") ||
-  (p.relation || "").includes("所有者") ||
-  p.death
-);
-
-if (deceased) {
-  return `対象者: ${deceased.name || deceased.id}`;
-}
-
-return "";
-}
-
-function getPrintPaperLabel() {
-const value = document.getElementById("printPaper")?.value || "a4-landscape";
-
-const labels = {
-  "a4-landscape": "A4 横",
-  "a4-portrait": "A4 縦",
-  "a3-landscape": "A3 横",
-  "a3-portrait": "A3 縦"
-};
-
-return labels[value] || "A4 横";
-}
-
-function applyPrintPageStyle() {
-const paper = document.getElementById("printPaper")?.value || "a4-landscape";
-const margin = Number(document.getElementById("printMarginMm")?.value || 8);
-
-const pageSizeMap = {
-  "a4-landscape": "A4 landscape",
-  "a4-portrait": "A4 portrait",
-  "a3-landscape": "A3 landscape",
-  "a3-portrait": "A3 portrait"
-};
-
-const pageSize = pageSizeMap[paper] || "A4 landscape";
-const safeMargin = clamp(margin, 0, 30);
-
-let style = document.getElementById("dynamicPrintPageStyle");
-
-if (!style) {
-  style = document.createElement("style");
-  style.id = "dynamicPrintPageStyle";
-  document.head.appendChild(style);
-}
-
-style.textContent = `
-  @page {
-    size: ${pageSize};
-    margin: ${safeMargin}mm;
-  }
-`;
 }
 
 function fitAllAfterRestore() {
@@ -5802,195 +5492,10 @@ function fitAllAfterRestore() {
   });
 }
 
-function fitAllForPrint() {
-  if (!people.length && !annotations.length) {
-    return;
-  }
-
-  const targetMode =
-    document.getElementById("printTarget")
-      ?.value || "all";
-
-  if (targetMode === "current") {
-    renderChart();
-    return;
-  }
-
-  renderChart();
-
-  const rect = svg.getBoundingClientRect();
-
-  const rectWidth =
-    rect.width >= 100
-      ? rect.width
-      : window.innerWidth || 1000;
-
-  const rectHeight =
-    rect.height >= 100
-      ? rect.height
-      : window.innerHeight || 700;
-
-  let bounds;
-
-  if (targetMode === "selected") {
-    const selectedPeople =
-      getPrintTargetPeople();
-
-    const selectedAnnotations =
-      getSelectedAnnotations();
-
-    bounds = getCombinedBounds(
-      selectedPeople,
-      selectedAnnotations
-    );
-  } else {
-    bounds = getCombinedBounds(
-      people,
-      annotations
-    );
-  }
-
-  if (!bounds) {
-    return;
-  }
-
-  const margin = 30;
-
-  const availableWidth =
-    Math.max(100, rectWidth - margin * 2);
-
-  const availableHeight =
-    Math.max(100, rectHeight - margin * 2);
-
-  const contentWidth =
-    Math.max(1, bounds.width);
-
-  const contentHeight =
-    Math.max(1, bounds.height);
-
-  const baseScale = Math.min(
-    availableWidth / contentWidth,
-    availableHeight / contentHeight
-  );
-
-  const scalePercent = Number(
-    document.getElementById(
-      "printScalePercent"
-    )?.value || 100
-  );
-
-  const userScale =
-    clamp(scalePercent, 50, 250) / 100;
-
-  scale = clamp(
-    baseScale * userScale,
-    0.05,
-    6
-  );
-
-  const centerX =
-    bounds.minX + bounds.width / 2;
-
-  const centerY =
-    bounds.minY + bounds.height / 2;
-
-  offsetX =
-    rectWidth / 2 - centerX * scale;
-
-  offsetY =
-    rectHeight / 2 - centerY * scale;
-
-  renderChart();
-}
-
-function getCombinedBounds(
-  targetPeople = [],
-  targetAnnotations = []
-) {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  targetPeople.forEach(item => {
-    minX = Math.min(minX, item.x);
-    minY = Math.min(minY, item.y);
-    maxX = Math.max(
-      maxX,
-      item.x + NODE_W
-    );
-    maxY = Math.max(
-      maxY,
-      item.y + NODE_H
-    );
-  });
-
-  targetAnnotations.forEach(item => {
-    const bounds = getAnnotationBounds(item);
-
-    minX = Math.min(minX, bounds.minX);
-    minY = Math.min(minY, bounds.minY);
-    maxX = Math.max(maxX, bounds.maxX);
-    maxY = Math.max(maxY, bounds.maxY);
-  });
-
-  if (!Number.isFinite(minX)) {
-    return null;
-  }
-
-  return {
-    minX,
-    minY,
-    maxX,
-    maxY,
-    width: maxX - minX,
-    height: maxY - minY
-  };
-}
 
 
-function getPrintTargetPeople() {
-const targetMode = document.getElementById("printTarget")?.value || "all";
 
-if (targetMode === "all") {
-  return people;
-}
 
-if (targetMode === "selected") {
-  const ids = selectedIds && selectedIds.size
-    ? [...selectedIds]
-    : selectedId
-      ? [selectedId]
-      : [];
-
-  const selectedPeople = ids.map(person).filter(Boolean);
-
-  // 選択人物がいなければ全体に戻す
-  return selectedPeople.length ? selectedPeople : people;
-}
-
-// current の場合は自動フィットしないので、ここでは全体を返す
-return people;
-}
-
-function updatePrintMemoBox() {
-const contentEl = document.getElementById("printMemoContent");
-const linesEl = document.getElementById("printMemoLines");
-
-if (!contentEl || !linesEl) return;
-
-const memo = String(chartMemo || "").trim();
-
-if (memo) {
-  contentEl.textContent = memo;
-  contentEl.style.display = "block";
-  linesEl.style.display = "none";
-} else {
-  contentEl.textContent = "";
-  contentEl.style.display = "none";
-  linesEl.style.display = "block";
-}
-}
 
 function zoomIn() {
 const center = getSvgCenterClientPoint();
@@ -6071,6 +5576,8 @@ if (p.birth) {
 if (p.death) {
   parts.push(`死:${p.death}`);
 }
+if (isDeceased(p) && !p.death) parts.push("死亡（日付不明）");
+if (p.deathNote) parts.push(`死亡補足:${p.deathNote}`);
 
 return parts.join(" / ");
 }
@@ -6082,19 +5589,23 @@ return `住:${compactNodeText(p.address, 15)}`;
 }
 
 function buildNodeTooltipText(p) {
-  return [
+  const basic = [
     `${p.name || "無名"}`,
     p.gender ? `性別: ${p.gender}` : "",
     p.relation ? `続柄・関係: ${p.relation}` : "",
+    isDeceased(p) ? `死亡年月日: ${p.death || "不明"}` : "",
+    p.deathNote ? `死亡補足: ${p.deathNote}` : ""
+  ];
+  const details = typeof uiMode !== "undefined" && uiMode === "consultation" ? [
     p.address ? `住所: ${p.address}` : "",
     p.birth ? `生年月日: ${p.birth}` : "",
-    p.death ? `死亡年月日: ${p.death}` : "",
     p.renunciation ? `相続放棄: ${p.renunciation}` : "",
     p.representative ? "代表相続人" : "",
     p.taxpayer ? "納税義務者候補" : "",
     p.manager ? "納税管理人候補" : "",
     p.share ? `共有持分: ${p.share}` : ""
-  ].filter(Boolean).join("\n");
+  ] : [];
+  return [...basic, ...details].filter(Boolean).join("\n");
 }
 
 function escapeHtml(value) {
@@ -6125,8 +5636,24 @@ renderChart();
 });
 
 svg.addEventListener("click", event => {
+  if (!commitPropertyFieldBeforeCanvasAction()) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+  if (suppressNextSvgClick) {
+    suppressNextSvgClick = false;
+    event.stopPropagation();
+    return;
+  }
   hideNodeContextMenu();
   hideAnnotationContextMenu();
+  if (personToolActive) {
+    if (!event.target.closest?.(".node, .annotation")) {
+      window.newPerson(clientToWorld(event.clientX, event.clientY));
+    }
+    return;
+  }
 
   if (handleAnnotationCanvasClick(event)) {
     return;
@@ -6140,27 +5667,31 @@ svg.addEventListener("click", event => {
     return;
   }
 
-  if (suppressNextSvgClick) {
-    suppressNextSvgClick = false;
-    return;
-  }
 
   if (
     !event.target.closest?.(".node") &&
-    !event.target.closest?.(".annotation")
+    !event.target.closest?.(".annotation") &&
+    !event.target.closest?.(".relation-hit-target")
   ) {
     clearSelection();
     selectedAnnotationId = null;
     selectedAnnotationIds.clear();
+    selectedRelation = null;
     sync();
   }
 });
 
 
+svg.addEventListener("pointermove", event => {
+  const target = event.target.closest?.(".node, .node-hit-target, .person-menu-button");
+  highlightPersonMenu(target?.dataset.id || null);
+});
+svg.addEventListener("pointerleave", () => highlightPersonMenu(null));
+
 /* document全体のイベント */
-document.addEventListener("click", () => {
-  hideNodeContextMenu();
-  hideAnnotationContextMenu();
+document.addEventListener("click", event => {
+  if (!event.target.closest?.("#nodeContextMenu")) hideNodeContextMenu();
+  if (!event.target.closest?.("#annotationContextMenu")) hideAnnotationContextMenu();
 });
 
 
@@ -6182,7 +5713,27 @@ document.addEventListener("keydown", e => {
     activeTagName === "TEXTAREA" ||
     activeTagName === "SELECT" ||
     activeElement?.isContentEditable;
+  if (e.isComposing || annotationTextEdit) return;
+  if (e.key !== "Escape" && document.querySelector("dialog[open], .app-modal-backdrop.show")) return;
 
+  if (
+    !isFormEditing && !relationMode && !annotationTool && !personToolActive &&
+    selectedId && (activeElement === svg || svg.contains(activeElement)) &&
+    (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10"))
+  ) {
+    e.preventDefault();
+    const p = person(selectedId);
+    if (p) {
+      const rect = svg.getBoundingClientRect();
+      showNodeContextMenu(
+        p.id,
+        rect.left + offsetX + (p.x + getNodeDimensions(p).width) * scale,
+        rect.top + offsetY + p.y * scale,
+        true
+      );
+    }
+    return;
+  }
   if (e.key === "Alt" && !isFormEditing && !relationMode && !annotationTool) {
     svg.classList.add("annotation-hit-mode");
   }
@@ -6191,18 +5742,35 @@ document.addEventListener("keydown", e => {
    * Escキー
    *
    * 次の状態を解除します。
-   * - 人物の右クリックメニュー
+   * - 人物メニュー
    * - 図形・注釈の右クリックメニュー
    * - 関係作成モード
    * - 図形追加モード
    */
   if (e.key === "Escape") {
+    const closeDialog = document.getElementById("bulkEditCloseDialog");
+    if (closeDialog?.open) {
+      e.preventDefault();
+      closeWorkspaceDialog("bulkEditCloseDialog");
+      return;
+    }
+    if (document.getElementById("bulkEditModalBackdrop")?.classList.contains("show")) {
+      e.preventDefault();
+      closeBulkEditModal();
+      return;
+    }
+    closeToolMenus();
+    clearCanvasFeedback();
+    personToolActive = false;
+    selectedRelation = null;
+    updateCanvasToolStatus();
     hideNodeContextMenu();
     hideAnnotationContextMenu();
 
-    closeBulkEditModal();
     closeRelationListModal();
-    closeAnnotationEditModal();
+    if (typeof closePrintModal === "function") closePrintModal();
+    if (typeof closeValidationDialog === "function") closeValidationDialog();
+    if (typeof closeLegacyMigrationDialog === "function") closeLegacyMigrationDialog();
 
     if (relationMode) {
       cancelRelationMode();
@@ -6211,6 +5779,14 @@ document.addEventListener("keydown", e => {
     if (annotationTool) {
       cancelAnnotationTool();
     }
+    if (!isFormEditing) {
+      clearSelection();
+      selectedAnnotationId = null;
+      selectedAnnotationIds.clear();
+    }
+
+    renderChart();
+    if (typeof updateSelectionProperties === "function") updateSelectionProperties();
 
     return;
   }
@@ -6218,17 +5794,28 @@ document.addEventListener("keydown", e => {
   /*
    * Delete / Backspaceキー
    *
-   * 選択中の図形・注釈を削除します。
+   * 選択中の関係線、図形・注釈、または人物を削除します。
    * 入力欄を編集しているときは、文字削除を優先します。
    */
   if (
     (e.key === "Delete" || e.key === "Backspace") &&
-    selectedAnnotationId &&
     !isFormEditing
   ) {
-    e.preventDefault();
-    deleteSelectedAnnotation();
-    return;
+    if (selectedRelation) {
+      e.preventDefault();
+      deleteSelectedRelation();
+      return;
+    }
+    if (selectedAnnotationId || (selectedAnnotationIds && selectedAnnotationIds.size > 0)) {
+      e.preventDefault();
+      deleteSelectedAnnotation();
+      return;
+    }
+    if (selectedId || (selectedIds && selectedIds.size > 0)) {
+      e.preventDefault();
+      deleteSelected();
+      return;
+    }
   }
 
   /*
@@ -6338,28 +5925,17 @@ document.addEventListener("keydown", e => {
 });
 
 
-window.addEventListener("beforeprint", () => {
-  preparePrintLayout();
-
-  if (
-    document.getElementById("printAutoFit")
-      ?.checked &&
-    !printAutoFitApplied
-  ) {
-    fitAllForPrint();
-    printAutoFitApplied = true;
-  }
-});
+window.addEventListener("beforeprint", preparePrintLayout);
 
 
 window.addEventListener("afterprint", () => {
 restoreAfterPrint();
 });
 
-window.addEventListener("beforeunload", () => {
-if (isAutoSaveEnabled()) {
-  saveAutoSaveNow("ページ終了直前");
-}
+window.addEventListener("beforeunload", event => {
+  if (!hasUnsavedChanges()) return;
+  event.preventDefault();
+  event.returnValue = "";
 });
 
 function snapshotKey(snapshot) {
@@ -6399,19 +5975,16 @@ if (undoStack.length > UNDO_LIMIT) {
 }
 
 redoStack.length = 0;
+if (typeof updateViewportControls === "function") updateViewportControls();
 }
 
 function installUndoWrappers() {
 const targets = [
   ["newPerson", "人物追加前"],
   ["deletePerson", "人物削除前"],
-  ["savePersonForm", "人物情報変更前"],
   ["applyTable", "表反映前"],
-  ["addSpouse", "夫婦関係追加前"],
-  ["addChild", "親子関係追加前"],
   ["removeFamily", "関係削除前"],
   ["removeChildFromFamily", "親子関係解除前"],
-  ["clearAll", "全消去前"],
   ["arrangeSelectedFamily", "家族整列前"],
   ["arrangeSelectedPeople", "選択人物整列前"],
   ["arrangeAll", "全体整列前"]
@@ -6490,8 +6063,8 @@ let maxY = -Infinity;
 target.forEach(p => {
   minX = Math.min(minX, p.x);
   minY = Math.min(minY, p.y);
-  maxX = Math.max(maxX, p.x + NODE_W);
-  maxY = Math.max(maxY, p.y + NODE_H);
+  maxX = Math.max(maxX, p.x + getNodeDimensions(p).width);
+  maxY = Math.max(maxY, p.y + getNodeDimensions(p).height);
 });
 
 if (!Number.isFinite(minX)) {
@@ -6594,7 +6167,6 @@ function getAnnotationsBounds(items) {
 
 const LAYOUT_TOP = 80;
 const LAYOUT_LEFT = 120;
-const LEVEL_GAP = 250;
 const PERSON_GAP = 100;
 const SPOUSE_GAP = 60;
 const CHILD_GAP = 100;
@@ -6706,7 +6278,8 @@ function calculateGenerations(
 
 
 
-function showNodeContextMenu(id, clientX, clientY) {
+function showNodeContextMenu(id, clientX, clientY, focusMenu = false) {
+  setSelectionPanelVisible(false);
   nodeContextTargetId = id;
 
   const menu = document.getElementById("nodeContextMenu");
@@ -6737,22 +6310,41 @@ function showNodeContextMenu(id, clientX, clientY) {
 
   menu.style.left = `${Math.max(margin, left)}px`;
   menu.style.top = `${Math.max(margin, top)}px`;
+  menu.onkeydown = handleNodeMenuKeydown;
+  if (focusMenu) menu.querySelector("button:not(:disabled)")?.focus();
 }
 
 
 function hideNodeContextMenu() {
-const menu = document.getElementById("nodeContextMenu");
-if (!menu) return;
-
-menu.classList.remove("open");
-nodeContextTargetId = null;
+  nodeContextTargetId = null;
+  const menu = document.getElementById("nodeContextMenu");
+  if (!menu) return;
+  const restoreFocus = menu.contains(document.activeElement);
+  menu.classList.remove("open");
+  if (restoreFocus) {
+    svg.setAttribute("tabindex", "0");
+    svg.focus({ preventScroll: true });
+  }
 }
 
-function nodeMenuSelect() {
-if (!nodeContextTargetId) return;
-
-selectPerson(nodeContextTargetId);
-hideNodeContextMenu();
+function handleNodeMenuKeydown(event) {
+  const menu = event.currentTarget;
+  const buttons = [...menu.querySelectorAll("button:not(:disabled)")];
+  const index = buttons.indexOf(document.activeElement);
+  let next;
+  if (event.key === "ArrowDown") next = (index + 1) % buttons.length;
+  if (event.key === "ArrowUp") next = (index - 1 + buttons.length) % buttons.length;
+  if (event.key === "Home") next = 0;
+  if (event.key === "End") next = buttons.length - 1;
+  if (next !== undefined) {
+    event.preventDefault();
+    event.stopPropagation();
+    buttons[next]?.focus();
+  } else if (event.key === "Escape" || event.key === "Tab") {
+    if (event.key === "Escape") event.preventDefault();
+    event.stopPropagation();
+    hideNodeContextMenu();
+  }
 }
 
 function nodeMenuStartSpouse() {
@@ -6791,25 +6383,12 @@ renderChart();
 hideNodeContextMenu();
 }
 
-function nodeMenuFocus() {
-  if (!nodeContextTargetId) {
-    return;
-  }
-
-  const targetId = nodeContextTargetId;
-
-  selectOnly(targetId);
-  hideNodeContextMenu();
-
-  focusSelected();
-}
 
 
 function nodeMenuDeletePerson() {
 if (!nodeContextTargetId) return;
 
 const id = nodeContextTargetId;
-hideNodeContextMenu();
 
 if (typeof deletePerson === "function") {
   deletePerson(id);
@@ -7005,16 +6584,16 @@ function restoreSnapshot(snapshot) {
   if (!snapshot) {
     return;
   }
+  personToolActive = false;
 
-  people =
-    (snapshot.people || []).map(createPerson);
-
-  families =
-    (snapshot.families || []).map(createFamily);
-
-  annotations =
-    (snapshot.annotations || [])
-      .map(createAnnotation);
+  /*
+   * Undo/Redoの履歴はmakeSnapshot()で作成された内部スナップショット。
+   * 新規作成・外部JSON読込み用の補正関数に通すと空の氏名や
+   * 図形の幅20・矢印の高さ0等が別の値に変わるため、生値を複製する。
+   */
+  people = JSON.parse(JSON.stringify(snapshot.people || []));
+  families = JSON.parse(JSON.stringify(snapshot.families || []));
+  annotations = JSON.parse(JSON.stringify(snapshot.annotations || []));
 
   chartMemo = snapshot.chartMemo || "";
 
@@ -7087,6 +6666,7 @@ function restoreSnapshot(snapshot) {
   relationMode = null;
   relationClicks = [];
   relationPreviewMouse = null;
+  selectedRelation = null;
 
   annotationTool = null;
   annotationContextTargetId = null;
@@ -7100,10 +6680,10 @@ function restoreSnapshot(snapshot) {
   hideNodeContextMenu();
   hideAnnotationContextMenu();
 
-  normalizeRelations();
   updateRelationModeStatus();
   updateAnnotationToolUi();
-  sync();
+  // 保存値を再正規化せず、描画中の矢印座標の再計算も抑止する。
+  sync({ preserveSnapshot: true });
 }
 
 
@@ -7115,6 +6695,7 @@ if (undoStack.length > UNDO_LIMIT) {
 }
 
 redoStack.length = 0;
+if (typeof updateViewportControls === "function") updateViewportControls();
 }
 
 function undo() {
@@ -7143,87 +6724,59 @@ const next = redoStack.pop();
 restoreSnapshot(next);
 }
 
-function initPaneResizer() {
-const resizer = document.getElementById("paneResizer");
-const app = document.querySelector(".app");
 
-if (!resizer || !app) return;
 
-const saved = localStorage.getItem("inheritanceChartSidebarWidth");
 
-if (saved) {
-  app.style.setProperty("--sidebar-width", saved + "px");
+let bulkEditBaseline = "";
+let bulkEditReturnFocus = null;
+
+function getBulkEditDraftKey() {
+  return JSON.stringify(["bulkPersonTbody", "bulkRelationTbody", "bulkBusinessTbody"].map(id =>
+    [...document.getElementById(id).querySelectorAll("tr")].map(tr => [
+      tr.dataset.id,
+      [...tr.querySelectorAll("input, select")].filter(input =>
+        input.dataset.field !== "spouse" || input.value
+      ).map(input => [
+        input.dataset.field,
+        input.type === "checkbox" ? input.checked : input.value,
+        !!input.validity?.badInput
+      ])
+    ])
+  ));
 }
 
-let resizing = false;
-
-resizer.addEventListener("pointerdown", e => {
-  resizing = true;
-  resizer.classList.add("resizing");
-  resizer.setPointerCapture(e.pointerId);
-  e.preventDefault();
-});
-
-resizer.addEventListener("pointermove", e => {
-  if (!resizing) return;
-
-  const rect = app.getBoundingClientRect();
-  const width = e.clientX - rect.left;
-
-  const min = 280;
-  const max = Math.min(700, rect.width - 320);
-
-  const next = Math.max(min, Math.min(max, width));
-
-  app.style.setProperty("--sidebar-width", next + "px");
-});
-
-resizer.addEventListener("pointerup", e => {
-  if (!resizing) return;
-
-  resizing = false;
-  resizer.classList.remove("resizing");
-
-  try {
-    resizer.releasePointerCapture(e.pointerId);
-  } catch {}
-
-  const current = getComputedStyle(app).getPropertyValue("--sidebar-width").trim();
-  const num = parseInt(current, 10);
-
-  if (Number.isFinite(num)) {
-    localStorage.setItem("inheritanceChartSidebarWidth", String(num));
-  }
-});
+function finishBulkEditClose() {
+  closeWorkspaceDialog("bulkEditCloseDialog");
+  document.getElementById("bulkEditModalBackdrop")?.classList.remove("show");
+  bulkEditBaseline = "";
+  bulkEditReturnFocus?.focus({ preventScroll: true });
+  bulkEditReturnFocus = null;
 }
 
-function switchSideTab(tabName) {
-  document.querySelectorAll(".side-tab-button").forEach((button) => {
-    const isActive = button.dataset.sideTab === tabName;
-
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-
-  document.querySelectorAll(".side-tab-panel").forEach((panel) => {
-    panel.classList.remove("active");
-  });
-
-  const target = document.getElementById(`sideTab_${tabName}`);
-
-  if (target) {
-    target.classList.add("active");
-  }
+function saveBulkEditBeforeClose() {
+  closeWorkspaceDialog("bulkEditCloseDialog");
+  applyBulkEditAndClose();
 }
-
 
 function openBulkEditModal() {
-renderBulkEditTables();
-document.getElementById("bulkEditModalBackdrop")?.classList.add("show");
+  const backdrop = document.getElementById("bulkEditModalBackdrop");
+  if (backdrop?.classList.contains("show")) return;
+  closeToolMenus();
+  bulkEditReturnFocus = document.activeElement;
+  renderBulkEditTables();
+  bulkEditBaseline = getBulkEditDraftKey();
+  backdrop?.classList.add("show");
+  backdrop?.querySelector(".modal-close-button")?.focus({ preventScroll: true });
 }
 
 function closeBulkEditModal() {
-document.getElementById("bulkEditModalBackdrop")?.classList.remove("show");
+  if (!document.getElementById("bulkEditModalBackdrop")?.classList.contains("show")) return;
+  if (getBulkEditDraftKey() !== bulkEditBaseline) {
+    const dialog = document.getElementById("bulkEditCloseDialog");
+    if (!dialog.open) dialog.showModal();
+    return;
+  }
+  finishBulkEditClose();
 }
 
 function switchBulkEditTab(tabName) {
@@ -7247,6 +6800,7 @@ function switchBulkEditTab(tabName) {
 
 
 function openRelationListModal() {
+closeToolMenus();
 document.getElementById("relationListModalBackdrop")?.classList.add("show");
 
 if (typeof renderFamilyTable === "function") {
@@ -7268,9 +6822,6 @@ document.addEventListener("click", e => {
     closeRelationListModal();
   }
 
-  if (e.target?.id === "annotationEditModalBackdrop") {
-    closeAnnotationEditModal();
-  }
 });
 
 
@@ -7279,6 +6830,57 @@ document.addEventListener("click", e => {
    ========================================================= */
 
 let relationCompletionTimer = null;
+let relationWarningMessage = "";
+let canvasCompletionMessage = "";
+
+function clearCanvasFeedback() {
+  clearTimeout(relationCompletionTimer);
+  relationCompletionTimer = null;
+  relationWarningMessage = "";
+  canvasCompletionMessage = "";
+}
+
+// すべての配置・関係作成で同じ案内を使い、長い氏名は読み上げ説明に残す。
+function updateCanvasModeBanner() {
+  const banner = document.getElementById("canvasModeBanner");
+  if (!banner) return;
+  const step = document.getElementById("canvasModeStep");
+  const title = document.getElementById("canvasModeTitle");
+  const text = document.getElementById("canvasModeText");
+  const cancel = document.getElementById("cancelCanvasTool");
+  const progress = getRelationModeProgress();
+  const active = !!(personToolActive || annotationTool || progress);
+  banner.hidden = !active && !canvasCompletionMessage;
+  banner.classList.toggle("complete", !active && !!canvasCompletionMessage);
+  banner.classList.toggle("warning", !!progress && !!relationWarningMessage);
+  step.hidden = !progress;
+  step.textContent = progress ? `${progress.currentStep}/${progress.definition.total}` : "";
+  cancel.hidden = !active;
+  title.textContent = progress
+    ? `${progress.definition.title}（${progress.selectedCount}/${progress.definition.total}人選択済み）。` +
+      (progress.selectedNames.length ? `選択中: ${progress.selectedNames.join("、")}。` : "") +
+      `${progress.instruction} Escまたは中止ボタンでキャンセルできます。`
+    : "";
+  if (personToolActive) {
+    text.textContent = "クリックで人物を追加 · Escで終了";
+  } else if (annotationTool) {
+    text.textContent = annotationTool === "text"
+      ? "クリックでテキストを配置 · Escで中止"
+      : "クリックまたはドラッグで配置 · Escで中止";
+  } else if (progress) {
+    const instruction = {
+      spouse: ["1人目を選択 → 2人目を選択", "2人目を選択"],
+      child1: ["親を選択 → 子を選択", "子を選択"],
+      child2: ["親1 → 親2 → 子", "親2 → 子", "子を選択"]
+    }[relationMode][progress.currentStep - 1];
+    text.textContent = relationWarningMessage || `${instruction} · Escで中止`;
+  } else {
+    text.textContent = canvasCompletionMessage ? "関係を登録しました" : "";
+    title.textContent = canvasCompletionMessage;
+  }
+  const hint = document.getElementById("canvasFirstHint");
+  if (hint && !banner.hidden) hint.hidden = true;
+}
 
 function getRelationModeDefinition() {
   const definitions = {
@@ -7291,7 +6893,7 @@ function getRelationModeDefinition() {
       ]
     },
     child1: {
-      title: "親子関係を作成（1親）",
+      title: "親子関係を作成（親1人を指定）",
       total: 2,
       instructions: [
         "親にする人物をクリックしてください。",
@@ -7299,7 +6901,7 @@ function getRelationModeDefinition() {
       ]
     },
     child2: {
-      title: "親子関係を作成（2親）",
+      title: "親子関係を作成（親2人を指定）",
       total: 3,
       instructions: [
         "親1をクリックしてください。",
@@ -7333,83 +6935,22 @@ function getRelationModeProgress() {
 }
 
 function updateRelationToolUi(completionMessage = "") {
+  if (completionMessage) {
+    clearCanvasFeedback();
+    canvasCompletionMessage = completionMessage;
+    relationCompletionTimer = setTimeout(() => {
+      canvasCompletionMessage = "";
+      relationCompletionTimer = null;
+      updateCanvasModeBanner();
+    }, 2400);
+  }
+  updateCanvasToolStatus();
   document.querySelectorAll(".relation-tool-button").forEach(button => {
-    const active =
-      !!relationMode &&
-      button.dataset.relationMode === relationMode;
-
+    const active = !!relationMode && button.dataset.relationMode === relationMode;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-
-  if (svg) {
-    svg.classList.toggle("relation-mode", !!relationMode);
-  }
-
-  const banner = document.getElementById("canvasModeBanner");
-  const stepElement = document.getElementById("canvasModeStep");
-  const titleElement = document.getElementById("canvasModeTitle");
-  const textElement = document.getElementById("canvasModeText");
-
-  if (!banner || !stepElement || !titleElement || !textElement) {
-    return;
-  }
-
-  if (completionMessage) {
-    banner.hidden = false;
-    banner.classList.add("complete");
-
-    stepElement.textContent = "完了";
-    titleElement.textContent = "関係を登録しました";
-    textElement.textContent = completionMessage;
-
-    if (relationCompletionTimer) {
-      clearTimeout(relationCompletionTimer);
-    }
-
-    relationCompletionTimer = setTimeout(() => {
-      banner.hidden = true;
-      banner.classList.remove("complete");
-      relationCompletionTimer = null;
-    }, 3200);
-
-    return;
-  }
-
-  if (!relationMode) {
-    banner.hidden = true;
-    banner.classList.remove("complete");
-    return;
-  }
-
-  if (relationCompletionTimer) {
-    clearTimeout(relationCompletionTimer);
-    relationCompletionTimer = null;
-  }
-
-  const progress = getRelationModeProgress();
-
-  if (!progress) {
-    banner.hidden = true;
-    return;
-  }
-
-  banner.hidden = false;
-  banner.classList.remove("complete");
-
-  stepElement.textContent =
-    `${progress.currentStep}/${progress.definition.total}`;
-  titleElement.textContent = progress.definition.title;
-
-  const selectedCount =
-    `${progress.selectedCount}/${progress.definition.total}人選択済み。`;
-  const selectedNames = progress.selectedNames.length
-    ? `選択中: ${progress.selectedNames.join("、")}。`
-    : "";
-
-  textElement.textContent =
-    `${selectedCount}${selectedNames}${progress.instruction} ` +
-    "Escまたは「中止」でキャンセルできます。";
+  svg?.classList.toggle("relation-mode", !!relationMode);
 }
 
 function finishRelationMode(message) {
@@ -7427,9 +6968,10 @@ function finishRelationMode(message) {
 
 function activateNewPersonForEditing(id) {
   selectOnly(id);
+  setSelectionPanelVisible(!personToolActive);
 
-  switchSideTab("people");
   sync();
+  if (personToolActive) return;
 
   const nameInput = document.getElementById("name");
 
@@ -7437,7 +6979,7 @@ function activateNewPersonForEditing(id) {
     return;
   }
 
-  nameInput.focus();
+  nameInput.focus({ preventScroll: true });
   nameInput.select();
 }
 
@@ -7480,7 +7022,7 @@ function nodeMenuAddNewSpouse() {
   const spouse = createRelatedPerson({
     name: "新規配偶者",
     relation: "配偶者",
-    x: target.x + NODE_W + 60,
+    x: target.x + getNodeDimensions(target).width + 60,
     y: target.y
   });
 
@@ -7508,7 +7050,7 @@ function nodeMenuAddNewParent() {
   if (existingParents.length >= 2) {
     const proceed = confirm(
       `${personLabel(target.id)} には既に親が2人登録されています。\n\n` +
-      "新しい親を別の1親関係として追加しますか？\n" +
+      "新しい親を、親1人を指定する別の関係として追加しますか？\n" +
       "追加後は、必要に応じて関係一覧または一括編集で確認してください。"
     );
 
@@ -7523,7 +7065,7 @@ function nodeMenuAddNewParent() {
     name: "新規親",
     relation: "親",
     x: target.x,
-    y: target.y - NODE_H - 100
+    y: target.y - getNodeDimensions().height - 100
   });
 
   let family = null;
@@ -7599,12 +7141,12 @@ function nodeMenuAddNewChild() {
     relation: "子",
     x:
       anchor.x -
-      NODE_W / 2 +
-      existingChildCount * (NODE_W + 40),
+      getNodeDimensions().width / 2 +
+      existingChildCount * (getNodeDimensions().width + 40),
     y:
       Math.max(
-        target.y + NODE_H + 100,
-        spouse ? spouse.y + NODE_H + 100 : 0
+        target.y + getNodeDimensions(target).height + 100,
+        spouse ? spouse.y + getNodeDimensions(spouse).height + 100 : 0
       )
   });
 
@@ -7645,7 +7187,7 @@ window.nodeMenuAddNewParent = nodeMenuAddNewParent;
 window.nodeMenuAddNewChild = nodeMenuAddNewChild;
 
 /*
- * HTMLのonclickはwindow側を参照します。
+ * 外出ししたイベントは、許可したwindow側の操作だけを呼び出します。
  * 既存コード内部から呼ばれる関数宣言についても、下記イベント補助で
  * UI表示が同期するようにします。
  */
@@ -7788,7 +7330,8 @@ function isAnnotationSelected(id) {
   );
 }
 
-function selectOnlyAnnotation(id) {
+function selectOnlyAnnotation(id, showProperties = true) {
+  selectedRelation = null;
   selectedAnnotationId = id || null;
   selectedAnnotationIds = id
     ? new Set([id])
@@ -7796,9 +7339,11 @@ function selectOnlyAnnotation(id) {
 
   selectedId = null;
   selectedIds.clear();
+  setSelectionPanelVisible(showProperties);
 }
 
 function toggleAnnotationSelection(id) {
+  selectedRelation = null;
   if (!id) {
     return;
   }
@@ -7839,6 +7384,20 @@ function clearAnnotationSelection() {
   renderChart();
 }
 
+function applyManualOffsetToAnnotation(item, dx, dy) {
+  if (item.type === "arrow" && (item.startPersonId || item.endPersonId)) {
+    const display = getAnnotationDisplayItem(item);
+    item.x = display.x + dx;
+    item.y = display.y + dy;
+    item.width = display.width;
+    item.height = display.height;
+  } else {
+    item.x += dx;
+    item.y += dy;
+  }
+  clearArrowAttachment(item);
+}
+
 function alignSelectedAnnotationsLeft() {
   const items = getSelectedAnnotations();
 
@@ -7855,12 +7414,7 @@ function alignSelectedAnnotationsLeft() {
 
   items.forEach(item => {
     const bounds = getAnnotationBounds(item);
-    item.x += left - bounds.minX;
-
-    /*
-     * 矢印を手動配置した場合は吸着を解除する。
-     */
-    clearArrowAttachment(item);
+    applyManualOffsetToAnnotation(item, left - bounds.minX, 0);
   });
 
   sync();
@@ -7883,8 +7437,7 @@ function alignSelectedAnnotationsTop() {
 
   items.forEach(item => {
     const bounds = getAnnotationBounds(item);
-    item.y += top - bounds.minY;
-    clearArrowAttachment(item);
+    applyManualOffsetToAnnotation(item, 0, top - bounds.minY);
   });
 
   sync();
@@ -7930,8 +7483,7 @@ function distributeSelectedAnnotationsHorizontally() {
     const targetCenter =
       firstCenter + step * (index + 1);
 
-    item.x += targetCenter - currentCenter;
-    clearArrowAttachment(item);
+    applyManualOffsetToAnnotation(item, targetCenter - currentCenter, 0);
   });
 
   sync();
@@ -7977,8 +7529,7 @@ function distributeSelectedAnnotationsVertically() {
     const targetCenter =
       firstCenter + step * (index + 1);
 
-    item.y += targetCenter - currentCenter;
-    clearArrowAttachment(item);
+    applyManualOffsetToAnnotation(item, 0, targetCenter - currentCenter);
   });
 
   sync();
@@ -8001,7 +7552,7 @@ function annotationTypeLabel(type) {
   const labels = {
     text: "テキスト",
     rect: "四角",
-    ellipse: "丸・楕円",
+    ellipse: "丸",
     cross: "×印",
     arrow: "矢印"
   };
@@ -8016,10 +7567,17 @@ function startAnnotationTool(type) {
   ) {
     return;
   }
+  finishAnnotationTextEdit(true);
+  if (annotationTextEdit) return;
+  clearCanvasFeedback();
+  const toggleOff = annotationTool === type;
+  if (annotationTool || annotationCreating) cancelAnnotationTool();
+  if (toggleOff) return;
 
   if (relationMode) {
     cancelRelationMode();
   }
+  personToolActive = false;
 
   annotationTool = type;
   annotationCreating = null;
@@ -8047,6 +7605,7 @@ function cancelAnnotationTool() {
 
   svg.removeEventListener("pointermove", moveAnnotationCreate);
   svg.removeEventListener("pointerup", endAnnotationCreate);
+  svg.removeEventListener("pointercancel", cancelAnnotationCreate);
 
   annotationTool = null;
   annotationCreating = null;
@@ -8067,32 +7626,7 @@ function updateAnnotationToolUi() {
   });
 
   svg.classList.toggle("annotation-mode", !!annotationTool);
-
-  const status = document.getElementById("annotationToolStatus");
-
-  if (!status) {
-    return;
-  }
-
-  status.classList.toggle("active", !!annotationTool);
-
-  if (!annotationTool) {
-    status.textContent = "図形追加ツールは未選択です。";
-    return;
-  }
-
-  const label = annotationTypeLabel(annotationTool);
-
-  if (annotationTool === "text") {
-    status.textContent =
-      `${label}追加中: 図上の配置位置をクリックして入力してください。` +
-      "Escキーで中止できます。";
-    return;
-  }
-
-  status.textContent =
-    `${label}追加中: 図上をドラッグして作成してください。` +
-    "Shiftキーで形状・方向を固定できます。Escキーで中止できます。";
+  updateCanvasToolStatus();
 }
 
 
@@ -8181,14 +7715,15 @@ function startAnnotationCreate(event) {
   svg.setPointerCapture(event.pointerId);
   svg.addEventListener("pointermove", moveAnnotationCreate);
   svg.addEventListener("pointerup", endAnnotationCreate);
+  svg.addEventListener("pointercancel", cancelAnnotationCreate);
 
-  renderChart();
+  if (typeof refreshPlacementPreview === "function") refreshPlacementPreview();
 
   return true;
 }
 
 function moveAnnotationCreate(event) {
-  if (!annotationCreating) {
+  if (!annotationCreating || event.pointerId !== annotationCreating.pointerId) {
     return;
   }
 
@@ -8199,7 +7734,7 @@ function moveAnnotationCreate(event) {
   annotationCreating.shiftKey = event.shiftKey;
 
   applyAnnotationCreateConstraint(annotationCreating);
-  renderChart();
+  if (typeof refreshPlacementPreview === "function") refreshPlacementPreview();
 }
 
 function applyAnnotationCreateConstraint(state) {
@@ -8246,6 +7781,8 @@ function applyAnnotationCreateConstraint(state) {
 }
 
 function endAnnotationCreate(event) {
+  if (!annotationCreating || event.pointerId !== annotationCreating.pointerId) return;
+  moveAnnotationCreate(event);
   const state = annotationCreating;
   annotationCreating = null;
 
@@ -8262,6 +7799,7 @@ function endAnnotationCreate(event) {
     "pointerup",
     endAnnotationCreate
   );
+  svg.removeEventListener("pointercancel", cancelAnnotationCreate);
 
   if (!state) {
     renderChart();
@@ -8290,10 +7828,18 @@ function endAnnotationCreate(event) {
   }
 
   pushUndoSnapshot(beforeSnapshot);
-
   annotationTool = null;
+  // pointerup直後のclickで、配置した図形の選択を解除しない。
+  suppressNextSvgClick = true;
+
   updateAnnotationToolUi();
   sync();
+}
+
+function cancelAnnotationCreate(event) {
+  if (!annotationCreating || event.pointerId !== annotationCreating.pointerId) return;
+  suppressNextSvgClick = true;
+  cancelAnnotationTool();
 }
 
 
@@ -8342,7 +7888,7 @@ function createAnnotationFromDrag(state) {
 
 
 
-function drawAnnotationCreatePreview() {
+function drawAnnotationCreatePreview(layer = viewport) {
   const state = annotationCreating;
 
   if (!state) {
@@ -8353,7 +7899,7 @@ function drawAnnotationCreatePreview() {
   const dy = state.endY - state.startY;
 
   if (state.type === "rect") {
-    viewport.appendChild(svgEl("rect", {
+    layer.appendChild(svgEl("rect", {
       x: Math.min(state.startX, state.endX),
       y: Math.min(state.startY, state.endY),
       width: Math.abs(dx),
@@ -8363,7 +7909,7 @@ function drawAnnotationCreatePreview() {
   }
 
   if (state.type === "ellipse") {
-    viewport.appendChild(svgEl("ellipse", {
+    layer.appendChild(svgEl("ellipse", {
       cx: (state.startX + state.endX) / 2,
       cy: (state.startY + state.endY) / 2,
       rx: Math.abs(dx) / 2,
@@ -8373,7 +7919,7 @@ function drawAnnotationCreatePreview() {
   }
 
   if (state.type === "cross") {
-    viewport.appendChild(svgEl("path", {
+    layer.appendChild(svgEl("path", {
       d:
         `M ${state.startX} ${state.startY} ` +
         `L ${state.endX} ${state.endY} ` +
@@ -8384,7 +7930,7 @@ function drawAnnotationCreatePreview() {
   }
 
   if (state.type === "arrow") {
-    viewport.appendChild(svgEl("line", {
+    layer.appendChild(svgEl("line", {
       x1: state.startX,
       y1: state.startY,
       x2: state.endX,
@@ -8394,7 +7940,7 @@ function drawAnnotationCreatePreview() {
     }));
   }
 
-  viewport.appendChild(svgEl("circle", {
+  layer.appendChild(svgEl("circle", {
     cx: state.startX,
     cy: state.startY,
     r: 4,
@@ -8433,22 +7979,18 @@ function handleAnnotationCanvasClick(event) {
     height: 64,
     text: ""
   });
-
+  pushUndoSnapshot(beforeSnapshot);
+  annotations.push(item);
   annotationTool = null;
+
   updateAnnotationToolUi();
 
-  beginAnnotationTextEdit(item, {
-    isNew: true,
-    beforeSnapshot
-  });
+  beginAnnotationTextEdit(item);
 
   return true;
 }
 
-function beginAnnotationTextEdit(
-  item,
-  { isNew = false, beforeSnapshot = null } = {}
-) {
+function beginAnnotationTextEdit(item) {
   if (!item) {
     return;
   }
@@ -8459,18 +8001,13 @@ function beginAnnotationTextEdit(
 
   annotationTextEdit = {
     id: item.id,
-    item: isNew ? item : null,
-    isNew,
-    value: isNew ? "" : String(item.text || ""),
-    beforeSnapshot:
-      beforeSnapshot ||
-      makeSnapshot("テキスト注釈編集前"),
+    value: String(item.text || ""),
+    beforeSnapshot: makeSnapshot("テキスト注釈編集前"),
     isComposing: false
   };
 
-  if (!isNew) {
-    selectOnlyAnnotation(item.id);
-  }
+  selectOnlyAnnotation(item.id);
+  loadPersonForm();
 
   hideAnnotationContextMenu();
   renderChart();
@@ -8565,13 +8102,7 @@ function finishAnnotationTextEdit(accept) {
 
   const text = String(edit.value || "");
 
-  if (edit.isNew && !text.trim()) {
-    annotationTextEdit = null;
-    renderChart();
-    return;
-  }
-
-  const item = edit.isNew ? edit.item : annotation(edit.id);
+  const item = annotation(edit.id);
   if (!item) {
     annotationTextEdit = null;
     renderChart();
@@ -8586,15 +8117,6 @@ function finishAnnotationTextEdit(accept) {
   }
 
   annotationTextEdit = null;
-
-  if (edit.isNew) {
-    item.text = text;
-    pushUndoSnapshot(edit.beforeSnapshot);
-    annotations.push(item);
-    selectOnlyAnnotation(item.id);
-    sync();
-    return;
-  }
 
   if (item.text !== text) {
     pushUndoSnapshot(edit.beforeSnapshot);
@@ -8612,9 +8134,7 @@ function drawAnnotationTextEditor() {
     return;
   }
 
-  const item = edit.isNew
-    ? edit.item
-    : annotation(edit.id);
+  const item = annotation(edit.id);
 
   if (!item) {
     return;
@@ -8739,7 +8259,8 @@ function ensureArrowMarker() {
 }
 
 function drawAnnotationSelectionOverlays() {
-  getSelectedAnnotations().forEach(item => {
+  getSelectedAnnotations().forEach(sourceItem => {
+    const item = getAnnotationDisplayItem(sourceItem);
     const isPrimarySelected =
       item.id === selectedAnnotationId;
 
@@ -8829,7 +8350,8 @@ function drawAnnotationSelectionOverlays() {
 }
 
 
-function drawAnnotation(item) {
+function drawAnnotation(sourceItem) {
+  const item = getAnnotationDisplayItem(sourceItem);
   const isPrimarySelected =
     item.id === selectedAnnotationId;
 
@@ -8862,7 +8384,8 @@ function drawAnnotation(item) {
       class: "annotation-shape",
       fill: item.fill,
       stroke: item.stroke,
-      "stroke-width": item.strokeWidth
+      "stroke-width": item.strokeWidth,
+      "pointer-events": "all"
     }));
 
     drawShapeAnnotationText(group, item);
@@ -8877,7 +8400,8 @@ function drawAnnotation(item) {
       class: "annotation-shape",
       fill: item.fill,
       stroke: item.stroke,
-      "stroke-width": item.strokeWidth
+      "stroke-width": item.strokeWidth,
+      "pointer-events": "all"
     }));
 
     drawShapeAnnotationText(group, item);
@@ -8907,9 +8431,48 @@ function drawAnnotation(item) {
     }));
   }
 
+  if (item.type === "cross" || item.type === "arrow") {
+    const hit = group.querySelector(".annotation-shape").cloneNode(false);
+    hit.setAttribute("class", "annotation-hit-target");
+    hit.setAttribute("stroke", "transparent");
+    hit.setAttribute("stroke-width", "14");
+    hit.setAttribute("fill", "none");
+    hit.setAttribute("vector-effect", "non-scaling-stroke");
+    hit.setAttribute("pointer-events", "stroke");
+    hit.removeAttribute("marker-end");
+    group.appendChild(hit);
+  }
 
-  group.addEventListener("pointerdown", startAnnotationDrag);
+
+  let hoveredRelation = null;
+  const updateRelationHover = relation => {
+    if (hoveredRelation === relation) return;
+    hoveredRelation?.lines.forEach(line => line.classList.remove("hovered"));
+    hoveredRelation = relation;
+    hoveredRelation?.lines.forEach(line => line.classList.add("hovered"));
+    group.classList.toggle("relation-through-hover", !!relation);
+  };
+  group.addEventListener("pointermove", event => {
+    updateRelationHover(relationThroughTransparentShape(event, group, item));
+  });
+  group.addEventListener("pointerenter", event => {
+    updateRelationHover(relationThroughTransparentShape(event, group, item));
+  });
+  group.addEventListener("pointerleave", () => updateRelationHover(null));
+  group.addEventListener("pointerdown", event => {
+    const relation = relationThroughTransparentShape(event, group, item);
+    if (relation) {
+      relationPointerDown(event);
+      return;
+    }
+    startAnnotationDrag(event);
+  });
   group.addEventListener("click", event => {
+    const relation = relationThroughTransparentShape(event, group, item);
+    if (relation) {
+      relationClick(event, relation.info);
+      return;
+    }
     event.stopPropagation();
   });
 
@@ -8917,18 +8480,21 @@ function drawAnnotation(item) {
   group.addEventListener("dblclick", event => {
     event.preventDefault();
     event.stopPropagation();
+    if (relationThroughTransparentShape(event, group, item)) return;
 
     if (item.type === "text") {
       return;
     }
 
-    selectedAnnotationId = item.id;
-    openAnnotationEditModal();
+    selectOnlyAnnotation(item.id);
+    sync();
+    document.getElementById("annotationQuickText").focus({ preventScroll: true });
   });
 
   group.addEventListener("contextmenu", event => {
     event.preventDefault();
     event.stopPropagation();
+    if (relationThroughTransparentShape(event, group, item)) return;
 
     showAnnotationContextMenu(
       item.id,
@@ -8956,14 +8522,15 @@ function startArrowEndpointDrag(event) {
 
   selectOnlyAnnotation(id);
   arrowSnapTargetId = null;
+  const display = getAnnotationDisplayItem(item);
 
   arrowEndpointDragging = {
     id,
     endpoint,
-    originalX: item.x,
-    originalY: item.y,
-    originalWidth: item.width,
-    originalHeight: item.height,
+    originalX: display.x,
+    originalY: display.y,
+    originalWidth: display.width,
+    originalHeight: display.height,
     beforeSnapshot: makeSnapshot("矢印端点変更前"),
     moved: false
   };
@@ -8992,6 +8559,7 @@ function moveArrowEndpointDrag(event) {
   if (!item) {
     return;
   }
+  if (!state.moved) updateAttachedArrowCoordinates(item);
 
   const point = clientToWorld(
     event.clientX,
@@ -9246,185 +8814,11 @@ function endAnnotationResize(event) {
   sync();
 }
 
-function openAnnotationEditModal() {
-  const id =
-    annotationContextTargetId ||
-    selectedAnnotationId;
-
-  const item = annotation(id);
-
-  hideAnnotationContextMenu();
-
-  if (!item) {
-    alert("編集する図形・注釈を選択してください。");
-    return;
-  }
-
-  selectedAnnotationId = item.id;
-
-  document.getElementById("annotationEditId").value = item.id;
-  document.getElementById("annotationEditText").value = item.text || "";
-  document.getElementById("annotationEditWidth").value =
-    Math.round(Math.abs(item.width));
-  document.getElementById("annotationEditHeight").value =
-    Math.round(Math.abs(item.height));
-  document.getElementById("annotationEditStroke").value =
-    normalizeColorForPicker(item.stroke, "#7557a6");
-  document.getElementById("annotationEditFill").value =
-    normalizeColorForPicker(item.fill, "#ffffff");
-  document.getElementById("annotationEditColor").value =
-    normalizeColorForPicker(item.color, "#252930");
-  document.getElementById("annotationEditStrokeWidth").value =
-    item.strokeWidth;
-  document.getElementById("annotationEditFontSize").value =
-    item.fontSize;
-
-  document.getElementById("annotationEditNoFill").checked =
-    item.fill === "none" ||
-    item.fill === "transparent";
-
-    const supportsText = [
-    "text",
-    "rect",
-    "ellipse"
-  ].includes(item.type);
-
-  document.getElementById("annotationTextEditArea").hidden =
-    !supportsText;
-
-  document.getElementById("annotationFontSizeArea").hidden =
-    !supportsText;
-
-  document.getElementById("annotationTextColorArea").hidden =
-    !supportsText;
-
-  document
-    .getElementById("annotationEditModalBackdrop")
-    ?.classList.add("show");
-
-}
-
-function closeAnnotationEditModal() {
-  document
-    .getElementById("annotationEditModalBackdrop")
-    ?.classList.remove("show");
-}
-
-function applyAnnotationEdit() {
-  const id =
-    document.getElementById("annotationEditId")?.value;
-
-  const item = annotation(id);
-
-  if (!item) {
-    closeAnnotationEditModal();
-    return;
-  }
-
-  const width = Number(
-    document.getElementById("annotationEditWidth")?.value
-  );
-
-  const height = Number(
-    document.getElementById("annotationEditHeight")?.value
-  );
-
-  const strokeWidth = Number(
-    document.getElementById("annotationEditStrokeWidth")?.value
-  );
-
-  const fontSize = Number(
-    document.getElementById("annotationEditFontSize")?.value
-  );
-
-  if (
-    !Number.isFinite(width) ||
-    !Number.isFinite(height) ||
-    width < 20 ||
-    height < 20
-  ) {
-    alert("幅と高さは20以上の数値で入力してください。");
-    return;
-  }
-
-  if (
-    !Number.isFinite(strokeWidth) ||
-    strokeWidth < 1 ||
-    strokeWidth > 12
-  ) {
-    alert("線の太さは1から12の範囲で入力してください。");
-    return;
-  }
-
-    const supportsText = [
-    "text",
-    "rect",
-    "ellipse"
-  ].includes(item.type);
-
-  if (
-    supportsText &&
-    (
-      !Number.isFinite(fontSize) ||
-      fontSize < 8 ||
-      fontSize > 72
-    )
-  ) {
-    alert("文字サイズは8から72の範囲で入力してください。");
-    return;
-  }
-
-  const nextText = supportsText
-    ? document.getElementById("annotationEditText")?.value || ""
-    : "";
-  const textError = getAnnotationTextEditError(item.id, nextText);
-  if (textError) {
-    alert(textError);
-    return;
-  }
-
-  pushUndo("図形・注釈編集前");
 
 
-  /*
-   * 矢印や×印で負方向を維持する。
-   */
-  item.width =
-    item.width < 0 ? -width : width;
 
-  item.height =
-    item.height < 0 ? -height : height;
 
-  item.stroke =
-    document.getElementById("annotationEditStroke")?.value ||
-    "#7557a6";
 
-  item.strokeWidth = strokeWidth;
-
-  const noFill =
-    !!document.getElementById("annotationEditNoFill")?.checked;
-
-  item.fill = noFill
-    ? "none"
-    : document.getElementById("annotationEditFill")?.value ||
-      "#ffffff";
-
-  if (supportsText) {
-    item.text = nextText;
-
-    item.color =
-      document.getElementById("annotationEditColor")?.value ||
-      "#252930";
-
-    item.fontSize = fontSize;
-  } else {
-    item.text = "";
-  }
-
-  closeAnnotationEditModal();
-
-  sync();
-}
 
 function normalizeColorForPicker(value, fallback) {
   const color = String(value || "").trim();
@@ -9610,6 +9004,7 @@ function detachSelectedArrowEndpoints() {
   }
 
   pushUndo("矢印吸着解除前");
+  updateAttachedArrowCoordinates(item);
 
   item.startPersonId = "";
   item.endPersonId = "";
@@ -9649,7 +9044,8 @@ function drawTextAnnotation(group, item) {
     class: "annotation-shape",
     fill: item.fill,
     stroke: item.stroke,
-    "stroke-width": item.strokeWidth
+    "stroke-width": item.strokeWidth,
+    "pointer-events": "all"
   }));
   if (annotationTextEdit?.id === item.id) {
     return;
@@ -9718,7 +9114,8 @@ function drawShapeAnnotationText(group, item) {
 let annotationDragging = null;
 
 function startAnnotationDrag(event) {
-  if (annotationTool || relationMode) {
+  if (!commitPropertyFieldBeforeCanvasAction()) { event.preventDefault(); event.stopPropagation(); return; }
+  if (annotationTool || relationMode || personToolActive) {
     event.stopPropagation();
     return;
   }
@@ -9777,6 +9174,7 @@ function startAnnotationDrag(event) {
         }
       : null;
 
+  setSelectionPanelVisible(true);
   if (isTextDoubleClick) {
     lastAnnotationTextPointerDown = null;
     beginAnnotationTextEdit(item);
@@ -9815,11 +9213,10 @@ function startAnnotationDrag(event) {
 
     moved: false,
 
-    items: targetItems.map(target => ({
-      id: target.id,
-      x: target.x,
-      y: target.y
-    }))
+    items: targetItems.map(target => {
+      const display = getAnnotationDisplayItem(target);
+      return { id: target.id, x: display.x, y: display.y, width: display.width, height: display.height };
+    })
   };
 
   svg.setPointerCapture(event.pointerId);
@@ -9832,7 +9229,6 @@ function startAnnotationDrag(event) {
     endAnnotationDrag
   );
 
-  renderList();
   loadPersonForm();
   renderChart();
 }
@@ -9852,9 +9248,9 @@ function moveAnnotationDrag(event) {
   const dx = point.x - annotationDragging.startX;
   const dy = point.y - annotationDragging.startY;
 
-  if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-    annotationDragging.moved = true;
-  }
+  if (!annotationDragging.moved && Math.abs(dx) <= 1 && Math.abs(dy) <= 1) return;
+  if (!annotationDragging.moved) setSelectionPanelVisible(false);
+  annotationDragging.moved = true;
 
   annotationDragging.items.forEach(original => {
     const item = annotation(original.id);
@@ -9865,6 +9261,8 @@ function moveAnnotationDrag(event) {
 
     item.x = original.x + dx;
     item.y = original.y + dy;
+    item.width = original.width;
+    item.height = original.height;
 
     /*
      * 図形を直接移動した場合、人物への矢印吸着を解除する。
@@ -10023,13 +9421,14 @@ function duplicateSelectedAnnotation() {
 
 
 function showAnnotationContextMenu(id, clientX, clientY) {
-  annotationContextTargetId = id;
 
   if (!selectedAnnotationIds.has(id)) {
-    selectOnlyAnnotation(id);
+    selectOnlyAnnotation(id, false);
   } else {
     selectedAnnotationId = id;
   }
+  setSelectionPanelVisible(false);
+  annotationContextTargetId = id;
 
   hideNodeContextMenu();
 
@@ -10079,7 +9478,8 @@ function hideAnnotationContextMenu() {
   annotationContextTargetId = null;
 }
 
-function getAnnotationBounds(item) {
+function getAnnotationBounds(sourceItem) {
+  const item = getAnnotationDisplayItem(sourceItem);
   const endX = item.x + item.width;
   const endY = item.y + item.height;
 
@@ -10101,8 +9501,8 @@ function getAllChartBounds() {
   people.forEach(item => {
     minX = Math.min(minX, item.x);
     minY = Math.min(minY, item.y);
-    maxX = Math.max(maxX, item.x + NODE_W);
-    maxY = Math.max(maxY, item.y + NODE_H);
+    maxX = Math.max(maxX, item.x + getNodeDimensions(item).width);
+    maxY = Math.max(maxY, item.y + getNodeDimensions(item).height);
   });
 
   annotations.forEach(item => {
@@ -10135,15 +9535,149 @@ function getAllChartBounds() {
   };
 }
 
+/* HTML操作の登録：属性をコードとして評価せず、許可した操作だけを呼び出す。 */
+const markupActions = Object.freeze({
+  "setUiMode:drawing": () => setUiMode("drawing"),
+  "setUiMode:consultation": () => setUiMode("consultation"),
+  "startPersonTool": () => startPersonTool(),
+  "cancelCanvasTool": () => cancelCanvasTool(),
+  "closeSelectionPanel": () => closeSelectionPanel(),
+  "dismissCanvasHint": () => dismissCanvasHint(),
+  "deleteSelectedRelation": () => deleteSelectedRelation(),
+  "startRelationMode:spouse": () => startRelationMode("spouse"),
+  "startRelationMode:child1": () => startRelationMode("child1"),
+  "startRelationMode:child2": () => startRelationMode("child2"),
+  "openSamplePicker": () => openSamplePicker(),
+  "closeSamplePicker": () => closeWorkspaceDialog("sampleDialog"),
+  "alignSelectedAnnotationsLeft": () => window.alignSelectedAnnotationsLeft(),
+  "alignSelectedAnnotationsTop": () => window.alignSelectedAnnotationsTop(),
+  "applyBulkEdit": () => window.applyBulkEdit(),
+  "applyBulkEditAndClose": () => window.applyBulkEditAndClose(),
+  "arrangeAll": () => window.arrangeAll(),
+  "arrangeSelectedFamily": () => window.arrangeSelectedFamily(),
+  "arrangeSelectedPeople": () => window.arrangeSelectedPeople(),
+  "bringSelectedAnnotationToFront": () => window.bringSelectedAnnotationToFront(),
+  "cancelAnnotationTool": () => window.cancelAnnotationTool(),
+  "cancelRelationMode": () => window.cancelRelationMode(),
+  "checkBulkEditInputsOnly": () => window.checkBulkEditInputsOnly(),
+  "clearAnnotationSelection": () => window.clearAnnotationSelection(),
+  "clearSelectionAndRender": () => window.clearSelectionAndRender(),
+  "clearValidationResult": () => window.clearValidationResult(),
+  "closeBulkEditModal": () => window.closeBulkEditModal(),
+  "saveBulkEditBeforeClose": () => saveBulkEditBeforeClose(),
+  "discardBulkEditAndClose": () => finishBulkEditClose(),
+  "continueBulkEdit": () => closeWorkspaceDialog("bulkEditCloseDialog"),
+  "closeRelationListModal": () => window.closeRelationListModal(),
+  "copySelectedAnnotation": () => window.copySelectedAnnotation(),
+  "deleteLegacyAutoSaveBackup": () => window.deleteLegacyAutoSaveBackup(),
+  "deleteSelected": () => window.deleteSelected(),
+  "deleteSelectedAnnotation": () => window.deleteSelectedAnnotation(),
+  "detachSelectedArrowEndpoints": () => window.detachSelectedArrowEndpoints(),
+  "distributeSelectedAnnotationsHorizontally": () => window.distributeSelectedAnnotationsHorizontally(),
+  "distributeSelectedAnnotationsVertically": () => window.distributeSelectedAnnotationsVertically(),
+  "downloadSvg": () => window.downloadSvg(),
+  "downloadPng": () => downloadPng(),
+  "openPrintModal": () => openPrintModal(),
+  "closePrintModal": () => closePrintModal(),
+  "executePrint": () => executePrint(),
+  "openValidationDialog": () => openValidationDialog(),
+  "closeValidationDialog": () => closeValidationDialog(),
+  "openLegacyMigrationDialog": () => openLegacyMigrationDialog(),
+  "closeLegacyMigrationDialog": () => closeLegacyMigrationDialog(),
+  "duplicateSelectedAnnotation": () => window.duplicateSelectedAnnotation(),
+  "fitAll": () => window.fitAll(),
+  "handleJsonFile": (event) => window.handleJsonFile(event),
+  "moveChartNearOrigin": () => window.moveChartNearOrigin(),
+  "moveSelectedAnnotationBackward": () => window.moveSelectedAnnotationBackward(),
+  "moveSelectedAnnotationForward": () => window.moveSelectedAnnotationForward(),
+  "newPerson": () => window.newPerson(),
+  "nodeMenuAddNewChild": () => window.nodeMenuAddNewChild(),
+  "nodeMenuAddNewParent": () => window.nodeMenuAddNewParent(),
+  "nodeMenuAddNewSpouse": () => window.nodeMenuAddNewSpouse(),
+  "nodeMenuDeletePerson": () => window.nodeMenuDeletePerson(),
+  "nodeMenuDetachAllRelations": () => window.nodeMenuDetachAllRelations(),
+  "nodeMenuDetachAsChild": () => window.nodeMenuDetachAsChild(),
+  "nodeMenuDetachAsParent": () => window.nodeMenuDetachAsParent(),
+  "nodeMenuStartChild1": () => window.nodeMenuStartChild1(),
+  "nodeMenuStartChild2": () => window.nodeMenuStartChild2(),
+  "nodeMenuStartSpouse": () => window.nodeMenuStartSpouse(),
+  "focusAnnotationProperties": () => {
+    const id = annotationContextTargetId || selectedAnnotationId;
+    hideAnnotationContextMenu();
+    selectOnlyAnnotation(id);
+    sync();
+    document.getElementById("annotationQuickText").focus({ preventScroll: true });
+  },
+  "openBulkEditModal": () => window.openBulkEditModal(),
+  "openKinshipDialog": () => openKinshipDialog(),
+  "openRelationListModal": () => window.openRelationListModal(),
+  "pasteAnnotation": () => window.pasteAnnotation(),
+  "printChart": () => window.printChart(),
+  "redo": () => window.redo(),
+  "renderFamilyTable": () => window.renderFamilyTable(),
+  "resetView": () => window.resetView(),
+  "restoreData": () => window.restoreData(),
+  "restoreLegacyAutoSaveManually": () => window.restoreLegacyAutoSaveManually(),
+  "saveData": () => window.saveData(),
+  "sendSelectedAnnotationToBack": () => window.sendSelectedAnnotationToBack(),
+  "setSelectedAnnotationPersonLayer:back": () => window.setSelectedAnnotationPersonLayer("back"),
+  "setSelectedAnnotationPersonLayer:front": () => window.setSelectedAnnotationPersonLayer("front"),
+  "startAnnotationTool:arrow": () => window.startAnnotationTool("arrow"),
+  "startAnnotationTool:cross": () => window.startAnnotationTool("cross"),
+  "startAnnotationTool:ellipse": () => window.startAnnotationTool("ellipse"),
+  "startAnnotationTool:rect": () => window.startAnnotationTool("rect"),
+  "startAnnotationTool:text": () => window.startAnnotationTool("text"),
+  "startRelationMode:child1": () => window.startRelationMode("child1"),
+  "startRelationMode:child2": () => window.startRelationMode("child2"),
+  "startRelationMode:spouse": () => window.startRelationMode("spouse"),
+  "switchBulkEditTab:business": () => window.switchBulkEditTab("business"),
+  "switchBulkEditTab:person": () => window.switchBulkEditTab("person"),
+  "switchBulkEditTab:relation": () => window.switchBulkEditTab("relation"),
+  "undo": () => window.undo(),
+  "updateChartMemoFromInput": () => window.updateChartMemoFromInput(),
+  "validateDataAndShow": () => window.validateDataAndShow(),
+  "zoomIn": () => window.zoomIn(),
+  "zoomOut": () => window.zoomOut(),
+  "focusValidationIssue": (_event, element) => {
+    const value = element.getAttribute("data-validation-index");
+    if (!value || !/^\d+$/.test(value)) return;
+    const index = Number(value);
+    if (Number.isSafeInteger(index)) window.focusValidationIssue(index);
+  },
+});
+const boundMarkupEvents = new WeakMap();
+
+function bindMarkupActions(root = document) {
+  for (const type of ["click", "input", "change"]) {
+    const attribute = `data-kakeizu-${type}`;
+    root.querySelectorAll(`[${attribute}]`).forEach((element) => {
+      const action = element.getAttribute(attribute);
+      if (!Object.hasOwn(markupActions, action)) return;
+      let events = boundMarkupEvents.get(element);
+      if (!events) {
+        events = new Set();
+        boundMarkupEvents.set(element, events);
+      }
+      if (events.has(type)) return;
+      // 対象要素へ直接登録し、document側のメニュー終了処理より先に実行する。
+      element.addEventListener(type, (event) => markupActions[action](event, element));
+      events.add(type);
+    });
+  }
+}
+
 /* 初期化 */
 function initializeApp() {
   installUndoWrappers();
-  initPaneResizer();
+  initializeWorkspaceUi();
+  if (typeof initializeKinshipUi === "function") initializeKinshipUi();
+  bindMarkupActions();
 
   sampleData();
   sync();
-
-  initAutoSave();
+  requestAnimationFrame(() => fitAll());
+  markContentSaved();
+  initLegacyAutoSaveMigration();
 }
 
 if (document.readyState === "loading") {

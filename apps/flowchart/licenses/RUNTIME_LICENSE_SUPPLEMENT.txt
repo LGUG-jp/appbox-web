@@ -7,6 +7,53 @@ not a replacement for copyright and permission notices. The package list below
 is copied from that inventory (including versions that may be build-only).
 Radix code is present in the generated distributed entry bundle (assets/index-*.js).
 
+Dependency rebuild and native build-package review (2026-10-19)
+-------------------------------------------------------------
+The generated inventory for this rebuild contains 249 installed packages on
+Windows x64. Exactly 43 entries have no local LICENSE/NOTICE file: the 40
+previously supplemented runtime entries below (35 Radix versions and
+Excalidraw, fastdom, fuzzy, react-remove-scroll-bar, strictdom), plus these
+three native build packages:
+
+  @esbuild/win32-x64@0.25.12
+    Purpose: Windows x64 esbuild executable used by Vite during build.
+    Package metadata: MIT; repository evanw/esbuild.
+    Same-version original notice: esbuild@0.25.12, LICENSE.md.
+    Copyright (c) 2020 Evan Wallace
+    Source: https://github.com/evanw/esbuild/blob/v0.25.12/LICENSE.md
+
+  @rollup/rollup-win32-x64-gnu@4.63.5
+  @rollup/rollup-win32-x64-msvc@4.63.5
+    Purpose: Windows x64 native Rollup bindings for build-time parsing.
+    Both package metadata entries: MIT; repository rollup/rollup.
+    Same-version original notice: rollup@4.63.5, LICENSE.md.
+    Copyright (c) 2017 [these people](https://github.com/rollup/rollup/graphs/contributors)
+    Source: https://github.com/rollup/rollup/blob/v4.63.5/LICENSE.md
+
+The complete MIT permission and warranty texts for these native packages are
+preserved under their same-version parent entries in THIRD_PARTY_LICENSE_TEXTS.txt.
+The executables and native bindings are development tools, not browser assets
+copied by the deployment sync. This is an exact review of these three package
+versions, not an exemption for other native packages or versions. A different
+OS inventory must be reviewed again rather than accepting new MISSING entries.
+
+New or updated packages also retain their local original license texts.
+@parcel/watcher and its Windows x64 binary (2.6.0) include the MIT notice for
+Devon Govett; detect-libc 2.1.2 includes Apache-2.0; source-map-js 1.2.2 includes
+BSD-3-Clause. Other updated packages declare MIT. No new runtime-license
+omission was found in this rebuild. Unchanged Radix, pako, embedded font/wasm,
+and Cytoscape notices below remain required.
+
+The inventory contains installed package metadata, including build-only
+packages. Vite 6.4.4 and Rollup 4.63.5 also contain embedded Node-side
+dependencies whose upstream notices are included in each package's complete
+LICENSE.md section in THIRD_PARTY_LICENSE_TEXTS.txt. For example, Vite retains
+Chokidar, braces and readdirp notices even though those particular bundled
+copies do not appear as separate installed-package rows. Updating Sass's
+Chokidar dependency does not replace Vite's embedded copy. Installed-package
+npm audit results do not independently establish the security of every
+embedded component; see the dependency security review separately.
+
 Radix UI package versions in the installed package inventory:
   @radix-ui/primitive@1.0.0
   @radix-ui/react-tabs@1.0.2

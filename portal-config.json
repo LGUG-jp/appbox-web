@@ -1,7 +1,13 @@
 {
   "schemaVersion": 1,
   "apps": {
+    "audioedit": {
+      "status": "hidden"
+    },
     "schedule": {
+      "status": "hidden"
+    },
+    "videoedit": {
       "status": "hidden"
     }
   }

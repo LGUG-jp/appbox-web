@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="blue">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <!-- 外部への通信・フォーム送信・外部リソース読込を遮断する。
+       試用版の単一HTMLで必要だった 'unsafe-inline' は、CSS・JSを別ファイルにしたため外した。 -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>ガントチャート作成アプリ | 共創アプリBOX</title>
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
+  <link rel="stylesheet" href="./app.css?v=1.7.1">
+</head>
+<body>
+<div id="app-root">
+  <header class="appbox-header appbox-print-hidden">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
+        <span class="appbox-header__brand-image" aria-hidden="true">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+        </span>
+        <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="ヘルプ（新しいタブで開きます）">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M9.8 9a2.3 2.3 0 1 1 3.6 1.9c-.9.6-1.4 1.1-1.4 2.1" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+            <circle cx="12" cy="17" r="1" fill="currentColor"></circle>
+          </svg>
+          <span>ヘルプ</span>
+        </a>
+        <a class="appbox-back-button" href="../../">&lt; ポータルに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="nc-main">
+    <div class="appbox-app-intro appbox-app-intro--edge appbox-print-hidden">
+      <div class="appbox-app-title-group">
+        <div class="appbox-app-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" focusable="false">
+            <path d="M4 4v16h16"></path>
+            <path d="M7 8h6"></path>
+            <path d="M10 12h7"></path>
+            <path d="M8 16h5"></path>
+          </svg>
+        </div>
+        <h1 class="appbox-app-h1">ガントチャート作成アプリ</h1>
+      </div>
+      <p class="appbox-app-desc">作業の一覧（WBS）とガントチャートで工程表を作り、ファイル保存・Excel・PDFに出力します。</p>
+    </div>
+
+    <noscript>
+      <p class="appbox-status appbox-status--warning nc-noscript">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
+    </noscript>
+
+    <div id="app-toolbar" class="nc-scope nc-toolbar appbox-panel--accent appbox-print-hidden">
+      <div class="tb-row">
+        <div class="grp">
+          <label for="project-name-input" class="appbox-sr-only">プロジェクト名</label>
+          <input type="text" id="project-name-input" class="appbox-input" maxlength="200" placeholder="プロジェクト名（未設定）"
+            title="PDFの見出し・Excelの1行目・保存ファイル名に使われます">
+          <span id="save-state" class="save-state" role="status"></span>
+        </div>
+        <div class="grp" role="group" aria-label="ファイル">
+          <button type="button" id="btn-new" class="appbox-button appbox-button--secondary" title="新しいプロジェクトを作る（テンプレート・期間・マスの単位を選べます）">新規</button>
+          <button type="button" id="btn-open" class="appbox-button appbox-button--secondary" title=".json ファイルを開く"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg><span>開く</span></button>
+          <input type="file" id="file-input" accept=".json,application/json" hidden>
+          <button type="button" id="btn-save" class="appbox-button appbox-button--secondary" title=".json ファイルとして保存（正本） Ctrl+S"><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>保存(.json)</span></button>
+        </div>
+        <div class="grp" role="group" aria-label="編集">
+          <button type="button" id="btn-undo" class="appbox-button appbox-button--secondary" title="元に戻す (Ctrl+Z)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg><span>元に戻す</span></button>
+          <button type="button" id="btn-redo" class="appbox-button appbox-button--secondary" title="やり直す (Ctrl+Y)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg><span>やり直す</span></button>
+        </div>
+        <div class="grp" role="group" aria-label="追加">
+          <button type="button" id="btn-add-major" class="appbox-button appbox-button--secondary" title="大事業を追加">＋ 大事業</button>
+          <button type="button" id="btn-add-minor" class="appbox-button appbox-button--secondary" title="小事業を追加">＋ 小事業</button>
+        </div>
+        <div class="grp" role="group" aria-label="出力">
+          <button type="button" id="btn-export-pdf" class="appbox-button appbox-button--secondary" title="印刷してPDFとして保存">PDF出力</button>
+          <button type="button" id="btn-export-excel" class="appbox-button appbox-button--secondary" title="Excel(.xlsx)として出力">Excel出力</button>
+          <button type="button" id="btn-save-baseline" class="appbox-button appbox-button--secondary" title="いまの日程を当初計画として記録します（以後の変更は2段書きで表示）">当初計画を確定</button>
+        </div>
+      </div>
+      <div class="tb-row">
+        <div class="grp" role="group" aria-label="表示">
+          <span class="nc-inline"><label for="scale-select">マス</label>
+          <select id="scale-select" class="appbox-select" title="ガントの1マスの単位">
+            <option value="day">日</option>
+            <option value="week" selected>週</option>
+            <option value="third">旬（上・中・下）</option>
+            <option value="half">半月（前・後）</option>
+            <option value="month">月</option>
+            <option value="year">年度</option>
+          </select></span>
+          <button type="button" id="btn-period" class="appbox-button appbox-button--secondary" title="ガントに表示する期間を設定します">期間</button>
+          <span class="chk-inline" title="進捗・状態・クリティカルパスなどの詳しい項目を表示します"><input type="checkbox" id="detail-mode"><label for="detail-mode">詳細表示</label></span>
+          <span class="nc-inline"><label for="reference-date-input">基準日</label>
+          <input type="date" id="reference-date-input" class="appbox-input" min="2000-01-01" max="2099-12-31"
+            title="「今日」の線を引く日（詳細表示では遅延判定の基準にもなります）"></span>
+          <button type="button" id="btn-today" class="appbox-button appbox-button--secondary" title="基準日を今日に戻す">今日</button>
+        </div>
+        <div class="grp" role="group" aria-label="展開">
+          <button type="button" id="btn-expand-all" class="appbox-button appbox-button--secondary">すべて展開</button>
+          <button type="button" id="btn-collapse-all" class="appbox-button appbox-button--secondary">すべて折りたたむ</button>
+        </div>
+        <div class="grp" role="group" aria-label="絞り込み">
+          <span class="nc-inline"><label for="filter-owner">担当者</label>
+          <select id="filter-owner" class="appbox-select"><option value="">すべて</option></select></span>
+          <span class="nc-inline"><label for="filter-status">状態</label>
+          <select id="filter-status" class="appbox-select">
+            <option value="">すべて</option>
+            <option value="risk">要注意・遅延</option>
+            <option value="delayed">遅延のみ</option>
+            <option value="critical">クリティカルパス</option>
+            <option value="open">未完了</option>
+          </select></span>
+          <button type="button" id="btn-workload" class="appbox-button appbox-button--secondary" title="担当者ごとの週別の同時進行数">担当者別の負荷</button>
+        </div>
+        <div class="grp grp-right">
+          <button type="button" id="btn-load-sample" class="appbox-button appbox-button--secondary" title="サンプルデータを読み込む（練習用）">サンプル</button>
+          <button type="button" id="btn-clear-local" class="appbox-button appbox-button--secondary nc-button--danger-outline" title="このブラウザに自動保存されたデータと画面の内容を消去">ローカルデータ消去</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="autosave-conflict" class="nc-scope appbox-print-hidden" hidden></div>
+    <div id="banner-area" class="nc-scope appbox-print-hidden"></div>
+
+    <div id="main-layout" class="nc-scope">
+      <section id="table-panel" aria-label="WBS一覧">
+        <div class="appbox-print-only"><div id="print-header"></div></div>
+        <table class="wbs-table">
+          <colgroup id="table-cols"></colgroup>
+          <thead class="table-head"><tr id="table-head-row"></tr></thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div id="table-empty" class="empty-state" hidden>
+          <div>タスクがまだありません。<br>テンプレートから作ると、よくある工程のたたき台がすぐに入ります。</div>
+          <div class="empty-actions">
+            <button type="button" id="btn-empty-new" class="appbox-button appbox-button--primary">テンプレートから作成</button>
+            <button type="button" id="btn-empty-add-major" class="appbox-button appbox-button--secondary">＋ 大事業を追加</button>
+            <button type="button" id="btn-empty-open" class="appbox-button appbox-button--secondary">保存したファイル(.json)を開く</button>
+            <button type="button" id="btn-empty-load-sample" class="appbox-button appbox-button--secondary">サンプルで試す</button>
+            <a class="appbox-button appbox-button--secondary" href="./help.html" target="_blank" rel="noopener">使い方を見る<span class="nc-nowrap">（新しいタブ）</span></a>
+          </div>
+        </div>
+        <div id="table-spacer" aria-hidden="true"></div>
+      </section>
+      <div id="splitter" class="appbox-print-hidden" role="separator" aria-orientation="vertical" tabindex="0"
+        aria-label="一覧とガントチャートの境界（左右の矢印キーで幅を調整）" title="ドラッグで一覧の幅を調整"></div>
+      <section id="gantt-panel" aria-label="ガントチャート">
+        <div id="gantt-header"></div>
+        <div id="gantt-body"></div>
+        <div id="gantt-spacer" aria-hidden="true"></div>
+      </section>
+    </div>
+
+    <div id="footer-bar" class="nc-scope">
+      <div id="legend-bar" class="legend"></div>
+      <div class="nc-footer-row appbox-print-hidden">
+        <p id="storage-note">
+          ⚠ <strong>正本は「保存(.json)」で書き出したファイルです。</strong>ブラウザへの自動保存は一時的な控えに過ぎず、同じPC・同じブラウザを使う他の人からも見える場合があります。共有PCでは使用後に「ローカルデータ消去」を押してください。
+        </p>
+        <footer class="appbox-footer nc-footer-version">共創アプリBOX / ガントチャート作成アプリ Version 1.7.1</footer>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="dialog-root" class="nc-scope"></div>
+<div id="menu-root" class="nc-scope"></div>
+<div id="toast-container" class="nc-scope" aria-live="polite"></div>
+<div id="drag-tip" class="nc-scope" role="status" hidden></div>
+
+<script src="./app.js?v=1.7.1"></script>
+</body>
+</html>

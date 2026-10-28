@@ -2,6 +2,7 @@
 <html lang="ja" data-appbox-theme="green">
 <head>
   <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -9,21 +10,21 @@
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <title>CSV差分チェッカー ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
 </head>
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -48,7 +49,7 @@
         </div>
         <p class="appbox-help-header-desc">2つのCSVを比べて、追加・削除・変更された行や項目を確認する方法を説明します。</p>
       </div>
-      <span class="version-badge">Version 1.2.4</span>
+      <span class="version-badge">Version 1.2.5</span>
     </div>
 
     <div class="appbox-help-grid help-panel">
@@ -59,6 +60,7 @@
           <li>
             <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
             <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#key">キー列と比較する列</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#options">比較条件</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#results">結果の見方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#csv-row-numbers">元CSV行番号</a></li>
@@ -89,15 +91,15 @@
           <ol class="help-steps">
             <li>
               <strong>旧CSVと新CSVを選択</strong>
-              <p class="appbox-help-step-desc">左側へ旧CSV、右側へ新CSVを選択します。初めて使う場合は「サンプルで試す」で操作の流れを確認できます。</p>
+              <p class="appbox-help-step-desc">左側の「旧CSVを選択」で変更前のCSVを、右側の「新CSVを選択」で変更後のCSVを読み込みます。初めて使う場合は「サンプルで試す」で操作の流れを確認できます。</p>
             </li>
             <li>
               <strong>比較の基準を決める</strong>
-              <p class="appbox-help-step-desc">同じ行を見つけるための「キー列」を選び、必要に応じて文字コードや区切り文字を確認します。通常は自動判定のままで構いません。</p>
+              <p class="appbox-help-step-desc">「キー列」には、職員番号や施設コードなど、新旧で同じ行を見つけられる列を選びます。各CSVの中で値が重複せず、空欄のない列が必要です。文字化けや列のずれがなければ、文字コード・区切り文字は自動判定のままで構いません。</p>
             </li>
             <li>
               <strong>比較する列と条件を確認</strong>
-              <p class="appbox-help-step-desc">比較したい列を選びます。空白・大文字小文字・日付などの書き方の違いを同じものとして扱いたい場合だけ、比較条件を設定します。</p>
+              <p class="appbox-help-step-desc">「比較する列を選ぶ」を開き、キー列以外に1列以上を選びます。最初はキー列以外の全列が選ばれています。空白・大文字小文字・日付などの書き方の違いを無視したい場合だけ、「比較条件」を設定します。</p>
             </li>
             <li>
               <strong>「差分を比較」を選択</strong>
@@ -105,7 +107,7 @@
             </li>
             <li>
               <strong>結果を確認・保存</strong>
-              <p class="appbox-help-step-desc">必要な行を検索・絞り込みして確認します。一致を除いた差分は「差分CSVを保存」から保存できます。</p>
+              <p class="appbox-help-step-desc">最初は差分のある行だけが表示されます。「状態」を「すべて」にすると一致行も確認できます。「差分CSVを保存」は、検索や表示中のページにかかわらず、一致を除いたすべての差分を保存します。</p>
             </li>
           </ol>
 
@@ -121,6 +123,15 @@
 
         <section class="help-section" id="advanced" aria-labelledby="advanced-title">
           <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+
+          <h3 class="appbox-help-subheading" id="key">キー列と比較する列</h3>
+          <p>「キー列」は、新旧CSVの同じ対象を結び付けるための列です。両方に同じ列名があり、各CSVの中で値が1行ずつに分かれるものを選びます。「氏名」だけでは同姓同名があり得るため、職員番号等の番号列を使うと対応を確認しやすくなります。</p>
+          <p>例えばキー列を「職員番号」、比較する列を「所属」にすると、職員番号「001」の所属が「総務課」から「市民課」へ変わった行は「変更」になります。職員番号が「001」から「009」へ変わると、別の対象と判断し、旧番号の「削除」と新番号の「追加」になります。</p>
+          <ul>
+            <li>最初に選ばれるキー列が、目的に合っているか必ず確認してください。複数列を組み合わせてキーにすることはできません。</li>
+            <li>「比較する列を選ぶ」でチェックを外した列の違いは、変更の判定にも差分CSVの出力にも含まれません。</li>
+            <li>文字コード・区切り文字を変えるとCSVを読み直します。キー列と比較する列を確認し直してください。</li>
+          </ul>
 
           <h3 class="appbox-help-subheading" id="options">比較条件</h3>
           <p class="appbox-help-p">
@@ -165,7 +176,8 @@
             <div>
               <dt>セル内の改行の種類の違いを同じものとして扱う</dt>
               <dd>
-                CRLF、CR、LFをLFに統一して比較します。
+                Windows等で保存されたCSVの、セル内の改行方式の違いを無視します。
+                改行自体を取り除いたり、改行のある値とない値を一致にしたりする設定ではありません。
               </dd>
             </div>
 
@@ -243,13 +255,13 @@
           <h3 class="appbox-help-subheading" id="csv-row-numbers">元CSV行番号</h3>
 
           <ul>
-            <li>1行目は見出し行なので、最初のデータ行は2行目として表示します。</li>
+            <li>見出し行を1行目とし、最初のデータ行は2行目として表示します。完全な空行は読み飛ばして数えます。</li>
             <li>追加行では旧CSV行番号を「—」、削除行では新CSV行番号を「—」と表示します。</li>
             <li>行番号は検索の対象に含まれます。</li>
             <li>
-              行番号は読み込んだCSV上の論理的なレコード位置です。
-              セル内に改行を含む場合、テキストエディターで見える物理的な行番号とは
-              一致しないことがあります。
+              ここでの行番号は、読み込んだデータの順番です。完全な空行やセル内の改行があると、
+              テキストエディターに表示される行番号とは一致しないことがあります。
+              例えば、見出しの次に空行があっても、最初のデータは2行目と表示します。
             </li>
           </ul>
 
@@ -273,14 +285,14 @@
             <article class="help-card">
               <h4>状態フィルター</h4>
               <p>
-                差分のみ、すべて、追加のみ、削除のみ、変更のみ、一致のみを切り替えられます。
+                「状態」から、差分のみ、すべて、追加のみ、削除のみ、変更のみ、一致のみを切り替えられます。最初は「差分のみ」です。
               </p>
             </article>
 
             <article class="help-card">
               <h4>変更列フィルター</h4>
               <p>
-                選んだ列に差分がある行だけを表示します。一致行は変更列を持たないため
+                「変更列」から、選んだ列に差分がある行だけを表示します。一致行は変更列を持たないため
                 表示されません。「すべての列」で解除できます。
               </p>
             </article>
@@ -293,6 +305,8 @@
               </p>
             </article>
           </div>
+          <p>検索・状態・変更列は組み合わせて絞り込めます。上部の追加・削除・変更・一致の件数は比較全体の集計で、絞り込みによって変わりません。絞り込んだ件数は表の下で確認してください。</p>
+          <p>表が横に長い場合は左右にスクロールして確認します。表の下の「前へ」「次へ」でページを移動でき、「1ページ」で25・50・100・200件から表示件数を選べます。</p>
 
           <h3 class="appbox-help-subheading" id="changed-columns">「変更箇所だけ表示」</h3>
 
@@ -318,6 +332,7 @@
             出力するのは、状態、キー列、旧CSV行番号、新CSV行番号、
             比較対象列ごとの旧値と新値です。
           </p>
+          <p>画面で絞り込んだ行だけを保存する機能はありません。表示中の1ページだけでなく、比較したすべての差分が保存されるため、配布する前に保存内容を確認してください。一致だけの場合は保存する差分がありません。</p>
 
           <div class="help-table-wrap">
             <table class="help-table">
@@ -365,8 +380,18 @@
         <section class="help-section" id="faq" aria-labelledby="faq-title">
           <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
           <details class="appbox-help-faq-item">
+            <summary>「差分を比較」ボタンが押せません。</summary>
+            <div class="appbox-help-faq-answer">新旧両方のCSVが読み込めているか、共通する列名からキー列を選べているかを確認してください。「比較する列を選ぶ」で、キー列以外に1列以上のチェックが必要です。キー列だけのCSVでは比較できません。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
+            <summary>件数はあるのに、表に結果が出ません。</summary>
+            <div class="appbox-help-faq-answer">最初は「差分のみ」の表示なので、一致行は出ません。検索欄を空にし、「状態」を「すべて」、「変更列」を「すべての列」にして、「変更箇所だけ表示」のチェックを外してください。</div>
+          </details>
+
+          <details class="appbox-help-faq-item">
             <summary>キー列には何を選べばよいですか？</summary>
-            <div class="appbox-help-faq-answer">職員番号、宛名番号、施設コードなど、各行を一意に識別できる列を選んでください。
+            <div class="appbox-help-faq-answer">職員番号、宛名番号、施設コードなど、どの行かを番号等で区別できる列を選んでください。
               空欄や重複がある列は使えません。複数列を組み合わせた複合キーには対応していません。</div>
           </details>
 
@@ -419,15 +444,15 @@
               <tbody>
                 <tr>
                   <th scope="row">拡張子</th>
-                  <td>.csv</td>
+                  <td>.csv。Excelの .xlsx・.xls は直接読み込めません。CSV形式で保存してから選択してください。</td>
                 </tr>
                 <tr>
                   <th scope="row">ファイルサイズ</th>
-                  <td>20MB以下</td>
+                  <td>各ファイル20MB以下</td>
                 </tr>
                 <tr>
                   <th scope="row">データ行数</th>
-                  <td>200,000行以下</td>
+                  <td>各ファイル200,000行以下（見出しと読み飛ばした完全な空行を除く）</td>
                 </tr>
                 <tr>
                   <th scope="row">列数</th>
@@ -435,7 +460,7 @@
                 </tr>
                 <tr>
                   <th scope="row">総セル数</th>
-                  <td>2,000,000セル以下</td>
+                  <td>各ファイルのデータ行数 × 列数が2,000,000セル以下</td>
                 </tr>
                 <tr>
                   <th scope="row">文字コード</th>
@@ -494,7 +519,7 @@
             <li>複数の列を組み合わせた複合キーには対応していません。</li>
             <li>比較条件を列ごとに個別に設定することはできません。キー列を含む全ての値へ共通で適用されます。</li>
             <li>日付の書き方を同じものとして扱う条件は年月日を含む対応形式に限られます。和暦、日時、Excelのシリアル値には対応していません。</li>
-            <li>数値の書き方を同じものとして扱う条件では、非常に大きな整数や高精度の小数で意図しない丸めが生じることがあります。</li>
+            <li>数値の書き方を同じものとして扱う条件では、大きな整数や長い小数も丸めずに比較します。指数表記は変換しません。</li>
             <li>CSV文法のすべてを厳格に検証するものではありません。</li>
             <li>
               解析・比較・検索・並べ替えは端末上で実行します。上限以内でも行数や列数が多いと
@@ -529,10 +554,12 @@
           </div>
 
           <ul>
-            <li>画面表示時にCSV由来の文字列をHTMLエスケープします。</li>
+            <li>元のCSVファイルを書き換えることはありません。</li>
             <li>出力するCSVには、表計算ソフトで数式として解釈される先頭文字への対策を行います。</li>
             <li>ファイルを差し替えたりクリアしたりすると、それまでの比較結果は破棄されます。</li>
             <li>文字コード、区切り文字、キー列、比較対象列、比較条件を変更した場合も同様です。</li>
+            <li>「サンプルで試す」は、読み込み済みのCSVや設定をサンプル用へ置き換えます。「すべてクリア」は読み込んだCSV・設定・結果を初期状態へ戻します。</li>
+            <li>アプリには作業を保存して再開する機能はありません。後で同じ比較をする場合は、新旧の元CSVを保管し、同じ列と条件を選んで比較してください。保存した差分CSVは作業を再開するためのファイルではありません。</li>
           </ul>
 
           <p>
@@ -548,10 +575,10 @@
     </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / CSV差分チェッカー Version 1.2.4
+      共創アプリBOX / CSV差分チェッカー Version 1.2.5
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

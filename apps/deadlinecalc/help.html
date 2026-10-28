@@ -2,25 +2,26 @@
 <html lang="ja" data-appbox-theme="green">
 <head>
   <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <title>期限・日数かんたん計算 ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
 </head>
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -46,11 +47,11 @@
         </div>
         <p class="appbox-help-header-desc">カレンダーをクリックして直感的に操作。初日不算入や開庁日を考慮して、期限日や期間日数を計算します。</p>
       </div>
-      <span class="version-badge">Version 1.4.2</span>
+      <span class="version-badge">Version 1.4.5</span>
 
       <div class="help-callout help-callout-warning">
         <strong>計算結果と法的効果についてのご注意</strong>
-        <p>このツールは事務処理における日付・期限の算定を補助する参考用ツールです。民法上の初日不算入の原則や地方自治法の休日規定など一般的な行政基準をもとに計算しますが、法令、条例、規則、契約、通知等に特別な算定方法が定められている場合は、その規定を最優先してください。正式な提出期限や権利義務に関わる期日は、根拠規定を必ずご確認ください。</p>
+        <p>このツールは事務処理における日付・期限の算定を補助する参考用ツールです。設定した初日・日数・末日の扱いと、収録済みの祝日・独自閉庁日に基づいて計算します。法令、条例、規則、契約、通知等に特別な算定方法が定められている場合は、その規定を最優先してください。正式な提出期限や権利義務に関わる期日は、根拠規定を必ずご確認ください。</p>
       </div>
     </div>
 
@@ -63,7 +64,7 @@
             <ul class="appbox-help-nav-sublist">
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#deadline-calculation">1. 期限を計算（○日前・後）</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#period-calculation">2. 期間を計算（2点間・あと何日？）</a></li>
-              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#day-information">3. 選択した日の開庁日・祝日情報</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#day-information">3. カレンダーの見方</a></li>
             </ul>
           </li>
           <li>
@@ -93,19 +94,19 @@
           <ol class="help-steps">
             <li>
               <strong>カレンダーで基準日を選択</strong>
-              <p class="appbox-help-step-desc">カレンダー上の日付をクリックして「基準日」を選択します（初期値は今日）。入力欄へ直接入力したり、カレンダーピッカーから選ぶこともできます。</p>
+              <p class="appbox-help-step-desc">カレンダー上の日付をクリックして「基準日」を選択します（初期値は今日）。別の月はカレンダー上部の年月操作で表示し、「今日にする」で今日へ戻せます。</p>
             </li>
             <li>
               <strong>日数を指定・加算減算</strong>
-              <p class="appbox-help-step-desc">日数ステッパー（<code>-10</code>、<code>-1</code>、<code>+1</code>、<code>+10</code>）やクイックボタン（<code>7日</code>、<code>10日</code>、<code>14日</code>、<code>20日</code>、<code>30日</code>、<code>60日</code>、<code>90日</code>等）を押して日数を指定します。直接数値を入力することも可能です。</p>
+              <p class="appbox-help-step-desc">日数の増減ボタン（<code>-10</code>、<code>-1</code>、<code>+1</code>、<code>+10</code>）や日数ボタン（<code>7日</code>、<code>10日</code>、<code>14日</code>、<code>20日</code>、<code>30日</code>、<code>60日</code>、<code>90日</code>等）を押して日数を指定します。0〜36,525の整数を直接入力することもできます。</p>
             </li>
             <li>
               <strong>計算方向を切り替え</strong>
-              <p class="appbox-help-step-desc">方向ボタンで「○日後（未来）」または「○日前（過去への逆算）」を切り替えます。カレンダー上で計算期間（青色の帯）と期限日（緑色のピン）がリアルタイムに追従します。</p>
+              <p class="appbox-help-step-desc">方向ボタンで「○日後（未来）」または「○日前（過去）」を切り替えます。カレンダー上で計算期間（青色の帯）と期限日（緑色のピン）がリアルタイムに追従します。</p>
             </li>
             <li>
               <strong>結果を確認・コピー</strong>
-              <p class="appbox-help-step-desc">右側の結果カードに、期限日（西暦・和暦・曜日・開庁ステータス）、実日数、実働開庁日数、除外された閉庁日数が表示されます。閉庁日補正が発生した場合は、本来の到達日も併記されます。「結果をコピー」ボタンを押して文書やメール等へ貼り付けできます。</p>
+              <p class="appbox-help-step-desc">右側の結果カードに、期限日（西暦・和暦・曜日・開庁ステータス）、実日数、実働開庁日数、除外された閉庁日数が表示されます。実日数・実働開庁日は、補正後の最終期限日までを初日算入の設定に合わせて数えます（指定0日は基準日を含めません）。閉庁日補正が発生した場合は、本来の到達日も併記されます。計算エラー時は古い結果を消し、コピーを無効にします。「結果をコピー」で期限日を、「条件を含めてコピー」で計算条件もコピーできます。文書やメール等へ貼り付けてください。</p>
             </li>
           </ol>
 
@@ -117,29 +118,30 @@
             </li>
             <li>
               <strong>開始日と終了日を指定</strong>
-              <p class="appbox-help-step-desc">カレンダー上で「開始日（基準日）」と「終了日（期限日）」の2つの日付をクリックします（「カレンダーで選択」ボタンでピッカーから指定することも可能です）。基準日を「今日」にして提出期限を指定すれば、提出日までの「残り開庁日数（あと何日）」の把握に便利です。</p>
+              <p class="appbox-help-step-desc">開始日欄の「カレンダーで選択」を押してカレンダーの日付をクリックし、続けて終了日をクリックします。終了日だけを変えるときは、終了日欄の「カレンダーで選択」を先に押します。基準日を「今日」にして提出期限を指定すれば、提出日までの「残り開庁日数（あと何日）」の把握に便利です。</p>
             </li>
             <li>
               <strong>日数と内訳を確認</strong>
               <p class="appbox-help-step-desc">2点間の実日数、開庁日数、年・月・日の目安、および閉庁日内訳（土日・祝日・年末年始・独自閉庁日）が即座に算出されます。</p>
             </li>
           </ol>
+          <p>期間計算の「結果をコピー」は実日数と開庁日数を、「詳細を含めてコピー」は開始日・終了日・計算条件・閉庁日の内訳もコピーします。</p>
           <p class="appbox-help-p">※<strong>順序の注意</strong>：終了日（期限日）は、開始日（基準日）以降の日付を指定してください。開始日より前の過去日をクリックした場合は警告メッセージが表示され選択できません（カレンダー上の過去セルも無効化されます）。過去へ遡る計算を行いたい場合は、「期限を計算」の「○日前」モードをご利用ください。</p>
 
-          <h3 class="appbox-help-subheading" id="day-information">3. 選択した日の開庁日・祝日情報</h3>
-          <p class="appbox-help-p">カレンダー上のどの日付をクリックしても、右下の「選択日の情報」カードに開庁日か閉庁日（祝日名・年末年始・独自閉庁日等）かが表示され、前後の直近開庁日も即座に案内されます。</p>
+          <h3 class="appbox-help-subheading" id="day-information">3. カレンダーの見方</h3>
+          <p class="appbox-help-p">カレンダーの日付には、祝日名・年末年始・組織独自閉庁日の名称が表示されます。日付をクリックすると、現在のタブと選択対象に応じて基準日・開始日・終了日が変わります。1年分を一覧で見る場合は「年間祝日・閉庁日早見表」を使ってください。</p>
         </section>
 
         <section class="help-section" id="advanced" aria-labelledby="advanced-title">
           <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
 
           <h3 class="appbox-help-subheading" id="calculation-settings">初日不算入と閉庁日補正の詳細設定</h3>
-          <p class="appbox-help-p">「詳細設定」アコーディオンを開くことで、法律・条例や業務要件に基づく計算条件を細かく指定できます。</p>
+          <p class="appbox-help-p">「詳細設定」を開き、初日の扱い・日数の数え方・末日の補正を選びます。「標準」はアプリの初期設定です。ご自身の業務の算定条件に合うか確認してください。</p>
 
           <h4 class="appbox-help-subheading">【基準日の扱い（初日）】</h4>
           <ul>
-            <li><strong>初日不算入（標準）</strong>: 民法第140条本文の規定に基づき、期間の初日は算入せず翌日を1日目として起算します。通常の行政文書や届出期限の標準的な算定方式です。</li>
-            <li><strong>初日算入</strong>: 期間が午前零時から始まる場合や、特別の法令・規程の定めがある場合に選択します。</li>
+            <li><strong>初日不算入（標準）</strong>: 基準日を数えず、翌日を1日目とします。「○日前」の計算では前日を1日目とします。</li>
+            <li><strong>初日算入</strong>: 基準日を1日目として数えます。ただし「開庁日のみで数える」で基準日が閉庁日なら、その日は数えません。</li>
           </ul>
 
           <h4 class="appbox-help-subheading">【日数の数え方】</h4>
@@ -150,10 +152,12 @@
 
           <h4 class="appbox-help-subheading">【土日・祝日の補正（末日処理）】</h4>
           <ul>
-            <li><strong>翌開庁日へ繰越（標準）</strong>: 地方自治法第4条の2第2項や民法第142条の規定に基づき、期限の末日が日曜日、土曜日、国民の祝日、年末年始等の休日にあたる場合、その翌開庁日を期限日とみなします。</li>
-            <li><strong>前開庁日へ繰上</strong>: 入札公告の事前公示期間や、期日前に手続を完了させる必要がある場合に選択します。</li>
+            <li><strong>翌開庁日へ繰越（標準）</strong>: 到達日が閉庁日なら、その後の最初の開庁日へ移動します。「○日前」の計算でも、補正の向きは自動では変わりません。</li>
+            <li><strong>前開庁日へ繰上</strong>: 到達日が閉庁日なら、その前の直近の開庁日へ移動します。</li>
             <li><strong>補正なし</strong>: 休日の判定を行わず、暦通りの到達日をそのまま期限日とします。</li>
           </ul>
+
+          <p>「開庁日のみで数える」は途中の閉庁日も除いて数えます。「暦日で数える」と末日の補正を組み合わせる場合は、途中の閉庁日は数え、到達日が閉庁日のときだけ移動します。指定日数が0日でも、暦日計算では基準日が閉庁日なら補正されることがあります。</p>
 
           <h3 class="appbox-help-subheading" id="annual-calendar">年間祝日・閉庁日早見表の活用とA4印刷</h3>
           <p class="appbox-help-p">「年間祝日・閉庁日早見表」タブを選択すると、指定した1年間の祝日・振替休日・年末年始・組織独自閉庁日を確認できる年間早見表が表示されます。</p>
@@ -169,15 +173,15 @@
           <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
           <details class="appbox-help-faq-item">
             <summary>祝日データはいつまで収録されていますか？</summary>
-            <div class="appbox-help-faq-answer">内閣府が公表している「国民の祝日」データ（1955年1月1日〜2027年12月31日・2027年末まで対応・データ取得日: 2026年2月2日）を収録しています。メイン画面のカレンダー下部および年間早見表上部でも現在の収録期間とデータ取得日を確認できます。将来の祝日法改正や内閣府の新たな公表にあわせて、順次データが更新されます。収録範囲外の日付を計算した場合は、画面上に祝日判定対象外である旨が表示されます。</div>
+            <div class="appbox-help-faq-answer">内閣府が公表している「国民の祝日」データ（1955年1月1日〜2027年12月31日・2027年末まで対応・データ取得日: 2026年2月2日）を収録しています。メイン画面のカレンダー下部および年間早見表上部でも現在の収録期間とデータ取得日を確認できます。データの自動更新はありません。新しい祝日データへの対応はアプリの更新が必要です。収録範囲外の日付を計算した場合は、画面上に祝日判定対象外である旨が表示されます。</div>
           </details>
           <details class="appbox-help-faq-item">
             <summary>振替休日や国民の休日は考慮されますか？</summary>
-            <div class="appbox-help-faq-answer">はい。内閣府の公表データに準拠し、振替休日や「国民の休日」（祝日に挟まれた平日）もすべて閉庁日として正確に処理されます。</div>
+            <div class="appbox-help-faq-answer">収録範囲内では、内閣府の公表データに含まれる振替休日や「国民の休日」も閉庁日として扱います。収録範囲外や公表後の変更は、別途確認してください。</div>
           </details>
           <details class="appbox-help-faq-item">
             <summary>年末年始の閉庁日はいつですか？</summary>
-            <div class="appbox-help-faq-answer">行政機関の休日に関する法律および自治体条例の標準に準拠し、12月29日から1月3日までの6日間を年末年始の閉庁日として自動処理します。</div>
+            <div class="appbox-help-faq-answer">このアプリでは12月29日から1月3日までの6日間を年末年始の閉庁日として扱います。組織の実際の開庁予定も確認してください。</div>
           </details>
           <details class="appbox-help-faq-item">
             <summary>創立記念日や夏季一斉休庁日などの組織独自の休みは反映されますか？</summary>
@@ -185,7 +189,7 @@
           </details>
           <details class="appbox-help-faq-item">
             <summary>期間計算で、終了日に開始日より前の日付を選べません。</summary>
-            <div class="appbox-help-faq-answer">「期間を計算」は開始日（基準日）から終了日（期限日）までの期間の長さを測る機能のため、終了日は開始日以降の日付を指定する仕様となっています。ある期日から過去へ遡った日数を計算したい場合は、「期限を計算」モードの「○日前（過去への逆算）」をご利用ください。</div>
+            <div class="appbox-help-faq-answer">「期間を計算」は開始日（基準日）から終了日（期限日）までの期間の長さを測る機能のため、終了日は開始日以降の日付を指定する仕様となっています。ある期日から過去へ遡った日数を計算したい場合は、「期限を計算」モードの「○日前（過去）」をご利用ください。</div>
           </details>
           <details class="appbox-help-faq-item">
             <summary>正常に計算されない、または表示が崩れる場合はどうすればよいですか？</summary>
@@ -208,7 +212,7 @@
 
           <h3 class="appbox-help-subheading" id="limitations">利用上の注意・制限事項</h3>
           <ul>
-            <li>対応日付範囲は西暦1955年1月1日〜2099年12月31日の新暦（グレゴリオ暦）です。旧暦や1955年より前の日付には対応していません。</li>
+            <li>月カレンダーは1900年1月〜2099年12月まで表示できます。1900年1月では「前月」、2099年12月では「翌月」を選べず、範囲外の余白の日付も選択できません。年の選択欄と年間早見表で選べる範囲は1955年〜2050年です。旧暦には対応していません。</li>
             <li>国民の祝日データは内閣府公表データ（1955年1月1日〜2027年12月31日・2027年末まで対応・データ取得日: 2026年2月2日）を収録しています。収録範囲外の日付を指定した場合は、祝日判定が行われない旨の注記が表示されます。</li>
             <li>時刻単位の計算（「○時間後」「○日後の17時まで」等）には対応していません。</li>
           </ul>
@@ -218,7 +222,7 @@
             <strong>入力・計算はブラウザ内で完結します</strong>
             <p>入力した日付や計算処理はすべて利用者のブラウザ内でのみ処理されます。外部サーバーへの通信は一切行わず、Cookie、ローカルストレージ（localStorage）等の永続保存領域も使用しません。</p>
           </div>
-          <p class="appbox-help-p">画面を開き直すと入力内容は初期状態（本日日付）に戻ります。コピーや印刷で出力したデータは、利用者の端末内で適切に取り扱ってください。</p>
+          <p class="appbox-help-p">画面を再読み込みすると初期状態へ戻ります。ブラウザの「戻る」等では画面の状態が保持される場合があるため、再開時は日付と条件を確認してください。コピーや印刷で出力したデータは、利用者の端末内で適切に取り扱ってください。</p>
         </section>
 
         <div class="help-footer-actions">
@@ -228,10 +232,10 @@
     </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / 期限・日数かんたん計算 Version 1.4.2
+      共創アプリBOX / 期限・日数かんたん計算 Version 1.4.5
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

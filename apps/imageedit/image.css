@@ -713,22 +713,124 @@ input[type="color"]{
 }
 
 .editor-settings{
+  /* 設定用に100px以上残す。狭幅時は下の480px上限に合わせて切り替える。 */
+  --image-layer-list-max-height:min(260px,38dvh,calc(max(300px,var(--image-sidebar-height,calc(100dvh - 160px))) - 180px));
   grid-area:settings;
+  display:flex;
+  flex-direction:column;
   padding:12px 14px;
-  overflow-x:hidden;
-  overflow-y:auto;
-  scrollbar-width:thin;
+  overflow:hidden;
 }
 
-.editor-settings:has(.context-panel.hidden){visibility:hidden}
+.layer-list-panel{
+  margin-top:auto;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  flex:0 0 auto;
+  min-width:0;
+}
+.layer-list-summary{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:700;
+  list-style:none;
+  color:var(--text);
+}
+.layer-list-summary::-webkit-details-marker{display:none}
+.layer-list-summary::before{
+  content:"▶" / "";
+  color:var(--yellow-strong);
+  font-size:10px;
+}
+.layer-list-panel[open] .layer-list-summary::before{content:"▼" / ""}
+.layer-list-count{
+  margin-left:auto;
+  padding:1px 7px;
+  border-radius:999px;
+  background:var(--yellow-soft);
+  color:var(--text);
+  font-size:11px;
+}
+.layer-list{
+  display:grid;
+  gap:4px;
+  max-height:var(--image-layer-list-max-height);
+  padding:8px;
+  overflow-y:auto;
+  border-top:1px solid var(--line);
+}
+.layer-list-item{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+  width:100%;
+  padding:7px 8px;
+  border:1px solid transparent;
+  border-radius:7px;
+  position:relative;
+  background:transparent;
+  color:var(--text);
+  text-align:left;
+  font-size:12px;
+}
+.layer-list-item[draggable="true"]{cursor:grab}
+.layer-list-item.layer-list-dragging{opacity:.45;cursor:grabbing}
+.layer-list-item.layer-list-dragging[aria-pressed="true"]{border-color:transparent}
+/* A single straight line in the grid gap, independent of rounded row corners. */
+.layer-list-item.layer-list-drop-before::before,
+.layer-list-item.layer-list-drop-after::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  height:3px;
+  border-radius:0;
+  background:var(--yellow-strong);
+  pointer-events:none;
+  z-index:1;
+}
+.layer-list-item.layer-list-drop-before::before{top:-4px}
+.layer-list-item.layer-list-drop-after::before{bottom:-4px}
+.layer-list-hint{margin:0;padding:0 10px 8px;font-size:11px;color:var(--muted)}
+.layer-list-item:hover{background:var(--yellow-soft)}
+.layer-list-item:focus-visible,
+.layer-list-summary:focus-visible{outline-color:var(--text)}
+.layer-list-item[aria-pressed="true"]{
+  border-color:var(--yellow-strong);
+  background:var(--yellow-soft);
+}
+.layer-list-item:hover .layer-list-name,
+.layer-list-item[aria-pressed="true"] .layer-list-name{color:var(--text)}
+.layer-list-selected{flex:0 0 auto;margin-left:auto;visibility:hidden}
+.layer-list-item[aria-pressed="true"] .layer-list-selected{visibility:visible}
+.layer-list-kind{flex:0 0 auto;font-weight:600}
+.layer-list-name{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  color:var(--muted);
+}
+.layer-list-empty{margin:4px 2px;color:var(--muted);font-size:12px}
 
 .context-panel{
   display:grid;
+  flex:1 1 auto;
+  align-content:start;
   gap:6px 10px;
+  min-height:0;
   min-width:0;
   max-width:100%;
   margin:0;
-  padding:3px 0;
+  padding:6px;
+  overflow-y:auto;
+  scrollbar-width:thin;
 }
 
 .context-title{
@@ -1217,7 +1319,7 @@ input[type="color"]{
   }
 
   .editor-sidebar{height:480px;min-height:0}
-  .editor-settings{height:auto;min-height:0;max-height:480px}
+  .editor-settings{height:auto;min-height:0;max-height:480px;--image-layer-list-max-height:min(220px,38dvh)}
 
   .right-panel,
   .batch-layout>aside:last-child{
@@ -1307,4 +1409,8 @@ input[type="color"]{
 
 @media(forced-colors:active){
   .tool.active{ outline:2px solid Highlight; }
+  .layer-list-item:focus-visible,
+  .layer-list-summary:focus-visible{outline-color:Highlight}
+  .layer-list-item.layer-list-drop-before::before,
+  .layer-list-item.layer-list-drop-after::before{background:Highlight}
 }

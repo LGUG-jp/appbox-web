@@ -2,19 +2,21 @@
 <html lang="ja" data-appbox-theme="blue">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
   <title>文章差分チェッカー ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
 </head>
 
 <body>
@@ -22,8 +24,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -60,11 +62,12 @@
           <li>
             <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
             <ul class="appbox-help-nav-sublist">
-              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#modes">比較方式の選び方</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#modes">比較単位の選び方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#options">比較条件</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#scroll-sync">比較結果のスクロール連動</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#results">結果の見方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#operations">便利な操作</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#reset">やり直し・クリア</a></li>
             </ul>
           </li>
           <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
@@ -83,12 +86,8 @@
           <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
           <ol class="help-steps">
             <li>
-              <strong>古い文章を入力</strong>
-              <p class="appbox-help-step-desc">左側の「旧・古い文章」へ、変更前の文章を入力または貼り付けます。</p>
-            </li>
-            <li>
-              <strong>新しい文章を入力</strong>
-              <p class="appbox-help-step-desc">右側の「新・新しい文章」へ、変更後の文章を入力または貼り付けます。</p>
+              <strong>新旧の文章を入力</strong>
+              <p class="appbox-help-step-desc">左側の「旧・古い文章」へ変更前の文章を、右側の「新・新しい文章」へ変更後の文章を入力または貼り付けます。</p>
             </li>
             <li>
               <strong>比較単位を選択</strong>
@@ -99,14 +98,15 @@
               <p class="appbox-help-step-desc">追加・削除された箇所をブラウザ内で比較します。</p>
             </li>
             <li>
-              <strong>必要に応じて条件を調整</strong>
-              <p class="appbox-help-step-desc">「比較条件」を開いて設定します。一度比較した後は、変更内容が比較結果へ自動で反映されます。</p>
+              <strong>結果を確認</strong>
+              <p class="appbox-help-step-desc">「前の差分」「次の差分」で変更箇所を順番に確認します。左右の表示では新旧を見比べ、下の「統合表示」では削除と追加を一続きで読めます。</p>
             </li>
             <li>
-              <strong>結果を確認</strong>
-              <p class="appbox-help-step-desc">追加、削除、差分箇所と、各比較結果を確認します。</p>
+              <strong>必要な結果をコピー・印刷</strong>
+              <p class="appbox-help-step-desc">Wordへ差分の色付きで貼り付ける場合は「Word向けにコピー」、条件や件数も残す場合は「比較レポートをコピー」を使います。「印刷」から紙に出すこともできます。</p>
             </li>
           </ol>
+          <p>必要に応じて「比較条件」を開いて設定します。一度比較した後は、変更内容が比較結果へ自動で反映されます。例えば全角・半角の違いを無視する条件を選ぶと、文字の幅だけが違う箇所を差分から除けます。</p>
 
           <div class="help-callout help-callout-info">
             <strong>入力方向</strong>
@@ -119,13 +119,13 @@
 
         <section class="help-section" id="advanced" aria-labelledby="advanced-title">
           <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
-          <h3 class="appbox-help-subheading" id="modes">比較方式の選び方</h3>
+          <h3 class="appbox-help-subheading" id="modes">比較単位の選び方</h3>
 
           <div class="help-table-wrap">
             <table class="help-table">
               <thead>
                 <tr>
-                  <th scope="col">比較方式</th>
+                  <th scope="col">比較単位</th>
                   <th scope="col">適した用途</th>
                   <th scope="col">特徴</th>
                 </tr>
@@ -148,7 +148,7 @@
                     全文文字単位
                   </th>
                   <td>
-                    改行を越えた文章全体の最短差分を確認したい場合
+                    行の区切りにとらわれず、文章全体で変更を確認したい場合
                   </td>
                   <td>
                     改行を含む文章全体を1つの文字列として比較します。
@@ -193,8 +193,9 @@
                 全角・半角の英数字を同じ文字として扱う
               </dt>
               <dd>
-                全角と半角の英字・数字を同一視します。
-                半角カナ、丸数字、ダッシュ、長音記号などは変換しません。
+                全角の英字・数字に加え、「！」「－」などの全角記号も半角にそろえて比較します。
+                例えば「ＡＢＣ１２３！」と「ABC123!」を同じものとして扱います。
+                半角カナ、丸数字、長音記号「ー」や全角スペースは、この設定では変換しません。
               </dd>
             </div>
 
@@ -204,6 +205,7 @@
               </dt>
               <dd>
                 2つ以上連続する改行を1つへ変換し、空行数の違いを比較対象から除きます。
+                空白やタブが入力されている行は、この設定だけでは取り除きません。
               </dd>
             </div>
 
@@ -301,7 +303,7 @@
               <p class="appbox-help-step-desc">
                 統合表示の本文を、追加は緑文字、削除は赤文字と取り消し線、変更なしは黒文字でコピーします。
                 見出し、集計、差分の説明ラベル、不可視文字を示す記号は含めません。
-                正規化を有効にしている場合は、正規化後の文章をコピーします。
+                空白や全角・半角などをそろえる比較条件が有効な場合は、条件に合わせて整えた文章をコピーします。
                 Wordでは「元の書式を保持」を選択して貼り付けてください。
               </p>
               <p class="appbox-help-step-desc">
@@ -349,7 +351,7 @@
                 <tr>
                   <td>差分を比較</td>
                   <td>
-                    <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+                    入力欄で <kbd>Ctrl</kbd> + <kbd>Enter</kbd>（Macは <kbd>⌘</kbd> + <kbd>Enter</kbd>）
                   </td>
                 </tr>
                 <tr>
@@ -367,18 +369,25 @@
               </tbody>
             </table>
           </div>
+          <h3 class="appbox-help-subheading" id="reset">やり直し・クリア</h3>
+          <ul>
+            <li>文章や比較単位を変更すると、古い結果は消えます。「差分を比較」を押し直してください。</li>
+            <li>一度比較した後に空白・全角半角・空行の比較条件を変えると、自動で比較し直します。「不可視文字を表示する」は、空白等を記号で見せるだけで、差分の判定を変えません。</li>
+            <li>「サンプルで試す」は、入力済みの文章をサンプルへ置き換えます。必要な文章は先に別の文書等へ控えてください。</li>
+            <li>「クリア」の確認画面で了承すると、入力文章・比較結果・比較条件が初期状態へ戻ります。</li>
+          </ul>
         </section>
 
         <section class="help-section" id="faq" aria-labelledby="faq-title">
           <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
 <details class="appbox-help-faq-item">
             <summary>
-              通常はどの比較方式を使えばよいですか？
+              通常はどの比較単位を使えばよいですか？
             </summary>
             <p class="appbox-help-faq-answer">
               通常は「行内文字単位（推奨）」を使用してください。
               行全体の追加・削除だけを確認するときは「行単位」、
-              改行を越えた最短差分が必要な場合は「全文文字単位」が適しています。
+              行の区切りにとらわれず変更を確認したい場合は「全文文字単位」が適しています。
             </p>
           </details>
 
@@ -398,10 +407,10 @@
               設定を変更したら比較結果が消えました。
             </summary>
             <p class="appbox-help-faq-answer">
-              文章または比較方式を変更すると、古い比較結果を無効にします。
+              文章または比較単位を変更すると、古い比較結果を無効にします。
               「差分を比較」を再度押してください。
               「比較条件」は、一度比較した後であれば変更内容が自動で反映されます。
-              自動再比較で上限エラーになった場合も、文章や比較方式を変えずに比較ルールを戻すと再試行します。
+              自動再比較で上限エラーになった場合も、文章や比較単位を変えずに比較ルールを戻すと再試行します。
             </p>
           </details>
 
@@ -435,8 +444,10 @@
               長い文章を比較できません。
             </summary>
             <p class="appbox-help-faq-answer">
-              ブラウザ停止を防ぐため、文字数、行数、処理時間などに上限があります。
-              章、条、項などの単位へ文章を分割するか、行単位比較を使用してください。
+              文字単位の2つの比較では新旧合計30,000文字、行単位では新旧合計10,000行までです。
+              空白・全角半角・空行の比較条件を使う場合は、整えた後の文章で判定します。
+              上限以内でも、変更が多すぎたり処理時間が長くなったりすると中止します。
+              章、条、項などに分けて比較してください。文字数の上限に達した場合は、行単位比較も試せます。
             </p>
           </details>
         </section>
@@ -465,6 +476,8 @@
             </li>
             <li>
               比較結果のファイル保存、履歴保存、行番号表示には対応していません。
+              結果を残す場合は、コピー先のWord等で保存するか、印刷してください。
+              アプリには入力文章や結果を保存して後から再開する機能はありません。
             </li>
             <li>
               正式文書の確認では、差分結果だけでなく新旧の原文も確認してください。
@@ -509,6 +522,6 @@
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

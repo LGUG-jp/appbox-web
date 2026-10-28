@@ -2,6 +2,8 @@
 <html lang="ja" data-appbox-theme="red">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; font-src 'self'; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-src 'none'; media-src 'none'; base-uri 'none'; form-action 'none'">
 
   <meta
     name="viewport"
@@ -31,21 +33,21 @@
   <title>
     PDFかんたん編集 | 共創アプリBOX
   </title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
 
   <!-- 共通アセット。app.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
 
   <link
     rel="stylesheet"
-    href="./app.css?v=1.13.0"
+    href="./app.css?v=1.14.2"
   >
 </head>
 
@@ -54,36 +56,38 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
       <div id="pdfHeaderActions" class="pdf-header-actions" role="group" aria-label="PDFの操作" hidden>
-        <button id="appendPdfBtn" class="tool-action" type="button" aria-label="開く" aria-describedby="appendPdfDescription" title="PDFを開いて末尾に追加" disabled>
-          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#open"></use></svg>
-          <span>開く</span>
+        <button id="appendPdfBtn" class="tool-action" type="button" aria-label="PDFを追加" aria-describedby="appendPdfDescription" title="PDFを末尾に追加（結合）" disabled>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg>
+          <span>PDFを追加</span>
         </button>
         <button id="closePdfBtn" class="tool-action" type="button" aria-label="PDFを閉じる" title="PDFを閉じる" disabled>
-          <svg class="appbox-icon appbox-icon--action appbox-icon--close" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#close"></use></svg>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--close" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#close"></use></svg>
           <span>閉じる</span>
         </button>
         <div class="toolbar-group history-actions" role="group" aria-label="履歴操作">
           <button id="undoBtn" class="tool-action icon-button" type="button" aria-label="元に戻す" title="元に戻す" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#undo"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg>
           </button>
           <button id="redoBtn" class="tool-action icon-button" type="button" aria-label="やり直す" title="やり直す" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#redo"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg>
           </button>
         </div>
         <div id="saveMenuGroup" class="save-menu">
           <button id="saveBtn" class="tool-action primary save-menu-trigger" type="button" aria-label="保存" aria-haspopup="menu" aria-expanded="false" aria-controls="saveMenu" title="保存（PDF・作業ファイル）" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#save"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg>
             <span>保存</span>
           </button>
           <div id="saveMenu" class="save-menu-list" role="menu" aria-labelledby="saveBtn" hidden>
-            <button id="savePdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="savePdfDescription" disabled>PDFを保存（全ページ）</button>
+            <button id="savePdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="savePdfDescription" disabled>PDFを保存（通常）</button>
+            <button id="saveRedactedPdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="saveRedactedPdfDescription" disabled>墨消しPDFとして保存</button>
             <button id="saveProjectBtn" type="button" role="menuitem" tabindex="-1" aria-describedby="saveProjectDescription" disabled>作業ファイル（.abpdf）を保存</button>
+            <p id="savePdfGuardNote" class="save-menu-note" hidden>墨消し範囲があるため、通常保存は使えません。</p>
           </div>
         </div>
       </div>
@@ -142,7 +146,7 @@
         </div>
         <h1 class="appbox-app-h1">PDFかんたん編集</h1>
       </div>
-      <p class="appbox-app-desc">PDFの結合・ページ回転・並べ替え・手書き・画像挿入・テキスト・四角・丸・矢印をブラウザ内で編集できます。</p>
+      <p class="appbox-app-desc">PDFの結合・ページ回転・並べ替え・墨消し・手書き・画像挿入・テキスト・四角・丸・矢印をブラウザ内で編集できます。</p>
     </div>
 
     <div class="appbox-shell appbox-shell--wide pdfeditor-shell">
@@ -173,11 +177,11 @@
           </svg>
 
           <div>
-            <strong>マスキング用途で使用しないでください（データは見えます）</strong>
+            <strong>通常保存ではマスキングできません（元データが残ります）</strong>
 
             <span>
-              四角・丸・テキスト・画像・手書きを重ねても、元の文字や画像はPDF内に残ります。
-              個人情報・機密情報の削除や非表示には使用しないでください。
+              通常保存では、四角・丸・テキスト・画像・手書きを重ねても、元の文字や画像はPDF内に残ります。
+              隠す場合は「墨消しPDFとして保存」を選んでください。専用の「墨消し」は黒・白から選べます。
             </span>
           </div>
         </aside>
@@ -261,45 +265,36 @@
     >
       <div class="page-toolbar" role="toolbar" aria-label="PDF編集操作">
         <div class="toolbar-controls">
-          <div class="toolbar-group edit-only page-navigation" role="group" aria-label="ページ移動">
+          <div class="toolbar-group edit-only page-navigation" role="group" aria-label="ページ一覧">
             <button id="backToPagesBtn" class="tool-action back-to-pages" type="button" aria-label="ページ一覧へ戻る" title="ページ一覧へ戻る">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#back"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#back"></use></svg>
               <span>一覧へ戻る</span>
             </button>
             <button id="togglePagesBtn" class="tool-action icon-button" type="button" aria-label="ページ一覧を閉じる" title="ページ一覧を閉じる" aria-expanded="true" aria-controls="pagesPanel" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#sidebar"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#sidebar"></use></svg>
             </button>
-            <div class="page-stepper">
-              <button id="prevPageBtn" class="tool-action icon-button" type="button" aria-label="前のページ" title="前のページ" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#chevron-left"></use></svg>
-              </button>
-              <span id="pageIndicator" aria-live="polite">0 / 0ページ</span>
-              <button id="nextPageBtn" class="tool-action icon-button" type="button" aria-label="次のページ" title="次のページ" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#chevron-right"></use></svg>
-              </button>
-            </div>
           </div>
           <div class="toolbar-group selection-actions overview-only" role="group" aria-label="選択ページの操作">
             <span id="selectionCount" class="selection-count" role="status">0ページ選択</span>
             <div class="page-actions">
               <button id="rotateLeftBtn" class="tool-action icon-button" type="button" aria-label="選択ページを左へ90度回転" title="選択ページを左へ90度回転" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rotate-left"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-left"></use></svg>
               </button>
               <button id="rotateRightBtn" class="tool-action icon-button" type="button" aria-label="選択ページを右へ90度回転" title="選択ページを右へ90度回転" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rotate-right"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-right"></use></svg>
               </button>
               <button id="movePageUpBtn" class="tool-action icon-button" type="button" aria-label="選択ページを前へ移動" title="選択ページを前へ移動" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#page-before"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#page-before"></use></svg>
               </button>
               <button id="movePageDownBtn" class="tool-action icon-button" type="button" aria-label="選択ページを後ろへ移動" title="選択ページを後ろへ移動" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#page-after"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#page-after"></use></svg>
               </button>
               <button id="deletePageBtn" class="tool-action icon-button" type="button" aria-label="選択ページを削除" title="選択ページを削除" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--delete" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#delete"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--delete" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#delete"></use></svg>
               </button>
             </div>
             <button id="extractBtn" class="tool-action extract-action" type="button" aria-label="選択を保存" aria-describedby="extractPdfDescription" title="選択ページのみをPDFに保存" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#download"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#download"></use></svg>
               <span>選択を保存</span>
             </button>
           </div>
@@ -309,45 +304,46 @@
           </div>
           <div id="annotationToolsMenu" class="toolbar-group tools edit-only" role="group" aria-label="選択・図形の追加・重ね順">
             <button class="mode-btn icon-button" data-tool="select" type="button" aria-label="選択" title="選択" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#select"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#select"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="text" type="button" aria-label="テキスト" title="テキスト" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#text"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#text"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="rect" type="button" aria-label="四角" title="四角" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#rectangle"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rectangle"></use></svg>
             </button>
+            <button class="mode-btn" data-tool="redact" type="button" aria-label="墨消し" title="黒・白の墨消し範囲を指定" aria-pressed="false">墨消し</button>
             <button class="mode-btn icon-button" data-tool="ellipse" type="button" aria-label="丸" title="丸" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#ellipse"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#ellipse"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="arrow" type="button" aria-label="矢印" title="矢印" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#arrow"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#arrow"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="line" type="button" aria-label="線" title="線" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#line"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#line"></use></svg>
             </button>
             <button id="insertImageBtn" class="icon-button" type="button" aria-label="画像を挿入" title="画像を挿入" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#image"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#image"></use></svg>
             </button>
             <input id="imageInput" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden>
             <button id="stampBtn" class="icon-button" type="button" aria-label="スタンプ" title="スタンプ" aria-haspopup="dialog" aria-controls="stampDialog" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#stamp"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#stamp"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="ink" type="button" aria-label="手書き" title="手書き" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#pen"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#pen"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="ink-eraser" type="button" aria-label="手書き消しゴム" title="手書き消しゴム" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#eraser"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#eraser"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="highlight" type="button" aria-label="マーカー" title="マーカー" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#highlight"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#highlight"></use></svg>
             </button>
             <div id="figureOrderControls" class="figure-order-controls" role="group" aria-label="図形の重ね順">
               <button id="bringFiguresFrontBtn" class="tool-action icon-button" type="button" aria-label="最前面に移動" title="最前面に移動" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#bring-front"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#bring-front"></use></svg>
               </button>
               <button id="sendFiguresBackBtn" class="tool-action icon-button" type="button" aria-label="最背面に移動" title="最背面に移動" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.3.0#send-back"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#send-back"></use></svg>
               </button>
             </div>
           </div>
@@ -405,6 +401,13 @@
                 <strong id="formatTitle">図形の設定</strong>
               </button>
             </div>
+            <label id="redactionColorField" class="compact-field" hidden>
+              <span>墨消しの色</span>
+              <select id="redactionColorInput" aria-label="墨消しの色">
+                <option value="#000000">黒</option>
+                <option value="#ffffff">白</option>
+              </select>
+            </label>
             <div class="property-controls">
               <label id="colorField" class="compact-field" title="図形の色">
                 <span id="colorFieldLabel">色</span>
@@ -675,7 +678,7 @@
             <button id="figureContextDeleteBtn" class="danger" type="button" role="menuitem">削除</button>
           </div>
           <div id="dockPreview" class="dock-preview" hidden></div>
-          <div class="viewer-toolbar">
+          <div class="viewer-toolbar" role="group" aria-label="PDFの表示操作">
             <div class="viewer-controls">
               <!--
                   縮小・拡大ボタンは<label>の外に置いています。
@@ -722,6 +725,15 @@
                 ＋
               </button>
             </div>
+            <div class="page-stepper" role="group" aria-label="ページ移動">
+              <button id="prevPageBtn" class="tool-action icon-button" type="button" aria-label="前のページ" title="前のページ" disabled>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#chevron-left"></use></svg>
+              </button>
+              <span id="pageIndicator" aria-live="polite">0 / 0ページ</span>
+              <button id="nextPageBtn" class="tool-action icon-button" type="button" aria-label="次のページ" title="次のページ" disabled>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#chevron-right"></use></svg>
+              </button>
+            </div>
           </div>
           <p id="canvasHint" class="canvas-hint" role="status"></p>
         </div>
@@ -735,7 +747,7 @@
       </div>
     </section>
     <footer class="appbox-footer pdfeditor-footer">
-      共創アプリBOX / PDFかんたん編集 Version 1.13.0
+      共創アプリBOX / PDFかんたん編集 Version 1.14.2
     </footer>
     </div>
   </main>
@@ -891,8 +903,33 @@
       </details>
     </form>
   </dialog>
-  <span id="appendPdfDescription" hidden>PDFを開いて末尾に追加します。</span>
-  <span id="savePdfDescription" hidden>全ページをPDFに保存します。</span>
+  <dialog id="pdfSaveDialog" class="page-number-dialog pdf-save-dialog" aria-labelledby="pdfSaveTitle" aria-describedby="pdfSaveSummary">
+    <form id="pdfSaveForm" method="dialog">
+      <h2 id="pdfSaveTitle">墨消しPDFを保存しますか？</h2>
+      <p id="pdfSaveSummary" class="pdf-save-summary"></p>
+      <p id="pdfSaveSelectionNotice" class="pdf-save-selection-notice" hidden></p>
+      <section id="pdfSaveCautions" class="pdf-save-cautions" aria-labelledby="pdfSaveCautionsTitle">
+        <h3 id="pdfSaveCautionsTitle">保存時の注意事項</h3>
+        <ul>
+          <li>文字検索・コピーなどができなくなります。</li>
+          <li>画質やファイル容量が変わることがあります。</li>
+          <li>元のPDFや作業ファイルには、元の情報が残ります。</li>
+        </ul>
+      </section>
+      <div id="pdfSaveReview" class="pdf-save-review">
+        <h3>保存後のお願い</h3>
+        <p>保存したPDFを開き、墨消し範囲や隠し忘れがないか確認してください。</p>
+      </div>
+      <div class="page-number-actions">
+        <button type="submit" value="cancel" class="tool-action" autofocus>キャンセル</button>
+        <button id="pdfSaveConfirmBtn" type="submit" value="save" class="tool-action primary">墨消しPDFを保存</button>
+        <button id="pdfSaveRasterizeBtn" type="button" class="tool-action primary" hidden>墨消しPDFとして保存</button>
+      </div>
+    </form>
+  </dialog>
+  <span id="appendPdfDescription" hidden>別のPDFを末尾に追加（結合）します。</span>
+  <span id="savePdfDescription" hidden>全ページを通常のPDFに保存します。元の文字や画像データが残るため、マスキングには使えません。</span>
+  <span id="saveRedactedPdfDescription" hidden>全ページを画像化し、元の文字や画像データを引き継がないPDFを新しく作ります。四角形や画像で覆った場合も選べます。</span>
   <span id="saveProjectDescription" hidden>続きを編集するための作業ファイルを保存します。配布用ではありません。</span>
   <span id="extractPdfDescription" hidden>選択ページのみをPDFに保存します。</span>
   <span id="pageSelectionDescription" hidden>Ctrlで複数選択、Shiftで範囲選択。余白クリックで解除、余白ドラッグで矩形選択。</span>
@@ -904,11 +941,11 @@
   ></div>
 
   <!-- 共通の折りたたみ処理。app.jsとは独立して動きます。 -->
-  <script src="../../assets/appbox-collapse.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-collapse.js?v=2.5.0"></script>
 
   <script
     type="module"
-    src="./app.js?v=1.13.0"
+    src="./app.js?v=1.14.1"
   ></script>
 </body>
 </html>

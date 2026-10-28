@@ -100,6 +100,33 @@
     return wrappedTextRanges(context,text,width).map(line => line.text);
   }
 
+  // Quarter-turn orientation stays separate from editable text layout and wrapping.
+  function textTransform(layer){
+    const angle = ((Number(layer.rotation) || 0)%360+360)%360;
+    const index = Math.round(angle/90)%4;
+    const cos = [1,0,-1,0][index],sin = [0,1,0,-1][index];
+    const flip = layer.textFlipX ? -1 : 1;
+    return {a:cos*flip || 0,b:sin*flip || 0,c:-sin || 0,d:cos || 0};
+  }
+
+  function transformTextPoint(layer,point,inverse=false){
+    const {a,b,c,d} = textTransform(layer);
+    const x = point.x-layer.x,y = point.y-layer.y;
+    return inverse ? {x:layer.x+a*x+b*y,y:layer.y+c*x+d*y}
+      : {x:layer.x+a*x+c*y,y:layer.y+b*x+d*y};
+  }
+
+  function transformedTextBounds(layer,box){
+    const {a,b,c,d} = textTransform(layer);
+    if(a === 1 && !b && !c && d === 1) return box;
+    const corners = [
+      {x:box.x,y:box.y},{x:box.x+box.w,y:box.y},
+      {x:box.x,y:box.y+box.h},{x:box.x+box.w,y:box.y+box.h}
+    ].map(point => transformTextPoint(layer,point));
+    const x = Math.min(...corners.map(point => point.x)),y = Math.min(...corners.map(point => point.y));
+    return {x,y,w:Math.max(...corners.map(point => point.x))-x,h:Math.max(...corners.map(point => point.y))-y};
+  }
+
   function layoutText(context,layer){
     context.save();
     context.font = fontFor(layer);
@@ -118,7 +145,7 @@
       w:Math.max(1,width+pad*2),h:Math.max(1,(lines.length-1)*lineHeight+ascent+descent+pad*2)
     };
     context.restore();
-    return {lines,lineHeight,ascent,descent,bounds};
+    return {lines,lineHeight,ascent,descent,localBounds:bounds,bounds:transformedTextBounds(layer,bounds)};
   }
 
   function editingTextBox(context,layer){
@@ -137,9 +164,10 @@
     const lines = wrapText(context,layer.text,wrapWidth);
     const width = wrapWidth ?? Math.max(300,...lines.map(line => textAdvance(context,line)));
     context.restore();
+    const origin = transformTextPoint(layer,{x:layer.x,y:layer.y-((lineHeight-ascent-descent)/2+ascent)});
     return {
-      left:layer.x,
-      top:layer.y-((lineHeight-ascent-descent)/2+ascent),
+      left:origin.x,
+      top:origin.y,
       width,
       height:Math.max(1,lines.length)*lineHeight,
       lineHeight
@@ -147,7 +175,8 @@
   }
 
   function textCaretIndex(context,layer,point){
-    const box = editingTextBox(context,layer);
+    point = transformTextPoint(layer,point,true);
+    const box = editingTextBox(context,{...layer,rotation:0,textFlipX:false});
     context.save();
     context.font = fontFor(layer);
     const width = effectiveWrapWidth(context,layer);
@@ -176,12 +205,16 @@
   function drawText(context,layer){
     const layout = layoutText(context,layer);
     context.save();
+    const {a,b,c,d} = textTransform(layer);
+    if(a !== 1 || b || c || d !== 1){
+      context.transform(a,b,c,d,layer.x-a*layer.x-c*layer.y,layer.y-b*layer.x-d*layer.y);
+    }
     context.font = fontFor(layer);
     context.textAlign = "left";
     context.textBaseline = "alphabetic";
     if(layer.bgTransparent === false){
       context.fillStyle = layer.bgColor || "#ffffff";
-      const box = layout.bounds;
+      const box = layout.localBounds;
       context.fillRect(box.x,box.y,box.w,box.h);
     }
     context.fillStyle = layer.color;
@@ -297,5 +330,5 @@
     return {eligible,mixed:eligible.some(layer => valueForField(layer,property) !== value),value};
   }
 
-  return Object.freeze({TEXT_OUTLINE_WIDTH,SHAPE_OUTLINE_EXTRA,FONT_STACKS,DEFAULT_FONT_FAMILY,safeFontFamily,fontStackFor,fontFor,wrapText,layoutText,editingTextBox,textCaretIndex,drawText,drawArrow,drawShape,eligibleForField,valueForField,commonFieldValue});
+  return Object.freeze({TEXT_OUTLINE_WIDTH,SHAPE_OUTLINE_EXTRA,FONT_STACKS,DEFAULT_FONT_FAMILY,textTransform,transformTextPoint,safeFontFamily,fontStackFor,fontFor,wrapText,layoutText,editingTextBox,textCaretIndex,drawText,drawArrow,drawShape,eligibleForField,valueForField,commonFieldValue});
 });

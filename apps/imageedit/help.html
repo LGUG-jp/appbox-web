@@ -2,20 +2,22 @@
 <html lang="ja" data-appbox-theme="yellow">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
   <title>画像かんたん加工 ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
 
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
 </head>
 
 <body>
@@ -23,8 +25,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -51,11 +53,11 @@
         </div>
         <p class="appbox-help-header-desc">1枚ずつの加工と、複数画像の一括処理の手順を説明します。</p>
       </div>
-      <span class="version-badge">Version 1.12.3</span>
+      <span class="version-badge">Version 1.14.0</span>
 
       <div class="help-callout help-callout-warning">
         <strong>確実に隠す必要がある箇所は黒塗りを使ってください</strong>
-        <p>モザイクは対象や設定によって元の内容を推測できる場合があり、完全な秘匿を保証するものではありません。確実な秘匿が必要な箇所には、対象より十分に広い範囲を黒塗りし、保存後も目視確認してください。また、保存後はレイヤーが焼き込まれるため後から解除できません。</p>
+        <p>モザイクは対象や設定によって元の内容を推測できる場合があり、完全な秘匿を保証するものではありません。確実な秘匿が必要な箇所には、対象より十分に広い範囲を黒塗りし、保存後も目視確認してください。また、通常の画像保存ではレイヤーが焼き込まれます。作業ファイル（.abimg）は隠した元情報も含むため、配布用には使わないでください。</p>
       </div>
     </div>
 
@@ -72,6 +74,7 @@
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#trim">トリミング</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#size">サイズと容量</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#batch">一括処理</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#project">作業の保存・再開</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#files">形式とファイル名</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#operations">履歴とキー操作</a></li>
             </ul>
@@ -91,34 +94,11 @@
         <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
           <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
           <ol class="help-steps">
-            <li>
-              <strong>画像を選択</strong>
-              <p class="appbox-help-step-desc">対象画像を選択します。ドラッグ＆ドロップや、Ctrl+Vによる画像の貼り付けでも読み込めます。</p>
-            </li>
-            <li>
-              <strong>必要に応じて構図を調整</strong>
-              <p class="appbox-help-step-desc">必要に応じてトリミング、回転、反転、リサイズを行います。</p>
-            </li>
-            <li>
-              <strong>マスキングを適用</strong>
-              <p class="appbox-help-step-desc">黒塗りやモザイクで隠したい箇所を加工します。</p>
-            </li>
-            <li>
-              <strong>文字・図形を追加</strong>
-              <p class="appbox-help-step-desc">必要に応じて文字、四角形、円、矢印の注釈を追加します。</p>
-            </li>
-            <li>
-              <strong>加工結果を確認</strong>
-              <p class="appbox-help-step-desc">ヘッダーの「比較」で読込み時と現在を比べ、加工漏れがないか確認します。</p>
-            </li>
-            <li>
-              <strong>出力条件を設定</strong>
-              <p class="appbox-help-step-desc">ヘッダーの「保存」で保存設定を開き、用途、保存形式、目標容量、ファイル名を設定します。</p>
-            </li>
-            <li>
-              <strong>画像を保存・目視確認</strong>
-              <p class="appbox-help-step-desc">保存ボタンを押して保存し、保存後の画像を目視で確認します。</p>
-            </li>
+            <li><strong>画像を開く</strong><p class="appbox-help-step-desc">「1枚ずつ加工」で「画像・作業ファイルを選択」を押し、JPEG・PNG・WebPの画像を選びます。ドラッグ＆ドロップや、Ctrl＋Vによる画像の貼り付けでも読み込めます。</p></li>
+            <li><strong>必要な加工を行う</strong><p class="appbox-help-step-desc">左側で黒塗り・モザイク・文字・図形などのツールを選び、右側で設定します。「回転・リサイズ」では、トリミング、回転、反転、サイズ変更ができます。</p></li>
+            <li><strong>読込み時と比較する</strong><p class="appbox-help-step-desc">ヘッダーの「比較」で読込み時と現在を比べ、隠し忘れや必要な情報の欠落がないか確認します。</p></li>
+            <li><strong>目的に合う形式で保存する</strong><p class="appbox-help-step-desc">ヘッダーの「保存」で設定を開き、配布する画像は「加工済み画像を保存」、後で続きを編集する場合は「作業ファイルを保存（.abimg）」を選びます。両方必要な場合は、それぞれ保存してください。</p></li>
+            <li><strong>保存した画像を開いて確認する</strong><p class="appbox-help-step-desc">加工漏れ、文字の読める大きさ、画像サイズを確認します。作業ファイルには元画像が含まれるため、秘匿した画像の配布には使わないでください。</p></li>
           </ol>
 
           <p>
@@ -171,6 +151,7 @@
           </ul>
 
           <h3 class="appbox-help-subheading" id="layers">レイヤーと確認</h3>
+          <p>レイヤーは、画像に重ねた文字や黒塗りなどを個別に編集できる部品です。上に重ねた部品が下の内容を覆うため、重なり順も確認してください。</p>
           <p>
             黒塗り、モザイク、ブラシ、文字、四角形、円、直線、矢印、手書き、追加画像・スタンプは、
             保存するまで編集可能なレイヤーとして扱われます。
@@ -186,6 +167,7 @@
             <li>選択した対象に適用できる設定だけが表示され、色や線幅などは複数選択へまとめて反映できます。文字内容は画像上で1件ずつ編集します。選択ツールで未選択時は設定項目を隠します。右ペインの幅は確保し、画像位置を保ちます。</li>
             <li>加工設定の変更や削除は、画像上で対象を選んで操作します。削除には <kbd>Delete</kbd>／<kbd>Backspace</kbd> または右クリックメニューを使います。タッチ端末でも、選択済みの対象や画像内の余白を長押しして複数選択をまとめて削除できます。</li>
             <li>右側の設定パネル下部の「最前面」「最背面」で重なり順を一度に変更できます。複数選択でも互いの順序を維持します。</li>
+            <li>右側最下部の「レイヤー」を開くと、前面から背面の順に一覧できます。項目をクリックして選択し、<kbd>Shift</kbd> を押しながらクリックすると複数選択できます。選択行にはチェック印が付き、画像上と設定欄にも反映されます。項目を上下にドラッグして離すと、その位置へ移動して重なり順を変更できます。移動先の目印が表示され、<kbd>Alt</kbd>＋<kbd>↑</kbd>／<kbd>↓</kbd>でも1段ずつ移動できます。変更はUndoで戻せます。</li>
             <li>右クリック、タッチ端末では長押しで、コピー・貼り付け・削除・重なり順のメニューを開けます。</li>
             <li>保存時は、編集したレイヤーを画像へ焼き込みます。</li>
           </ul>
@@ -464,6 +446,13 @@
             枚数や容量によっては時間がかかります。
           </p>
 
+          <h3 class="appbox-help-subheading" id="project">作業の保存・再開</h3>
+          <p>「保存」を開いて「作業ファイルを保存（.abimg）」を選ぶと、文字・図形・追加画像等を後から編集できます。再開時は「1枚ずつ加工」の画像選択やドロップ、または「画像を変更」から開いてください。</p>
+          <p>比較用の元画像と加工中の画像を別々に保持します。「比較」「すべて戻す」の基準は元画像のままです。保存前の履歴や一括処理の内容は含まず、再開後の編集から新しい履歴を作ります。別の端末ではフォントの代替で表示が変わる場合があります。</p>
+          <div class="help-callout help-callout-warning"><strong>作業ファイルを配布しないでください</strong><p>黒塗り・モザイク・切抜きで隠した元画像や、非表示レイヤーも含みます。配布するときは通常のPNG・JPEG・WebPとして保存してください。</p></div>
+          <p>ファイルは200MiB、画像資産ごと64MiB、元画像・加工中画像を含む合計7,200万画素、500レイヤー・20万点・合計20万文字までです。画像加工自体ができても作業保存の上限に達する場合があります。</p>
+          <p>通常画像や作業ファイルのダウンロード開始を保存済みとして扱います。ブラウザでの保存取消や書込み失敗は検知できないため、重要な作業は保存したファイルを開き直して確認してください。</p>
+
           <h3 class="appbox-help-subheading" id="files">形式とファイル名</h3>
           <div class="help-table-wrap">
             <table class="help-table">
@@ -475,12 +464,16 @@
               </thead>
               <tbody>
                 <tr>
-                  <th scope="row">読み込み</th>
+                  <th scope="row">画像の読み込み</th>
                   <td>JPEG（.jpg / .jpeg）、PNG（.png）、WebP（.webp）</td>
                 </tr>
                 <tr>
-                  <th scope="row">保存</th>
+                  <th scope="row">加工済み画像の保存</th>
                   <td>JPEG、PNG、WebP</td>
+                </tr>
+                <tr>
+                  <th scope="row">作業の保存・再開</th>
+                  <td>.abimg（1枚ずつ加工のみ）</td>
                 </tr>
                 <tr>
                   <th scope="row">一括処理の形式</th>
@@ -585,6 +578,8 @@
           <p>未保存の加工がある状態で画像を変更・初期化・再読込み・閉じるときは確認します。保存のダウンロード開始までを保存済みとして扱います。</p>
         </section>
 
+
+
         <section class="help-section" id="faq" aria-labelledby="faq-title">
           <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
 
@@ -595,7 +590,7 @@
 
           <details class="appbox-help-faq-item">
             <summary>画像が読み込めません。</summary>
-            <div class="appbox-help-faq-answer">HEIC、GIF、BMP、TIFF、SVG、RAW画像には対応していません。また、1ファイル25MB、幅・高さ8,192px、総画素数36,000,000画素の上限を超える画像は読み込めません。拡張子が対応形式でも、破損している場合は読み込めません。</div>
+            <div class="appbox-help-faq-answer">HEIC、GIF、BMP、TIFF、SVG、RAW画像には対応していません。通常の画像は、1ファイル25MB、幅・高さ8,192px、総画素数36,000,000画素の上限を超えると読み込めません。作業ファイル（.abimg）の上限は<a href="#project">作業の保存・再開</a>を確認してください。拡張子が対応形式でも、破損している場合は読み込めません。</div>
           </details>
 
           <details class="appbox-help-faq-item">
@@ -615,7 +610,7 @@
 
           <details class="appbox-help-faq-item">
             <summary>保存した画像から黒塗りを外せますか？</summary>
-            <div class="appbox-help-faq-answer">外せません。保存時に表示中のレイヤーを画像へ焼き込むため、保存したJPEG、PNG、WebPには編集可能なレイヤー情報は残りません。加工前の画像が必要な場合は、元画像を別に保管してください。</div>
+            <div class="appbox-help-faq-answer">加工済みのJPEG・PNG・WebPは、表示中のレイヤーを画像へ焼き込むため黒塗りを外せません。一方、作業ファイル（.abimg）は元画像と編集可能なレイヤーを保存するため、黒塗りを外せます。秘匿した画像の配布には、作業ファイルを使わないでください。</div>
           </details>
         </section>
 
@@ -663,8 +658,8 @@
       </div>
     </div>
 
-    <footer class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.12.3</footer>
+    <footer class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.14.0</footer>
   </main>
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

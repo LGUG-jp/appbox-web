@@ -351,20 +351,56 @@
     return false;
   }
 
+  function getHttpUrlError(value) {
+    // WHATWG URLはホスト中の全角句点を半角ドットへ正規化するため、
+    // 原文のauthorityで検査する。パス・クエリ中の日本語は許容する。
+    const authority = /^https?:\/\/([^/?#]*)/i.exec(value)?.[1] || "";
+
+    if (/[。．｡]/.test(authority)) {
+      return "URLのホスト名に全角の句点があります。半角ドット（.）に修正してください。";
+    }
+    if (authority.includes("@")) {
+      return "URLにユーザー情報（@より前の部分）が含まれています。削除してから作成してください。";
+    }
+
+    try {
+      const url = new URL(value);
+      // 庁内のドットなしホスト、IPアドレス、末尾のルートドットを許容する。
+      // URL APIだけでは「.」や連続ドットもホストとして解析できるため補う。
+      const hostname = url.hostname.replace(/\.$/, "");
+      if (
+        (url.protocol === "http:" || url.protocol === "https:") &&
+        hostname.split(".").every(label => label.length > 0)
+      ) {
+        return "";
+      }
+    } catch (error) {
+      // 解析不能なURLも下記の共通メッセージで案内する。
+    }
+
+    return "URLの形式またはホスト名を確認してください（例: https://example.jp/）。";
+  }
+
   function isLikelyEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-      value
-    );
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return false;
+    }
+
+    // 件名などのmailtoクエリはドメイン検査から除外する。
+    // ローカル部の '?' は従来どおり許容するため、@より後ろだけ切り出す。
+    const domain = value.slice(value.indexOf("@") + 1).split(/[?#]/, 1)[0];
+    return domain.includes(".") && domain.split(".").every(label => label.length > 0);
   }
 
   function isLikelyPhone(value) {
     /*
     * 改行、タブ等を許可しない。
     * 数字、先頭のプラス、括弧、ハイフン、
-    * 半角スペースだけを許可する。
+    * 半角スペースだけを許可し、数字を1文字以上必要とする。
     */
-    return /^[+＋]?[0-9０-９()（）\-‐‑‒–—―ー ]+$/.test(
-      value
+    return (
+      /^[+＋]?[0-9０-９()（）\-‐‑‒–—―ー ]+$/.test(value) &&
+      /[0-9０-９]/.test(value)
     );
   }
 
@@ -432,6 +468,13 @@
         );
       }
 
+      if (/^https?:\/\//i.test(trimmed)) {
+        const urlError = getHttpUrlError(trimmed);
+        if (urlError) {
+          warnings.push(urlError);
+        }
+      }
+
       if (
         /^http:\/\//i.test(trimmed)
       ) {
@@ -472,7 +515,7 @@
       )
     ) {
       warnings.push(
-        "電話番号に通常使用しない文字が含まれています。"
+        "電話番号の形式を確認してください。数字を1文字以上含め、区切りには +・()・- などを使用してください。"
       );
     }
 
@@ -1557,6 +1600,13 @@
         qrText.focus();
         return false;
       }
+
+      const urlError = getHttpUrlError(value);
+      if (urlError) {
+        setStatus(urlError, "error");
+        qrText.focus();
+        return false;
+      }
     }
 
     if (
@@ -1611,7 +1661,7 @@
       )
     ) {
       setStatus(
-        "電話番号の形式を確認してください。",
+        "電話番号の形式を確認してください。数字を1文字以上含め、区切りには +・()・- などを使用してください。",
         "error"
       );
 

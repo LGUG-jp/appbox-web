@@ -16,6 +16,8 @@
   // ==========================================
   var todayObj = core.getToday();
   var todayIso = core.toIsoDate(todayObj);
+  var MIN_CALENDAR_YEAR = 1900;
+  var MAX_CALENDAR_YEAR = 2099;
 
   var state = {
     currentYear: todayObj.year,
@@ -171,9 +173,15 @@
   // ==========================================
   // カレンダー描画
   // ==========================================
+  function isSupportedCalendarYear(year) {
+    return year >= MIN_CALENDAR_YEAR && year <= MAX_CALENDAR_YEAR;
+  }
+
   function renderCalendar() {
     selectCalYear.value = state.currentYear;
     selectCalMonth.value = state.currentMonth;
+    btnPrevMonth.disabled = state.currentYear === MIN_CALENDAR_YEAR && state.currentMonth === 1;
+    btnNextMonth.disabled = state.currentYear === MAX_CALENDAR_YEAR && state.currentMonth === 12;
 
     var calData = core.getMonthCalendar(state.currentYear, state.currentMonth, customClosedDays);
 
@@ -196,7 +204,7 @@
       baseDate = state.selectedBaseDate;
       if (state.lastDeadlineResult) {
         targetDate = state.lastDeadlineResult.finalTargetDate;
-        if (state.deadlineDirection === "after") {
+        if (baseDate <= targetDate) {
           rangeStart = baseDate;
           rangeEnd = targetDate;
         } else {
@@ -204,7 +212,7 @@
           rangeEnd = baseDate;
         }
       }
-    } else {
+    } else if (state.lastDurationResult) {
       baseDate = state.durationStart;
       targetDate = state.durationEnd;
       if (core.compareDates(state.durationEnd, state.durationStart) >= 0) {
@@ -224,6 +232,12 @@
       cell.dataset.date = d.date;
 
       if (!d.isCurrentMonth) cell.classList.add("is-other-month");
+      var outsideCalendarRange = !isSupportedCalendarYear(d.year);
+      if (outsideCalendarRange) {
+        cell.classList.add("is-disabled-target");
+        cell.setAttribute("aria-disabled", "true");
+        cell.setAttribute("tabindex", "-1");
+      }
       if (d.dayOfWeek === 6) cell.classList.add("is-saturday");
       if (d.dayOfWeek === 0) cell.classList.add("is-sunday");
       if (d.isClosed) cell.classList.add("is-holiday");
@@ -272,16 +286,18 @@
         }
       }
 
-      // クリックイベント
-      cell.addEventListener("click", function () {
-        handleDateClick(d.date);
-      });
-      cell.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+      // 表示範囲外の前月・翌月パディング日は選択できない
+      if (!outsideCalendarRange) {
+        cell.addEventListener("click", function () {
           handleDateClick(d.date);
-        }
-      });
+        });
+        cell.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleDateClick(d.date);
+          }
+        });
+      }
 
       calendarGrid.appendChild(cell);
     });
@@ -330,12 +346,50 @@
   // ==========================================
   // 期限計算 (Deadline Calculation)
   // ==========================================
+  function clearDeadlineResult() {
+    state.lastDeadlineResult = null;
+    deadlineFinalDate.textContent = "計算できません";
+    deadlineFinalSub.textContent = "";
+    [metricRealDays, metricBusinessDays, metricExcludedDays].forEach(function (el) { el.textContent = "—"; });
+    deadlineAdjustBadge.hidden = true;
+    deadlineAdjustMsg.hidden = true;
+    deadlineAdjustMsg.textContent = "";
+    deadlineWarnings.textContent = "";
+    deadlineWarnings.hidden = true;
+    btnCopyDeadlineSimple.disabled = true;
+    btnCopyDeadlineFull.disabled = true;
+  }
+
+  function clearDurationResult() {
+    state.lastDurationResult = null;
+    durationRangeTag.textContent = "";
+    [durationMetricTotal, durationMetricBusiness, durationMetricApprox].forEach(function (el) { el.textContent = "—"; });
+    durationMetricInclusive.textContent = "";
+    durationBreakdownText.textContent = "";
+    durationWarnings.textContent = "";
+    durationWarnings.hidden = true;
+    btnCopyDurationSimple.disabled = true;
+    btnCopyDurationFull.disabled = true;
+  }
+
+  // Use the final interval for both directions; exclude the actual base endpoint when requested.
+  function deadlineMetrics(result) {
+    var base = result.baseDate;
+    var target = result.finalTargetDate;
+    var interval = core.calculateDuration(base < target ? base : target, base < target ? target : base, customClosedDays);
+    var includeBase = result.includeFirstDay && result.days > 0;
+    return {
+      realDays: interval.totalDays + (includeBase ? 1 : 0),
+      businessDays: interval.businessDaysInclusive - (!includeBase && core.isOpenDay(base, customClosedDays) ? 1 : 0)
+    };
+  }
+
   function recalculateDeadline() {
+    clearDeadlineResult();
     var baseDate = state.selectedBaseDate;
     var days = state.deadlineDays;
     var dir = state.deadlineDirection;
 
-    deadlineBaseDisplay.textContent = core.formatFullDate(baseDate);
     inputDaysValue.value = days;
 
     // クイックチップのアクティブ状態更新
@@ -344,6 +398,7 @@
     });
 
     try {
+      deadlineBaseDisplay.textContent = core.formatFullDate(baseDate);
       var result = core.calculateDeadline(baseDate, days, {
         direction: dir,
         includeFirstDay: state.includeFirstDay,
@@ -352,18 +407,13 @@
         customClosedDays: customClosedDays
       });
 
-      state.lastDeadlineResult = result;
+      var metrics = deadlineMetrics(result);
 
       deadlineFinalDate.textContent = result.finalTargetJapanese + "（" + result.finalTargetWeekday + "）";
       deadlineFinalSub.textContent = result.finalTargetDate;
 
-      metricRealDays.textContent = days;
-      // 開庁日数のカウント（ステップ内）
-      var bCount = 0;
-      result.steps.forEach(function (s) {
-        if (s.stepType === "count" && !s.isClosed) bCount++;
-      });
-      metricBusinessDays.textContent = result.countMode === "business" ? days : bCount;
+      metricRealDays.textContent = metrics.realDays;
+      metricBusinessDays.textContent = metrics.businessDays;
       metricExcludedDays.textContent = result.excludedDays.length;
 
       // 繰越／繰上バッジとメッセージ
@@ -391,25 +441,26 @@
         deadlineWarnings.hidden = true;
       }
 
-      // カレンダー再描画（ハイライト更新）
-      renderCalendar();
+      state.lastDeadlineResult = result;
+      btnCopyDeadlineSimple.disabled = false;
+      btnCopyDeadlineFull.disabled = false;
     } catch (err) {
+      clearDeadlineResult();
       if (deadlineWarnings) {
         deadlineWarnings.textContent = "計算エラー: " + err.message;
         deadlineWarnings.hidden = false;
       }
     }
+    renderCalendar();
   }
 
   // ==========================================
   // 期間計算 (Duration Calculation)
   // ==========================================
   function recalculateDuration() {
+    clearDurationResult();
     var start = state.durationStart;
     var end = state.durationEnd;
-
-    durationStartDisplay.textContent = core.formatFullDate(start);
-    durationEndDisplay.textContent = core.formatFullDate(end);
 
     if (state.durationPickTarget === "start") {
       btnDurationPickStart.classList.add("is-active");
@@ -424,12 +475,12 @@
     }
 
     try {
+      durationStartDisplay.textContent = core.formatFullDate(start);
+      durationEndDisplay.textContent = core.formatFullDate(end);
       var result = core.calculateRemainingDays(start, end, {
         includeFirstDay: state.durationIncludeFirst,
         customClosedDays: customClosedDays
       });
-
-      state.lastDurationResult = result;
 
       durationRangeTag.textContent = result.isPast ? "（期限超過）" : (result.isToday ? "（当日）" : "（" + result.totalDays + "日後）");
       durationMetricTotal.textContent = result.totalDays;
@@ -450,13 +501,17 @@
         durationWarnings.hidden = true;
       }
 
-      renderCalendar();
+      state.lastDurationResult = result;
+      btnCopyDurationSimple.disabled = false;
+      btnCopyDurationFull.disabled = false;
     } catch (err) {
+      clearDurationResult();
       if (durationWarnings) {
         durationWarnings.textContent = "期間計算エラー: " + err.message;
         durationWarnings.hidden = false;
       }
     }
+    renderCalendar();
   }
 
   // ==========================================
@@ -484,6 +539,7 @@
   // カレンダー前月・次月・今月・セレクト
   btnPrevMonth.addEventListener("click", function () {
     var prev = core.addMonths({ year: state.currentYear, month: state.currentMonth, day: 1 }, -1);
+    if (!isSupportedCalendarYear(prev.year)) return;
     state.currentYear = prev.year;
     state.currentMonth = prev.month;
     renderCalendar();
@@ -491,6 +547,7 @@
 
   btnNextMonth.addEventListener("click", function () {
     var next = core.addMonths({ year: state.currentYear, month: state.currentMonth, day: 1 }, 1);
+    if (!isSupportedCalendarYear(next.year)) return;
     state.currentYear = next.year;
     state.currentMonth = next.month;
     renderCalendar();

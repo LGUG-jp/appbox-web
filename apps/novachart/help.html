@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ja" data-appbox-theme="blue">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>ガントチャート作成アプリ ヘルプ | 共創アプリBOX</title>
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
+</head>
+<body>
+  <header class="appbox-header">
+    <div class="appbox-header__inner">
+      <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
+        <span class="appbox-header__brand-image" aria-hidden="true">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+        </span>
+        <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
+      </a>
+      <nav class="appbox-header__actions" aria-label="ページ操作">
+        <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-shell help-shell" id="main-content">
+    <div class="appbox-help-header-card">
+      <div>
+        <span class="appbox-help-eyebrow">ヘルプ・使い方</span>
+        <div class="appbox-help-title-group">
+          <div class="appbox-help-app-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" focusable="false">
+              <path d="M4 4v16h16"></path>
+              <path d="M7 8h6"></path>
+              <path d="M10 12h7"></path>
+              <path d="M8 16h5"></path>
+            </svg>
+          </div>
+          <h1 class="appbox-help-h1">ガントチャート作成アプリ</h1>
+        </div>
+        <p class="appbox-help-header-desc">作業の一覧（WBS）とガントチャートで工程表を作り、ファイル保存・Excel・PDFに出力します。</p>
+      </div>
+      <span class="version-badge">Version 1.7.1</span>
+
+      <div class="help-callout help-callout-warning">
+        <strong>正本は「保存(.json)」で書き出したファイルです</strong>
+        <p>ブラウザへの自動保存は一時的な控えです。ブラウザの閲覧データの削除などで消えることがあり、同じPC・同じブラウザを使う他の人からも見える場合があります。区切りごとに「保存(.json)」でファイルに書き出し、共有PCでは使用後に「ローカルデータ消去」を押してください。</p>
+        <p>このヘルプは別のタブで開いています。編集中の画面に戻るときは、このタブを閉じてください。「アプリに戻る」で開き直すと編集画面が2つになります。同じ工程表を複数のタブで同時に編集しないでください。</p>
+      </div>
+    </div>
+
+    <div class="appbox-help-grid help-panel">
+      <nav class="appbox-help-nav-card appbox-no-print" aria-label="ヘルプの目次">
+        <p class="appbox-help-nav-title">目次</p>
+        <ul class="appbox-help-nav-list">
+          <li><a class="appbox-help-nav-link" href="#quick-start">基本の使い方</a></li>
+          <li>
+            <a class="appbox-help-nav-link" href="#advanced">応用の使い方</a>
+            <ul class="appbox-help-nav-sublist">
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#start">作り始め方と保存・再開</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#add-task">作業の追加</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#edit-task">日程の変更と並べ替え</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#tentative">日程は目安</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#baseline">当初計画（2段書き）</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#view">表示の切り替えと絞り込み</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#output">PDF・Excelへの出力</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#keyboard">キーボード操作</a></li>
+            </ul>
+          </li>
+          <li><a class="appbox-help-nav-link" href="#terms">用語</a></li>
+          <li><a class="appbox-help-nav-link" href="#faq">よくある質問</a></li>
+          <li><a class="appbox-help-nav-link" href="#other">その他</a></li>
+        </ul>
+      </nav>
+
+      <div class="appbox-help-content">
+        <section class="help-section" id="quick-start" aria-labelledby="quick-start-title">
+          <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
+          <ol class="help-steps">
+            <li>
+              <strong>作り方を選ぶ</strong>
+              <p class="appbox-help-step-desc">開いたときに「テンプレートから作成」「新規作成」「続きから作成」を選びます。初めて使う場合は「サンプルで試す」から操作を確認できます。作り方の違いは下の説明を参照してください。</p>
+            </li>
+            <li>
+              <strong>作業名・担当者・日程を直す</strong>
+              <p class="appbox-help-step-desc">一覧の行をクリックすると入力欄が開きます。ガントのバーをドラッグすると日程を動かせます（端をドラッグすると期間が変わります）。</p>
+            </li>
+            <li>
+              <strong>「当初計画を確定」を押す</strong>
+              <p class="appbox-help-step-desc">日程が固まったら押します。以後の変更は、当初計画（上段）と修正後の予定（下段）の2段書きで表示されます。</p>
+            </li>
+            <li>
+              <strong>「保存(.json)」でファイルに書き出す</strong>
+              <p class="appbox-help-step-desc">書き出したファイルが正本です。続きは「開く」でこのファイルを選びます。別のPCで続けるときも、このファイルを使います。</p>
+            </li>
+            <li>
+              <strong>必要に応じてPDF・Excelに出力する</strong>
+              <p class="appbox-help-step-desc">「PDF出力」は印刷画面から「PDFに保存」を選びます。「Excel出力」は一覧表とガント図を .xlsx で書き出します。</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="help-section" id="advanced" aria-labelledby="advanced-title">
+          <h2 class="appbox-help-h2" id="advanced-title">応用の使い方</h2>
+
+          <h3 class="appbox-help-subheading" id="start">作り始め方と保存・再開</h3>
+          <ul>
+            <li><strong>テンプレートから作成</strong>：5分類・16種類から選び、期間とマスの単位を指定します。日程は期間に合わせて伸び縮みした目安です。実際の開催日や期限へ直してください。</li>
+            <li><strong>新規作成</strong>：白紙から作ります。「＋ 大事業」で工程のまとまりを追加してください。</li>
+            <li><strong>続きから作成</strong>：このブラウザの自動保存の控え、または「保存(.json)」で書き出したファイルから続けます。別のPCではJSONファイルを使います。</li>
+          </ul>
+          <p>作り直すときは「新規」を押します。現在の工程表を残す場合は、その前にJSONファイルへ保存してください。Excel・PDFは閲覧・共有用の出力で、編集を再開するためのファイルではありません。</p>
+          <p>自動保存の控えは、ブラウザのデータ消去や容量不足等で失われることがあります。確実に残すにはJSONへ保存してください。「ローカルデータ消去」は、ブラウザの控えと現在の工程表・操作履歴を消します。ダウンロード済みのファイルは削除しません。</p>
+
+          <h3 class="appbox-help-subheading" id="add-task">作業の追加</h3>
+          <ul>
+            <li><strong>一覧の一番下の「＋ 作業を追加」</strong>: 最後の大事業の末尾に小事業を追加します。</li>
+            <li><strong>ガントの空いている所を横にドラッグ</strong>: ドラッグした期間が入った状態で入力欄が開きます。大事業の行なら配下の末尾、小事業の行ならその直後、一番下の行なら最後の大事業に入ります。マスが旬・半月・月・年度のときは、マスの区切りに合わせます。タッチ操作ではスクロールを優先するため、ドラッグでは作成しません。</li>
+            <li><strong>各行の「＋」</strong>: その大事業に小事業を追加します。入力欄の「保存して続けて追加」で続けて入力できます。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="edit-task">日程の変更と並べ替え</h3>
+          <ul>
+            <li><strong>バーのドラッグ</strong>: 小事業は移動、端をつかむと期間の変更です。大事業のバーを動かすと配下の小事業ごと移動します。</li>
+            <li><strong>先行タスク</strong>: 入力欄で、その作業の前に終わっている必要がある作業を選べます。先行が延びると、後続は自動で後ろへずれます。</li>
+            <li><strong>行の「…」メニュー</strong>: 複製・並べ替え・削除などができます。</li>
+            <li><strong>一覧とガントの境界</strong>: ドラッグ（または境界を選んで左右の矢印キー）で一覧の幅を変えられます。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="tentative">日程は目安</h3>
+          <p class="appbox-help-p">はっきり決まっていない作業は、入力欄の「日程は目安」にチェックを入れます。ガントでは点線、一覧・Excel・PDFでは「目安」と表示します。Excelでは点の網掛けにするため、目安の作業は進捗の濃淡と大事業の自動拡張の斜線を省きます。</p>
+          <ul>
+            <li>目安でも、入力した日付は先行タスクの自動調整・遅延の判定・大事業の期間の計算にそのまま使います。</li>
+            <li>大事業の行には、配下の小事業が目安かどうかは表示しません。</li>
+            <li>「当初計画を確定」を押しても目安は外れません。決まったらチェックを外してください。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="baseline">当初計画（2段書き）</h3>
+          <p class="appbox-help-p">「当初計画を確定」を押した時点の日程を記録します。上段の灰色が当初計画、下段が修正後の予定（実績ではなく、遅れに合わせて直した予定）で、当初より延びた部分はオレンジになります。一覧の「当初比（終了）」は終了日の差（＋は遅れ）です。大事業の当初計画は確定した時点の期間で、あとから小事業を足し引きしても変わりません。</p>
+
+          <h3 class="appbox-help-subheading" id="view">表示の切り替えと絞り込み</h3>
+          <ul>
+            <li><strong>マス</strong>: ガントの1マスの単位です（日・週・旬・半月・月・年度）。旬は上旬（1〜10日）・中旬（11〜20日）・下旬（21日〜）、年度は4月〜翌3月です。</li>
+            <li><strong>期間</strong>: ガントに表示する期間を指定します。</li>
+            <li><strong>詳細表示</strong>: 進捗・状態・クリティカルパス・先行タスクの矢印の強調など、詳しい項目を表示します（ふだんは隠しています）。</li>
+            <li><strong>基準日</strong>: 「今日」の線を引く日です。詳細表示では遅延判定の基準にもなります。</li>
+            <li><strong>担当者・状態</strong>: 一覧とガントを絞り込みます。「担当者別の負荷」では、担当者ごとに週ごとの同時進行数を確認できます。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="output">PDF・Excelへの出力</h3>
+          <ul>
+            <li><strong>PDF出力</strong>: 印刷する範囲（すべてのタスク／画面の表示のまま）、担当者名を伏せるか、用紙（A3横・A4横）を選び、印刷画面で送信先を「PDFに保存」にします。1ページ目が一覧、2ページ目以降がガントチャートです。</li>
+            <li><strong>Excel出力</strong>: 一覧表とガント図（セルの塗りつぶし）を出力します。列の細かさは画面の「マス」に合わせます。当初計画を確定したタスクは、上の行に当初計画が入ります（2段書き）。シンプル表示のときは、画面と同じく進捗・状態を出さずに出力します。色の意味は「凡例」シートにあります。Excelには、画面での絞り込みや大事業の折りたたみにかかわらず、全タスクを出力します。表示中の範囲に限って共有する場合は、PDF出力の「画面の表示のまま」を選んでください。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading" id="keyboard">キーボード操作</h3>
+          <div class="help-table-wrap">
+            <table class="help-table help-shortcut-table">
+              <caption class="appbox-sr-only">キーボード操作の一覧</caption>
+              <thead><tr><th scope="col">キー</th><th scope="col">動作</th></tr></thead>
+              <tbody>
+                <tr><td><kbd>Ctrl</kbd>＋<kbd>Z</kbd>／<kbd>Ctrl</kbd>＋<kbd>Y</kbd></td><td>元に戻す／やり直す（履歴は最大80件、容量により少なくなる場合があります）</td></tr>
+                <tr><td><kbd>Ctrl</kbd>＋<kbd>S</kbd></td><td>保存(.json)</td></tr>
+                <tr><td><kbd>↑</kbd>・<kbd>↓</kbd></td><td>一覧で行を移動</td></tr>
+                <tr><td><kbd>Enter</kbd></td><td>選んだ行を編集</td></tr>
+                <tr><td><kbd>→</kbd>・<kbd>←</kbd></td><td>大事業を開く・閉じる</td></tr>
+                <tr><td><kbd>Space</kbd></td><td>開閉／進捗の変更（シンプル表示では編集）</td></tr>
+                <tr><td><kbd>Alt</kbd>＋<kbd>↑</kbd>・<kbd>↓</kbd></td><td>行の並べ替え</td></tr>
+                <tr><td><kbd>Ctrl</kbd>＋<kbd>D</kbd></td><td>行の複製</td></tr>
+                <tr><td><kbd>Insert</kbd>／<kbd>Delete</kbd></td><td>小事業を追加／行を削除</td></tr>
+                <tr><td><kbd>Enter</kbd>／<kbd>Esc</kbd>（入力欄）</td><td>保存／閉じる</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="help-section" id="terms" aria-labelledby="terms-title">
+          <h2 class="appbox-help-h2" id="terms-title">用語</h2>
+          <ul>
+            <li><strong>大事業／小事業</strong>: 2階層のWBSです。小事業は大事業の行にまとめて折りたためます（▶ で開閉）。</li>
+            <li><strong>実効期間</strong>: 大事業の期間は、小事業がはみ出すと自動で広がります（ガントでは斜線で表示）。</li>
+            <li><strong>進捗</strong>: 小事業は0〜100%の20%刻みで入力します。大事業は小事業の進捗を期間の長さで加重平均した自動計算です（小事業がない大事業は直接入力）。</li>
+            <li><strong>状態</strong>: 基準日までの経過日数から期待される進捗と比べて判定します。差が20ポイント以内は順調、40ポイント以内は要注意、それ以上は遅延です。期限を過ぎて未完了なら、少なくとも要注意になります。</li>
+            <li><strong>先行タスク</strong>: その小事業の前に終わっている必要がある作業です。シンプル表示でも、先行タスクを指定した作業には「先行」の印が付きます。</li>
+            <li><strong>クリティカルパス（CP・赤枠）</strong>: 1日でも遅れるとプロジェクト全体の完了が遅れる作業の連なりです。</li>
+            <li><strong>マイルストーン（◆）</strong>: 節目の1日です。名前と日付を表示し、当初の日付から動いたときは白抜きの◆で当初の位置を示します。</li>
+          </ul>
+        </section>
+
+        <section class="help-section" id="faq" aria-labelledby="faq-title">
+          <h2 class="appbox-help-h2" id="faq-title">よくある質問</h2>
+          <details class="appbox-help-faq-item">
+            <summary>入力したデータが外部インターネットへ送信されることはありますか。</summary>
+            <div class="appbox-help-faq-answer">送信されません。計算・表示・ファイルの作成は、すべてお使いのブラウザ内で行います。</div>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>画面を閉じても続きから作業できますか。</summary>
+            <div class="appbox-help-faq-answer">同じPC・同じブラウザなら、自動保存の控えから前回の内容を復元します。ただし控えは一時的なものです。確実に残すには「保存(.json)」でファイルに書き出し、次回は「開く」でそのファイルを選んでください。</div>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>「別のタブで、ブラウザの自動保存の控えが更新されました」と表示されました。</summary>
+            <div class="appbox-help-faq-answer">同じブラウザの別のタブでもこのアプリを開いて編集したため、ブラウザの自動保存の控えが新しくなっています。表示されたタブの古い内容で控えを上書きしないよう、そのタブの自動保存を止めています。表示されたタブの内容を残すときは「このタブの内容をファイルに保存」を、別のタブの内容で続けるときは「最新の控えを読み込む」を押してください（表示されたタブの未保存の変更と「元に戻す」の履歴は消えます）。2つのタブがほぼ同時に自動保存した場合は検知できないことがあるため、同じ工程表を複数のタブで同時に編集しないでください。</div>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>以前の試用版（NovaChart）で保存したファイルは開けますか。</summary>
+            <div class="appbox-help-faq-answer">互換性のある保存形式なら読み込めます。旧版の .wbsproj ファイルは、元ファイルのコピーを作り、コピーの拡張子を .json に変えて試してください。</div>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>祝日はどのように判定していますか。</summary>
+            <div class="appbox-help-faq-answer">祝日法の規則で計算しています（2000〜2099年）。将来の法改正は反映されません。</div>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>PDFを社外に渡すときに気を付けることはありますか。</summary>
+            <div class="appbox-help-faq-answer">「PDF出力」で「担当者名を伏せる」を選べます。また、PDFの作成者情報にPCのアカウント名が入る場合があります。社外に渡す前にPDFのプロパティをご確認ください。</div>
+          </details>
+        </section>
+
+        <section class="help-section" id="other" aria-labelledby="other-title">
+          <h2 class="appbox-help-h2" id="other-title">その他</h2>
+
+          <h3 class="appbox-help-subheading">利用上の注意・制限事項</h3>
+          <ul>
+            <li>開けるファイルは、このアプリで保存した .json ファイルです。上限は100MB・5,000タスクで、上限内でも端末によって処理が重くなることがあります。別のアプリのJSONは開けません。</li>
+            <li>「元に戻す」の履歴は最大80件で、データ量により少なくなる場合があります。画面を閉じると失われ、JSONファイルにも保存しません。</li>
+            <li>スマートフォンなど狭い画面では、画面全体をスクロールして使います。ガントのドラッグでの作成はマウス操作向けです。</li>
+          </ul>
+
+          <h3 class="appbox-help-subheading">仕様</h3>
+          <p class="appbox-help-p">保存ファイルは .json 形式です。Excel出力は .xlsx 形式、PDF出力はブラウザの印刷機能を使います。</p>
+
+          <h3 class="appbox-help-subheading">セキュリティとプライバシー</h3>
+          <div class="help-callout help-callout-security">
+            <strong>データの取扱い</strong>
+            <p>入力内容はブラウザ内で処理し、外部へ送信しません。作業中の内容は、このブラウザの保存領域（localStorage）に一時的な控えとして自動保存します。共有PCでは使用後に「ローカルデータ消去」で控えを消してください。書き出したファイル（.json・.xlsx・PDF）は、保存先のフォルダの取扱いに従って管理してください。</p>
+          </div>
+        </section>
+
+        <p class="appbox-help-p">編集中の画面に戻るときは、このタブを閉じてください（下のボタンはアプリを新しく開きます）。</p>
+        <div class="help-footer-actions">
+          <a class="appbox-back-button" href="./index.html">&lt; アプリに戻る</a>
+        </div>
+      </div>
+    </div>
+
+    <footer class="appbox-footer">
+      共創アプリBOX / ガントチャート作成アプリ Version 1.7.1
+    </footer>
+  </main>
+
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
+</body>
+</html>

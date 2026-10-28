@@ -2,25 +2,26 @@
 <html lang="ja" data-appbox-theme="blue">
 <head>
   <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
   <title>西暦・和暦・年齢早見表 ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.3.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
 </head>
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -99,7 +100,8 @@
           <p>今年から過去100年分の生年（0〜100歳、全101年分）を、新しい年から順に表示します。1873年より前の年は表示しません。表示している年と「本日」は端末の日付に合わせて自動更新します。別のタブや休止状態から戻ったときにも日付を確認します。</p>
           <p><strong>年齢は「今年の誕生日に迎える年齢」です。</strong>生まれた年だけでは、今日時点で誕生日を迎えたか判断できません。誕生日前は表の年齢から1歳引いてください。生年月日から調べる場合は「生年月日から年齢計算」タブを押してください。</p>
           <h3 class="appbox-help-subheading" id="age-calculation">生年月日から年齢を計算</h3>
-          <p>①基準日には今日の日付が自動入力され、②生年月日を入力すると、③確認結果に満年齢・年度末年齢・次回誕生日等を表示します。基準日はカレンダー付きの日付欄からそのまま変更できます。利用者が基準日を変更していない間は、日付の変わり目や画面復帰時に今日の日付へ更新します。「和暦・年月日で入力」を開くと、従来どおり元号と年・月・日で指定でき、全角数字や「元」も使えます。過去・未来の基準日を指定できますが、生年月日は今日以前、基準日は生年月日以降である必要があります。</p>
+          <p>①基準日と②生年月日を入力し、「年齢を計算する」を押すと、③確認結果に満年齢・年度末年齢・次回誕生日等を表示します。基準日は「いつの時点の年齢を調べるか」を指定する日付です。</p>
+          <p>基準日はカレンダー付きの日付欄から変更できます。利用者が変更していない間は、日付の変わり目や画面復帰時に今日の日付へ更新します。「和暦・年月日で入力」を開くと、元号と年・月・日で指定でき、全角数字や「元」も使えます。過去・未来の基準日を指定できますが、生年月日は今日以前、基準日は生年月日以降である必要があります。</p>
           <ul>
             <li>満年齢：誕生日当日に1歳加算します。</li>
             <li>年度末年齢：基準日が属する年度の3月31日時点の年齢です。別の年度末を調べる場合は基準日を変更してください。</li>
@@ -112,7 +114,7 @@
           <h3 class="appbox-help-subheading" id="reference-print">早見表の表示・印刷</h3>
 <ul>
             <li>改元した年の表示：通常は新元号の「元年」を表示します（例：1989年は平成元年、2019年は令和元年）。「改元年の旧元号も表示」にチェックを入れると、「昭和64年 ／ 平成元年」のように旧元号を併記できます。</li>
-            <li>横幅のある画面では、早見表を0〜34歳・35〜69歳・70〜100歳の3組で並べます。3組の間には余白を設けつつ、各表の西暦・和暦・年齢は高密度に配置します。年齢列は行の背景色に合わせ、青系の文字色・太字で強調します。</li>
+            <li>横幅のある画面では、早見表を0〜34歳・35〜69歳・70〜100歳の3組で並べます。各組を上から下へ読み、次に右隣の組へ進みます。画面幅に応じて、2組または1組ずつの並びに切り替わります。</li>
             <li>全101年分を一覧表示します。表の中だけをスクロールする領域は設けず、ページ全体を上下に移動して続けて確認できます。</li>
             <li>「印刷用ビュー」で、通常モード・シンプルモード・かわいいモード・ふんわりポップ・和モダン・ビジネス・レトロの7種類から選べます。</li>
             <li>印刷の用紙向きは「縦向き（標準）」と「横向き」を選択できます。どちらも全101年分をA4用紙1ページに収めたレイアウトで出力します。年齢列は印刷でも青系で強調します。</li>
@@ -123,6 +125,7 @@
           <p>基準日は今日の日付が初期入力されます。「入力をクリア」で生年月日と計算結果を消し、基準日も今日に戻します。</p>
           <h3 class="appbox-help-subheading" id="copy-output">結果のコピーと出力</h3>
           <p>「結果と条件をコピー」で結果と入力日付・計算条件をまとめてコピーします。自動コピーが使えない環境では、画面にコピー用の文字欄を表示して選択します。<kbd>Ctrl</kbd>＋<kbd>C</kbd>（Macは<kbd>⌘</kbd>＋<kbd>C</kbd>）またはスマートフォンの選択メニューでコピーしてください。</p>
+          <p>「印刷用ビュー」の対象は早見表です。個別に計算した年齢は「結果と条件をコピー」で文書等へ貼り付け、貼り付け先で保存・印刷してください。</p>
           <p>早見表の「印刷用ビュー」でデザインと用紙の向きを選び、「この設定で印刷」からブラウザの印刷機能を使えます。PDFへの保存は端末で利用できる印刷先を選択してください。コピーした内容は端末のクリップボードやその履歴、貼り付け先に残る場合があります。</p>
         </section>
         <section class="help-section" id="faq" aria-labelledby="faq-title">
@@ -155,6 +158,6 @@
     <footer class="appbox-footer">共創アプリBOX / 西暦・和暦・年齢早見表 Version 1.2.5</footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.3.0"></script>
+  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
 </body>
 </html>

@@ -775,6 +775,10 @@ body {
   color: #14532d;
 }
 
+#duration-metric-approx {
+  font-size: 16px;
+}
+
 .metric-sub {
   font-size: 11px;
   color: #4b5563;

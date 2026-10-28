@@ -5,10 +5,14 @@
 import { PAGE_NUMBER_POSITIONS, PAGE_NUMBER_LAYOUTS, PAGE_NUMBER_FORMATS, PAGE_NUMBER_MARGIN_MM } from "./page-numbering.mjs?v=1.13.0";
 import { WATERMARK_ANGLES } from "./watermark.mjs?v=1.10.0";
 import { MAX_STROKE_POINTS, MAX_DOCUMENT_INK_POINTS } from "./ink.mjs?v=1.8.0";
+import { redactionColor } from "./redaction.mjs?v=1.14.1";
 import { PDFArray, PDFDict, PDFName, PDFNull, PDFPageLeaf, PDFPageTree, PDFRef, PDFStream } from "./vendor/pdf-lib.esm.js";
 
 export const PROJECT_FORMAT = "appbox-pdfeditor-project";
 export const PROJECT_VERSION = 1;
+const ROTATED_TEXT_PROJECT_VERSION = 2;
+const REDACTION_PROJECT_VERSION = 3;
+const WHITE_REDACTION_PROJECT_VERSION = 4;
 export const PROJECT_EXTENSION = ".abpdf";
 export const MAX_PROJECT_JSON_BYTES = 20 * 1024 * 1024;
 export const MAX_PROJECT_PAGES = 300;
@@ -192,6 +196,9 @@ export function normalizeProjectAnnotation(a, size, fontFamilies, imageCount) {
   const positive = value => number(value, 0.01, span * 2);
   const stroke = value => number(value, 0.1, 50);
   switch (a.type) {
+    case "redact":
+      return { type: "redact", x: x(a.x), y: x(a.y), w: positive(a.w), h: positive(a.h),
+        ...(redactionColor(a) === "#ffffff" ? { redactColor: "#ffffff" } : {}) };
     case "rect":
     case "ellipse":
       return { type: a.type, x: x(a.x), y: x(a.y), w: length(a.w), h: length(a.h), color: color(a.color),
@@ -203,9 +210,11 @@ export function normalizeProjectAnnotation(a, size, fontFamilies, imageCount) {
     case "text": {
       if (typeof a.text !== "string" || a.text.length > MAX_TEXT_LENGTH) throw new Error(INVALID_PROJECT);
       if (!fontFamilies.includes(a.fontFamily)) throw new Error(INVALID_PROJECT);
+      if (a.rotation !== undefined && ![0, 90, 180, 270].includes(a.rotation)) throw new Error(INVALID_PROJECT);
       return { type: "text", x: x(a.x), y: x(a.y), w: length(a.w), h: length(a.h), text: a.text,
         fontSize: number(a.fontSize, 1, 200), fontFamily: a.fontFamily, color: color(a.color), bold: flag(a.bold),
-        outline: flag(a.outline), bgColor: color(a.bgColor), bgTransparent: flag(a.bgTransparent) };
+        outline: flag(a.outline), bgColor: color(a.bgColor), bgTransparent: flag(a.bgTransparent),
+        ...(a.rotation ? { rotation: a.rotation } : {}) };
     }
     case "highlight": {
       const rects = list(a.rects, MAX_PROJECT_HIGHLIGHT_RECTS);
@@ -322,8 +331,14 @@ export function serializeProject({ name, pages, sizes, images, fontFamilies }) {
     if (watermark) result.watermark = watermark;
     return result;
   });
+  // Older readers must reject white masks (v4), masks (v3) and rotated text (v2),
+  // rather than silently changing the saved edit. Keep older formats when possible.
+  const version = projectPages.some(page => page.annotations.some(a => a.type === "redact" && a.redactColor === "#ffffff"))
+    ? WHITE_REDACTION_PROJECT_VERSION : projectPages.some(page => page.annotations.some(a => a.type === "redact"))
+    ? REDACTION_PROJECT_VERSION : projectPages.some(page => page.annotations.some(a => a.type === "text" && a.rotation))
+    ? ROTATED_TEXT_PROJECT_VERSION : PROJECT_VERSION;
   const json = new TextEncoder().encode(`${JSON.stringify({
-    format: PROJECT_FORMAT, version: PROJECT_VERSION, name: projectSourceName(name),
+    format: PROJECT_FORMAT, version, name: projectSourceName(name),
     images: imageEntries.map(entry => entry.name), pages: projectPages,
   })}\n`);
   if (json.length > MAX_PROJECT_JSON_BYTES) throw new Error("図形が多すぎるため、作業ファイルに保存できません。");
@@ -349,7 +364,7 @@ export function readProjectManifest(bytes, entries) {
     throw new Error(INVALID_PROJECT);
   }
   if (data?.format !== PROJECT_FORMAT) throw new Error(INVALID_ZIP);
-  if (data.version !== PROJECT_VERSION)
+  if (![PROJECT_VERSION, ROTATED_TEXT_PROJECT_VERSION, REDACTION_PROJECT_VERSION, WHITE_REDACTION_PROJECT_VERSION].includes(data.version))
     throw new Error("このバージョンでは開けない作業ファイルです。PDFかんたん編集を最新版にしてください。");
   if (typeof data.name !== "string" || !data.name || Array.from(data.name).length > 255) throw new Error(INVALID_PROJECT);
   const pages = list(data.pages, MAX_PROJECT_PAGES), images = list(data.images, MAX_PROJECT_ANNOTATIONS);

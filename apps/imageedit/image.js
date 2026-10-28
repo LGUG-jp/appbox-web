@@ -972,7 +972,11 @@ function renderLayers(){
       layer.y = startLayer.y;
       const pad = startLayer.bgTransparent === false ? 8
         : startLayer.outline ? annotationStyle.TEXT_OUTLINE_WIDTH : 0;
-      layer.textWidth = Math.max(2,newWidth-pad);
+      const vertical = Math.abs(startLayer.rotation || 0)%180 === 90;
+      layer.textWidth = Math.max(2,(vertical ? newHeight : newWidth)-pad);
+      const nextBounds = textBounds(layer);
+      layer.x += startBounds.x-nextBounds.x;
+      layer.y += startBounds.y-nextBounds.y;
     }else if(drawing.isLine(layer)){
       layer.x1 = startBounds.x+(startLayer.x1-startBounds.x)*sx;
       layer.y1 = startBounds.y+(startLayer.y1-startBounds.y)*sy;
@@ -1459,10 +1463,230 @@ function renderLayers(){
     }[type] || type;
   }
 
+  // The list is front-to-back; the actual compositing array is back-to-front.
+  // Reorder one grabbed layer without disturbing other layers' relative order.
+  function moveLayerFromList(layerId,targetId,after=false){
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing) return false;
+    const ordered = [...state.layers].reverse();
+    const from = ordered.findIndex(layer => String(layer.id) === layerId);
+    if(from < 0) return false;
+    if(targetId === layerId) return false;
+    const target = targetId === null ? -1 : ordered.findIndex(layer => String(layer.id) === targetId);
+    if(targetId !== null && target < 0) return false;
+    const [moved] = ordered.splice(from,1);
+    const insert = targetId === null ? ordered.length
+      : ordered.findIndex(layer => String(layer.id) === targetId) + (after ? 1 : 0);
+    if(insert < 0) return false;
+    ordered.splice(insert,0,moved);
+    const reordered = ordered.reverse();
+    if(reordered.every((layer,index) => layer === state.layers[index])) return false;
+    finishTextEditing(true);
+    pushHistory("layers");
+    state.layers = reordered;
+    selectLayers([moved]);
+    if(state.tool !== "select") setTool("select");
+    else{
+      renderLayers();
+      renderEditor();
+      updateSelectedControls();
+    }
+    return true;
+  }
+
+  let listDrag = null;
+  function clearLayerDropIndicator(){
+    const list = $("layerList");
+    if(!list) return;
+    Array.from(list.children).forEach(item => item.classList.remove(
+      "layer-list-dragging","layer-list-drop-before","layer-list-drop-after"
+    ));
+  }
+  function showLayerDropIndicator(button,after){
+    clearLayerDropIndicator();
+    if(!listDrag) return;
+    const rows = Array.from($("layerList").children).filter(item => item.dataset?.layerId);
+    rows.find(item => item.dataset.layerId === listDrag.id)
+      ?.classList.add("layer-list-dragging");
+    if(!button || button.dataset.layerId === listDrag.id) return;
+    // The bottom half of a row and the top half of the next row refer to
+    // the same boundary. Always draw on the next row to avoid two styles
+    // of insertion line and flickering at that shared boundary.
+    const index = rows.indexOf(button);
+    const next = after && index + 1 < rows.length ? rows[index+1] : null;
+    const marker = next || button;
+    if(marker.dataset.layerId === listDrag.id) return;
+    marker.classList.add(after && !next ? "layer-list-drop-after" : "layer-list-drop-before");
+  }
+  function layerListGapPosition(clientY){
+    const rows = Array.from($("layerList").children).filter(item => item.dataset?.layerId);
+    for(const button of rows){
+      const bounds = button.getBoundingClientRect();
+      if(clientY < bounds.top+bounds.height/2) return {button,after:false};
+    }
+    return rows.length ? {button:rows[rows.length-1],after:true} : null;
+  }
+  function finishLayerListDrag(){
+    listDrag = null;
+    clearLayerDropIndicator();
+  }
+
+  function renderLayerList(){
+    const list = $("layerList");
+    const count = $("layerListCount");
+    if(!list || !count) return;
+    count.textContent = String(state.layers.length);
+    const focused = list.contains(document.activeElement) ? document.activeElement : null;
+    const focusedId = focused?.dataset?.layerId;
+    const focusedIndex = focused ? Array.from(list.children).indexOf(focused) : -1;
+    // Keep existing buttons (and their children) alive during text-editor blur:
+    // replacing them on pointerdown can swallow the pending click.
+    const buttons = new Map(Array.from(list.children)
+      .filter(item => item.dataset?.layerId)
+      .map(item => [item.dataset.layerId,item]));
+    const selectedIds = new Set(selectedLayers().map(layer => layer.id));
+    const entries = [];
+    if(!state.layers.length){
+      const empty = document.createElement("p");
+      empty.className = "layer-list-empty";
+      empty.textContent = "レイヤーはありません。";
+      entries.push(empty);
+    }else{
+      // state.layers は背面→前面。リストは前面を上に表示する。
+      [...state.layers].reverse().forEach((layer,index) => {
+        const id = String(layer.id);
+        let button = buttons.get(id);
+        if(!button){
+          button = document.createElement("button");
+          button.type = "button";
+          button.className = "layer-list-item";
+          button.dataset.layerId = id;
+          button.draggable = true;
+          button.setAttribute("aria-keyshortcuts","Alt+ArrowUp Alt+ArrowDown");
+          const kind = document.createElement("span");
+          kind.className = "layer-list-kind";
+          const preview = document.createElement("span");
+          preview.className = "layer-list-name";
+          const selected = document.createElement("span");
+          selected.className = "layer-list-selected";
+          selected.setAttribute("aria-hidden","true");
+          selected.textContent = "✓";
+          button.append(kind,preview,selected);
+          button.addEventListener("dragstart",event => {
+            if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing){
+              event.preventDefault();
+              return;
+            }
+            listDrag = {id:button.dataset.layerId};
+            // Edge/Chromium require data on the native transfer to start dragging.
+            event.dataTransfer?.setData("text/plain",listDrag.id);
+            if(event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+            showLayerDropIndicator(null,false);
+          });
+          button.addEventListener("dragover",event => {
+            if(!listDrag) return;
+            event.preventDefault();
+            if(event.dataTransfer) event.dataTransfer.dropEffect = "move";
+            const bounds = button.getBoundingClientRect();
+            const after = event.clientY >= bounds.top+bounds.height/2;
+            listDrag.targetId = button.dataset.layerId;
+            listDrag.after = after;
+            showLayerDropIndicator(button,after);
+          });
+          button.addEventListener("drop",event => {
+            if(!listDrag) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const draggedId = listDrag.id;
+            const bounds = button.getBoundingClientRect();
+            const after = event.clientY >= bounds.top+bounds.height/2;
+            finishLayerListDrag();
+            moveLayerFromList(draggedId,button.dataset.layerId,after);
+          });
+          button.addEventListener("dragend",finishLayerListDrag);
+          button.addEventListener("keydown",event => {
+            if(!event.altKey || event.ctrlKey || event.metaKey ||
+              !["ArrowUp","ArrowDown"].includes(event.key)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const ordered = [...state.layers].reverse();
+            const position = ordered.findIndex(layer => String(layer.id) === button.dataset.layerId);
+            const next = position+(event.key === "ArrowUp" ? -1 : 1);
+            if(position < 0 || next < 0 || next >= ordered.length) return;
+            moveLayerFromList(button.dataset.layerId,String(ordered[next].id),event.key === "ArrowDown");
+          });
+          button.addEventListener("click",event => {
+            if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing) return;
+            const target = state.layers.find(item => String(item.id) === button.dataset.layerId);
+            if(!target) return;
+            const current = selectedLayers();
+            const alreadySelected = current.some(item => item.id === target.id);
+            selectLayers(event.shiftKey
+              ? alreadySelected ? current.filter(item => item.id !== target.id) : [...current,target]
+              : [target]);
+            setTool("select");
+          });
+        }
+        button.setAttribute("aria-pressed",String(selectedIds.has(layer.id)));
+        const kind = button.children[0];
+        kind.textContent = typeLabel(layer.type) + " " + (state.layers.length-index);
+        const preview = button.children[1];
+        const text = layer.type === "text"
+          ? String(layer.text || "").replace(/\s+/g," ").trim() : "";
+        preview.textContent = text;
+        preview.hidden = !text;
+        button.title = text ? `${kind.textContent}: ${text}` : kind.textContent;
+        entries.push(button);
+      });
+    }
+    // Selection/text changes update the same DOM nodes; replace only when
+    // layers were actually added, removed, or reordered.
+    if(entries.length !== list.children.length || entries.some((item,index) => list.children[index] !== item)){
+      list.replaceChildren(...entries);
+    }
+    if(focused){
+      const same = focusedId && entries.find(item => item.dataset?.layerId === focusedId);
+      if(same){
+        if(document.activeElement !== same) same.focus();
+      }else{
+        // Removing the focused layer must not strand keyboard focus in a
+        // detached button. Continue at the adjacent layer, or the summary.
+        const next = entries[Math.min(focusedIndex,entries.length-1)];
+        const fallback = next?.tagName === "BUTTON" ? next : $("layerListPanel")?.querySelector("summary");
+        fallback?.focus();
+      }
+    }
+  }
+
+  // Grid gaps receive events on the container, not a row. Resolve them to
+  // the adjacent insertion boundary, including the space below the last row.
+  $("layerList")?.addEventListener("dragover",event => {
+    if(!listDrag || event.target !== $("layerList")) return;
+    event.preventDefault();
+    if(event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    const position = layerListGapPosition(event.clientY);
+    showLayerDropIndicator(position?.button,position?.after);
+  });
+  $("layerList")?.addEventListener("drop",event => {
+    if(!listDrag || event.target !== $("layerList")) return;
+    event.preventDefault();
+    const draggedId = listDrag.id;
+    const position = layerListGapPosition(event.clientY);
+    finishLayerListDrag();
+    if(position) moveLayerFromList(draggedId,position.button.dataset.layerId,position.after);
+  });
+  $("layerList")?.addEventListener("dragleave",event => {
+    if(!listDrag) return;
+    const bounds = $("layerList").getBoundingClientRect();
+    if(event.clientX >= bounds.left && event.clientX <= bounds.left + bounds.width &&
+      event.clientY >= bounds.top && event.clientY <= bounds.top + bounds.height) return;
+    showLayerDropIndicator(null,false);
+  });
+
   function updateSelectedControls(){
     // Apply the final selection's controls after pointer-up/cancel, keeping
     // control and work-area changes out of an active gesture.
     if(state.drag) return;
+    renderLayerList();
     const layers = selectedLayers();
     const layer = selectedLayer();
     const actions = $("editorActions");
@@ -1686,6 +1910,9 @@ function renderLayers(){
     const scale = 1/displayScale();
     const style = textEditorRule.style;
     const hostStyle = textEditorHostRule.style;
+    const {a,b,c,d} = annotationStyle.textTransform(layer);
+    hostStyle.transformOrigin = "top left";
+    hostStyle.transform = `matrix(${a},${b},${c},${d},0,0)`;
     hostStyle.left = `${box.left*scale}px`;
     hostStyle.top = `${box.top*scale}px`;
     hostStyle.width = `${(box.width+2)*scale}px`;
@@ -1717,6 +1944,7 @@ function renderLayers(){
       textEditSession.historyPushed = true;
     }
     layer.text = text;
+    renderLayerList();
     renderLayers();
     renderEditor();
 
@@ -2848,7 +3076,7 @@ function renderLayers(){
         layer.x *= scaleX;
         layer.y *= scaleY;
         layer.fontSize = clamp(layer.fontSize*average,8,300);
-        if(layer.textWidth > 0) layer.textWidth *= Math.abs(scaleX);
+        if(layer.textWidth > 0) layer.textWidth *= Math.abs((layer.rotation || 0)%180 ? scaleY : scaleX);
       }else if(drawing.isLine(layer)){
         layer.x1 *= scaleX;
         layer.y1 *= scaleY;
@@ -2997,6 +3225,7 @@ function renderLayers(){
           layer,
           rotatePoint({x:layer.x,y:layer.y},degrees,oldWidth,oldHeight)
         );
+        layer.rotation = ((layer.rotation || 0)+degrees+360)%360;
       }else if(drawing.isLine(layer)){
         const first = rotatePoint(
           {x:layer.x1,y:layer.y1},
@@ -3066,6 +3295,8 @@ function renderLayers(){
         }
       }else if(layer.type === "text"){
         Object.assign(layer,flipPoint({x:layer.x,y:layer.y}));
+        layer.rotation = ((horizontal ? -(layer.rotation || 0) : 180-(layer.rotation || 0))+360)%360;
+        layer.textFlipX = !layer.textFlipX;
       }else if(drawing.isLine(layer)){
         const first = flipPoint({x:layer.x1,y:layer.y1});
         const second = flipPoint({x:layer.x2,y:layer.y2});
@@ -3239,6 +3470,10 @@ function renderLayers(){
 
   async function loadSingleFile(file){
     if(!file) return;
+    if(/\.abimg$/i.test(file.name || "")){
+      await loadProjectFile(file);
+      return;
+    }
 
     if(!isSupportedImage(file)){
         toast(
@@ -3373,6 +3608,125 @@ function renderLayers(){
         }
     }
   }
+
+  async function loadProjectFile(file){
+    if(state.singleBusy || state.drag || viewState.pan || state.composing) return;
+    finishTextEditing();
+    if(!confirmDiscardChanges("作業ファイルを開きますか？")) return;
+    const version = ++state.loadVersion;
+    state.singleBusy = true;
+    syncModeControls();
+    setSingleStatus("作業ファイルを読み込んでいます。");
+    const canvases = [];
+    let committed = false;
+    try{
+      const project = await window.AppBoxImageProject.read(file,window.AppBoxSafeImage.readDimensions);
+      if(version !== state.loadVersion) return;
+      for(let index=0;index<project.blobs.length;index++){
+        let image;
+        try{
+          image = await decodeImage(project.blobs[index]);
+          const asset = project.manifest.assets[index];
+          if(image.width !== asset.width || image.height !== asset.height) throw new Error("作業画像の寸法が一致しません。");
+          const canvas = createCanvas(asset.width,asset.height);
+          canvases.push(canvas);
+          canvas.getContext("2d").drawImage(image,0,0);
+        }finally{if(image && typeof image.close === "function") image.close();}
+        if(version !== state.loadVersion) return;
+      }
+      const layers = project.manifest.layers.map(record => {
+        const layer = {...record};
+        if(layer.type === "image"){layer.imageCanvas=canvases[layer.asset];delete layer.asset;}
+        return layer;
+      });
+      // Keep the old work until the new layers also render successfully.
+      const prepared = canvases[1], previous = state.originalCanvas ? cloneCanvas(baseCanvas) : null;
+      const checkpoint = {state:{...state},view:{...viewState},modeChoicesOpen,singleSavePreset,
+        scrollLeft:canvasViewport.scrollLeft,scrollTop:canvasViewport.scrollTop};
+      const fields = [["singleSaveName","value"],["singleFormat","value"],["presetSelect","value"],
+        ["singleTargetEnabled","checked"],["singleTargetKB","disabled"]]
+        .map(([id,key]) => ({element:$(id),key,value:$(id)[key]}));
+      const visibility = [$("singleEmpty"),$("singleWorkspace")]
+        .map(element => ({element,hidden:element.classList.contains("hidden")}));
+      const panels = [...$("singleWorkspace").querySelectorAll(".left-panel, .stage-head, .right-panel")]
+        .map(element => ({element,inert:element.inert}));
+      try{
+        baseCanvas.width=prepared.width;baseCanvas.height=prepared.height;
+        baseContext.drawImage(prepared,0,0);
+        state.sourceFile = {name:project.manifest.name,type:project.manifest.sourceType};
+        state.originalCanvas = canvases[0];
+        state.layers = layers;
+        state.crop = null;state.undo=[];state.redo=[];
+        selectLayers([]);
+        state.revision=++state.revisionCounter;state.savedRevision=state.revision;
+        modeChoicesOpen=false;viewState.mode="fit";viewState.pan=null;
+        canvasViewport.classList.remove("panning");
+        $("singleSaveName").value=sanitizeBaseName(project.manifest.name)+"-edited";
+        $("singleFormat").value="image/png";$("presetSelect").value="";
+        singleSavePreset=null;$("singleTargetEnabled").checked=false;$("singleTargetKB").disabled=true;
+        $("singleEmpty").classList.add("hidden");$("singleWorkspace").classList.remove("hidden");
+        panels.forEach(({element}) => {element.inert=false;});
+        invalidateBaseCaches();syncEditorChrome();updateSingleFormatUI();syncCanvas();setTool("select");
+        editCanvas.focus();
+        setSingleStatus("作業を再開しました。元画像・非表示の内容も含むため、配布時は加工済み画像を保存してください。","ok");
+        committed=true;
+      }catch(error){
+        Object.assign(state,checkpoint.state);Object.assign(viewState,checkpoint.view);
+        modeChoicesOpen=checkpoint.modeChoicesOpen;singleSavePreset=checkpoint.singleSavePreset;
+        fields.forEach(({element,key,value}) => {element[key]=value;});
+        visibility.forEach(({element,hidden}) => element.classList.toggle("hidden",hidden));
+        panels.forEach(({element,inert}) => {element.inert=inert;});
+        baseCanvas.width=previous?.width || 0;baseCanvas.height=previous?.height || 0;
+        if(previous) baseContext.drawImage(previous,0,0);
+        invalidateBaseCaches();syncEditorChrome();updateSingleFormatUI();syncCanvas();setTool(state.tool);
+        state.selectedLayerId=checkpoint.state.selectedLayerId;state.selectedLayerIds=checkpoint.state.selectedLayerIds;
+        updateSelectedControls();
+        canvasViewport.scrollLeft=checkpoint.scrollLeft;canvasViewport.scrollTop=checkpoint.scrollTop;
+        throw error;
+      }finally{if(previous){previous.width=0;previous.height=0;}}
+    }catch(error){
+      if(version === state.loadVersion){
+        setSingleStatus(error.message || "作業ファイルを読み込めませんでした。","warn");
+        toast(error.message || "作業ファイルを読み込めませんでした。");
+      }
+    }finally{
+      canvases.forEach((canvas,index) => {
+        if(!committed || index === 1){canvas.width=0;canvas.height=0;}
+      });
+      if(version === state.loadVersion){state.singleBusy=false;syncEditorChrome();}
+    }
+  }
+
+  async function saveProjectFile(){
+    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
+    finishTextEditing();
+    const version=state.loadVersion, revision=state.revision;
+    state.singleBusy=true;$("projectSave").disabled=true;syncModeControls();
+    $("closeSaveSettings").focus();
+    setSingleStatus("編集を再開できる作業ファイルを作っています。");
+    try{
+      const blob=await window.AppBoxImageProject.encode({
+        original:state.originalCanvas,base:baseCanvas,layers:state.layers,
+        name:state.sourceFile.name,sourceType:SUPPORTED_TYPES.includes(state.sourceFile.type) ? state.sourceFile.type
+          : /\.png$/i.test(state.sourceFile.name) ? "image/png" : /\.webp$/i.test(state.sourceFile.name) ? "image/webp" : "image/jpeg"
+      },canvas => canvasToBlob(canvas,"image/png"));
+      if(version !== state.loadVersion) return;
+      const name=sanitizeBaseName(state.sourceFile.name)+window.AppBoxImageProject.EXTENSION;
+      saveBlob(blob,name);
+      state.savedRevision=revision;closeSaveSettings();
+      toast("作業ファイルのダウンロードを開始しました。");
+      setSingleStatus(name+"のダウンロードを開始しました。配布用ではなく、元画像を含む編集再開用です。","ok");
+    }catch(error){
+      if(version === state.loadVersion){
+        setSingleStatus(error.message || "作業ファイルの保存に失敗しました。","warn");
+        toast(error.message || "作業ファイルの保存に失敗しました。");
+      }
+    }finally{
+      if(version === state.loadVersion){state.singleBusy=false;syncModeControls();}
+      $("projectSave").disabled=false;
+    }
+  }
+  $("projectSave").addEventListener("click",saveProjectFile);
 
 
   async function addImageLayer(file,{expandCanvas=false}={}){

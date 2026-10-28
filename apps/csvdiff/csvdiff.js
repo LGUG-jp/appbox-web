@@ -906,17 +906,19 @@
       return null;
     }
 
-    const number = Number(text);
-
-    if(!Number.isFinite(number)){
-      return null;
+    // Normalize decimal notation as text: Number would round long IDs and decimals.
+    const negative = text.startsWith("-");
+    const [whole, fraction = ""] = text.replace(/^[+-]/, "").split(".");
+    const integer = whole.replace(/^0+/, "") || "0";
+    let decimalEnd = fraction.length;
+    // Scan once from the end; an unanchored zero-suffix regex retries long inner runs.
+    while(decimalEnd > 0 && fraction.charCodeAt(decimalEnd - 1) === 48){
+      decimalEnd--;
     }
+    const decimal = fraction.slice(0, decimalEnd);
+    const sign = negative && (integer !== "0" || decimal) ? "-" : "";
 
-    if(Object.is(number, -0)){
-      return "0";
-    }
-
-    return String(number);
+    return sign + integer + (decimal ? "." + decimal : "");
   }
 
   function normalizeValue(value, options){

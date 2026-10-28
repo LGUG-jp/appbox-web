@@ -1,10 +1,11 @@
-import { isLine, bounds, translate, rotateAnnotation, reorderAnnotations, movePages, stepPages, rangeIds, nearestCorner, drawingBox, constrainedLinePoint, angleLockedLinePoint, resizeBox, selectionRects, samePageRaster, samePageLayout, thumbnailRasterSize, thumbnailColumns } from "./editor-core.mjs?v=1.12.0";
+import { isLine, bounds, translate, rotateAnnotation, reorderAnnotations, movePages, stepPages, rangeIds, nearestCorner, drawingBox, constrainedLinePoint, angleLockedLinePoint, resizeBox, selectionRects, samePageRaster, samePageLayout, thumbnailRasterSize, thumbnailColumns } from "./editor-core.mjs?v=1.13.2";
 import { MAX_STROKE_POINTS, MAX_DOCUMENT_INK_POINTS, appendInkPoint, stabilizeInkPoint, inkPath, inkIntersectsSegment, documentInkPointCount, acceptsInkPointer } from "./ink.mjs?v=1.8.0";
 import { embedTextPng } from "./text-image.mjs?v=1.4.0";
 import { MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, checkImageSize, imageMetadata, initialImageBox, imagePlacement, referencedImageIds, clipboardFiles } from "./image-insertion.mjs?v=1.7.0";
 import { PAGE_NUMBER_MARGIN_MM, createPageNumberPlan, pageNumberAnnotation, replacePageNumbers, removePageNumbers, resolvePageNumberPosition } from "./page-numbering.mjs?v=1.13.0";
 import { WATERMARK_PRESETS, createWatermarkPlan, watermarkAnnotation, replaceWatermarks, removeWatermarks } from "./watermark.mjs?v=1.10.0";
-import { MAX_PROJECT_JSON_BYTES, storedZipParts, readStoredZip, serializeProject, readProjectManifest, normalizeProjectPages, projectFileName, detachExcludedPages, relinkKeptPages } from "./project-file.mjs?v=1.13.0";
+import { MAX_PROJECT_JSON_BYTES, storedZipParts, readStoredZip, serializeProject, readProjectManifest, normalizeProjectPages, projectFileName, detachExcludedPages, relinkKeptPages } from "./project-file.mjs?v=1.14.1";
+import { hasRedactions, redactionColor, redactionRasterSize, createRedactedPdf } from "./redaction.mjs?v=1.14.1";
 import { MM_TO_PT, STAMP_PRESETS, MAX_STAMP_TEMPLATE_FILE_BYTES, normalizeStampSettings, formatStampDate, expandStampLines, layoutStamp, serializeStampTemplates, parseStampTemplates, mergeStampTemplates } from "./stamp.mjs?v=1.11.0";
 import {
   PDFDocument,
@@ -436,6 +437,8 @@ const state = {
   clipboard: [],
   markerColor: "#ffe04a",
   markerOpacity: 0.35,
+  redactionColor: "#000000",
+  pdfSavePending: false,
   sources: new Map(),
   images: new Map(),
   pages: [],
@@ -556,6 +559,9 @@ const els = {
 
   toast: $("toast")
 };
+
+// 初期選択ではPDFと作業ファイル、読込み後の追加ではPDFのみを表示します。
+const initialFileAccept = els.input.accept;
 
 let currentRenderTask = null;
 let currentThumbnailRenderTask = null;
@@ -1478,7 +1484,8 @@ function syncUI() {
   els.save.disabled =
     state.busy ||
     !hasPages;
-  $("savePdfMenuItem").disabled = state.busy || !hasPages;
+  syncPdfSaveOptions();
+  $("saveRedactedPdfMenuItem").disabled = state.busy || !hasPages;
   $("saveProjectBtn").disabled = state.busy || !hasPages;
   if (els.save.disabled) closeSaveMenu();
   $("insertImageBtn").disabled = state.busy || !hasPages || state.mode !== "edit";
@@ -3019,7 +3026,7 @@ function setTool(tool) {
     ![
       "select",
       "text",
-      "rect",
+      "rect", "redact",
       "arrow", "ellipse", "line", "highlight", "ink", "ink-eraser"
     ].includes(tool)
   ) {
@@ -3038,7 +3045,7 @@ function setTool(tool) {
 
   els.layer.classList.remove(
     "tool-text",
-    "tool-rect",
+    "tool-rect", "tool-redact",
     "tool-arrow", "tool-ellipse", "tool-line", "tool-highlight", "tool-ink", "tool-ink-eraser"
   );
 
@@ -3554,7 +3561,9 @@ function beginDrawing(
     pageDisplaySize(page);
 
   const annotation =
-    ["rect", "ellipse"].includes(type)
+    type === "redact"
+      ? { id: uid(), type, x: start.x, y: start.y, w: 0, h: 0, redactColor: state.redactionColor }
+      : ["rect", "ellipse"].includes(type)
       ? {
           id: uid(),
           type, fill: state.defaults.fill, fillNone: state.defaults.fillNone,
@@ -3601,7 +3610,7 @@ function beginDrawing(
   );
 
   const endPendingEdit = trackUnsavedEdit(() =>
-    ["rect", "ellipse"].includes(type)
+    ["rect", "ellipse", "redact"].includes(type)
       ? annotation.w >= 5 && annotation.h >= 5
       : Math.hypot(annotation.x2 - annotation.x1, annotation.y2 - annotation.y1) >= 8
   );
@@ -3617,7 +3626,7 @@ function beginDrawing(
           moveEvent
         );
 
-      if (["rect", "ellipse"].includes(type)) {
+      if (["rect", "ellipse", "redact"].includes(type)) {
         const box = drawingBox(
           start,
           point,
@@ -3674,7 +3683,7 @@ function beginDrawing(
       }
 
       const tooSmall =
-        ["rect", "ellipse"].includes(type)
+        ["rect", "ellipse", "redact"].includes(type)
           ? (
               annotation.w < 5 ||
               annotation.h < 5
@@ -3801,10 +3810,11 @@ function beginResize(
         ) /
         state.viewScale;
 
+      const verticalText = annotation.type === "text" && [90, 270].includes(annotation.rotation || 0);
       const minWidth =
-          annotation.type === "text" ? 70 : 8,
+          annotation.type === "text" ? (verticalText ? 30 : 70) : 8,
         minHeight =
-          annotation.type === "text" ? 30 : 8,
+          annotation.type === "text" ? (verticalText ? 70 : 30) : 8,
         preserveAspect =
           annotation.type === "image" ||
           (["rect", "ellipse"].includes(annotation.type) &&
@@ -4090,8 +4100,9 @@ function moveSelectedFigures(position) {
   if (state.busy || state.mode !== "edit" || !currentPage()) return;
   finishTextEditing();
   const page = currentPage(),
-    selected = selectedFigures(),
-    next = reorderAnnotations(page.annotations, selected.map((a) => a.id), position);
+    selected = selectedFigures();
+  if (selected.some(a => a.type === "redact")) return;
+  const next = reorderAnnotations(page.annotations, selected.map((a) => a.id), position);
   if (next === page.annotations) return;
   pushHistory();
   page.annotations = next;
@@ -4111,6 +4122,22 @@ function deleteSelectedAnnotation() {
 }
 
 
+function applyRedactionColor(value) {
+  if (state.busy || !["#000000", "#ffffff"].includes(value)) return;
+  finishTextEditing();
+  const selected = selectedFigures();
+  if (!selected.length) {
+    state.redactionColor = value;
+    syncToolProperties();
+    return;
+  }
+  if (selected.some(a => a.type !== "redact") || selected.every(a => redactionColor(a) === value)) return;
+  pushHistory();
+  selected.forEach(a => { a.redactColor = value; });
+  renderAnnotations();
+  updateThumbnailAnnotationMarker(currentPage().id);
+}
+
 function applyProperty(kind,value) {
   if(state.busy)return;
   finishTextEditing();const annotations=selectedFigures();
@@ -4122,7 +4149,7 @@ function applyProperty(kind,value) {
     syncToolProperties();return;
   }
   const textKeys=['fontSize','fontFamily','bold','bgColor','bgTransparent'];
-  const eligible=annotations.filter(a=>a.type!=='image' && (textKeys.includes(kind)?a.type==='text':kind==='outline'?['text','arrow'].includes(a.type):['fill','fillNone'].includes(kind)?['rect','ellipse'].includes(a.type):kind==='opacity'?a.type==='highlight':kind==='strokeWidth'?!['text','highlight'].includes(a.type):true));
+  const eligible=annotations.filter(a=>a.type!=='image' && a.type!=='redact' && (textKeys.includes(kind)?a.type==='text':kind==='outline'?['text','arrow'].includes(a.type):['fill','fillNone'].includes(kind)?['rect','ellipse'].includes(a.type):kind==='opacity'?a.type==='highlight':kind==='strokeWidth'?!['text','highlight'].includes(a.type):true));
   if(!eligible.length||eligible.every(a=>a[kind]===value))return;
   pushHistory();eligible.forEach(a=>a[kind]=value);renderAnnotations();updateThumbnailAnnotationMarker(currentPage().id);
 }
@@ -4217,17 +4244,12 @@ async function renderTextAnnotationPng(
   let rasterScale =
     TEXT_RASTER_SCALE;
 
-  const width =
-    Math.max(
-      1,
-      annotation.w
-    );
-
-  const height =
-    Math.max(
-      1,
-      annotation.h
-    );
+  // Page-space bounds swap on quarter turns; rasterize the original text layout.
+  const layout = annotation.watermark
+    ? { width: annotation.w, height: annotation.h }
+    : imagePlacement(annotation, 0);
+  const width = Math.max(1, layout.width);
+  const height = Math.max(1, layout.height);
 
   const byPixels =
     Math.sqrt(
@@ -4497,7 +4519,7 @@ function hasCoveringAnnotations(
       page.pageNumber || page.annotations.some(
         annotation =>
           [
-            "rect",
+            "rect", "redact",
             "ellipse",
             "text", "image", "ink"
           ].includes(
@@ -4659,6 +4681,8 @@ async function drawAnnotationsOnPdf(output, page, reference, height) {
     ...(number ? [number] : []),
   ];
   for(const a of items) {
+    // Dedicated masks are applied to pixels only, after all ordinary edits have been rendered.
+    if (a.type === "redact") continue;
     if (a.type === "image") {
       const asset = state.images.get(a.imageId);
       if (!asset) throw new Error("挿入画像を読み込めませんでした。");
@@ -4706,37 +4730,182 @@ async function drawAnnotationsOnPdf(output, page, reference, height) {
           opacity: a.opacity,
         });
       } else {
-        page.drawImage(image,{x:a.x,y:height-a.y-a.h,width:a.w,height:a.h});
+        const placement = imagePlacement(a, height);
+        page.drawImage(image, { x: placement.x, y: placement.y,
+          width: placement.width, height: placement.height, rotate: degrees(-placement.rotation) });
       }
     }
   }
 }
 
-async function exportPdf(extract = false) {
+// Use a separate, strict PDF.js document for export; preview rendering may recover from errors.
+async function renderRedactionPage(reference, sources) {
+  let canvas = null, overlayCanvas = null, overlayDoc = null;
+  try {
+    if (!sources.has(reference.sourceId)) {
+      const source = sourceFor(reference);
+      if (!source) throw new Error("PDFの元データが見つかりません。");
+      const task = pdfjsLib.getDocument({ data: source.bytes.slice(0), stopAtErrors: true,
+        ...getPdfJsAuxiliaryOptions() });
+      try { sources.set(reference.sourceId, await task.promise); }
+      catch (error) { await task.destroy(); throw error; }
+    }
+    const pdfPage = await sources.get(reference.sourceId).getPage(reference.sourceIndex + 1);
+    const rotation = effectivePageRotation(reference);
+    const unit = pdfPage.getViewport({ scale: 1, rotation });
+    const size = redactionRasterSize(unit.width, unit.height);
+    canvas = document.createElement("canvas");
+    canvas.width = size.width; canvas.height = size.height;
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) throw new Error("ページ画像を作成できませんでした。");
+    await pdfPage.render({ canvasContext: context, viewport: pdfPage.getViewport({ scale: size.scale, rotation }),
+      intent: "display", annotationMode: pdfjsLib.AnnotationMode.ENABLE, background: "#ffffff" }).promise;
+    pdfPage.cleanup();
+
+    const annotations = reference.annotations.filter(a => a.type !== "redact");
+    if (annotations.length || reference.watermark || reference.pageNumber) {
+      // Render ordinary edits separately. No original PDF page/objects enter this temporary document.
+      const overlay = await PDFDocument.create({ updateMetadata: false });
+      const page = overlay.addPage([unit.width, unit.height]);
+      await drawAnnotationsOnPdf(overlay, page, { ...reference, annotations }, unit.height);
+      const task = pdfjsLib.getDocument({ data: await overlay.save(), stopAtErrors: true,
+        ...getPdfJsAuxiliaryOptions() });
+      try { overlayDoc = await task.promise; }
+      catch (error) { await task.destroy(); throw error; }
+      const overlayPage = await overlayDoc.getPage(1);
+      overlayCanvas = document.createElement("canvas");
+      overlayCanvas.width = size.width; overlayCanvas.height = size.height;
+      const overlayContext = overlayCanvas.getContext("2d");
+      if (!overlayContext) throw new Error("編集内容の画像を作成できませんでした。");
+      await overlayPage.render({ canvasContext: overlayContext, viewport: overlayPage.getViewport({ scale: size.scale }),
+        background: "rgba(0,0,0,0)" }).promise;
+      context.drawImage(overlayCanvas, 0, 0);
+    }
+    return { canvas, width: unit.width, height: unit.height };
+  } catch (error) {
+    if (canvas) { canvas.width = 0; canvas.height = 0; }
+    throw error;
+  } finally {
+    if (overlayCanvas) { overlayCanvas.width = 0; overlayCanvas.height = 0; }
+    if (overlayDoc) await overlayDoc.destroy();
+  }
+}
+
+// A modal keeps the confirmation compact and makes editing inert while the choice is pending.
+// The same dialog can switch an ordinary overlay save to the image-only export.
+function confirmPdfSave({ rasterize, extract, masked }) {
+  const dialog = $("pdfSaveDialog"), form = $("pdfSaveForm");
+  if (dialog.open || state.pdfSavePending) return Promise.resolve(null);
+  const previousFocus = document.activeElement;
+  const render = () => {
+    const kind = masked ? "墨消し" : "画像化";
+    $("pdfSaveTitle").textContent = rasterize ? `${kind}PDFを保存しますか？` : "通常のPDFを保存しますか？";
+    $("pdfSaveSummary").textContent = rasterize
+      ? `元の文字や画像データが公開後に取り出されないよう、${extract ? "選択したページ" : "全ページ"}を一度画像化して保存します。`
+      : "四角形や画像などを重ねても、PDF内部に元の文字や画像データが残ります。マスキング用途では「墨消しPDFとして保存」を選んでください。";
+    $("pdfSaveSelectionNotice").hidden = !rasterize || masked;
+    $("pdfSaveSelectionNotice").textContent = `${extract ? "選択したページには" : "専用の"}墨消し範囲がありません。四角形や画像で隠す場合は、不透明で完全に覆われているか確認してください。`;
+    $("pdfSaveCautions").hidden = !rasterize;
+    $("pdfSaveReview").hidden = !rasterize;
+    $("pdfSaveConfirmBtn").textContent = rasterize ? `${kind}PDFを保存` : "通常のPDFを保存";
+    $("pdfSaveConfirmBtn").classList.toggle("primary", rasterize);
+    $("pdfSaveRasterizeBtn").hidden = rasterize;
+  };
+  render();
+  dialog.returnValue = "";
+  state.pdfSavePending = true;
+  return new Promise(resolve => {
+    const submit = event => {
+      event.preventDefault();
+      dialog.close(event.submitter?.value === "save" ? (rasterize ? "rasterized" : "normal") : "cancel");
+    };
+    const switchToRaster = () => { rasterize = true; render(); $("pdfSaveConfirmBtn").focus(); };
+    const cancel = () => { dialog.returnValue = "cancel"; };
+    const keydown = event => {
+      // Let the dialog handle Escape/Tab/Enter, without invoking document shortcuts.
+      event.stopPropagation();
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") event.preventDefault();
+    };
+    const cleanup = () => {
+      state.pdfSavePending = false;
+      form.removeEventListener("submit", submit);
+      $("pdfSaveRasterizeBtn").removeEventListener("click", switchToRaster);
+      dialog.removeEventListener("cancel", cancel);
+      dialog.removeEventListener("keydown", keydown);
+      dialog.removeEventListener("close", close);
+    };
+    const close = () => {
+      cleanup();
+      if (previousFocus?.isConnected && !previousFocus.disabled && !previousFocus.hidden) previousFocus.focus({ preventScroll: true });
+      else els.save.focus({ preventScroll: true });
+      resolve(["normal", "rasterized"].includes(dialog.returnValue) ? dialog.returnValue : null);
+    };
+    form.addEventListener("submit", submit);
+    $("pdfSaveRasterizeBtn").addEventListener("click", switchToRaster);
+    dialog.addEventListener("cancel", cancel);
+    dialog.addEventListener("keydown", keydown);
+    dialog.addEventListener("close", close);
+    try { dialog.showModal(); }
+    catch (error) {
+      cleanup();
+      console.error(error);
+      showToast("保存の確認画面を開けませんでした。もう一度お試しください。", true);
+      resolve(null);
+    }
+  });
+}
+
+async function exportRedactedPdf(exportPages, extract, confirmed = false) {
+  // Freeze the selected pages/ranges before any asynchronous work or pending pointer completion.
+  exportPages = clone(exportPages);
+  const masked = hasRedactions(exportPages);
+  const outputKind = masked ? "墨消し" : "画像化";
+  if (!confirmed && await confirmPdfSave({ rasterize: true, extract, masked }) !== "rasterized") return;
+  const sources = new Map();
+  setBusy(true, `${outputKind}PDFを作成しています…`);
+  try {
+    const bytes = await createRedactedPdf(exportPages, reference => renderRedactionPage(reference, sources),
+      (index, total) => updateStatus(`${outputKind}PDFを作成しています… ${index} / ${total}`));
+    const name = sourceFor(exportPages[0])?.name || "document.pdf";
+    downloadPdfBytes(bytes, `${extract ? "抽出_" : ""}${outputKind}_${name}`);
+    if (!extract) markDocumentSaved();
+    updateStatus(`${outputKind}PDFを保存しました。保存したPDFを開き、墨消し範囲や隠し忘れがないか確認してください。`);
+    showToast(`${outputKind}PDFを保存しました。保存したPDFを開き、墨消し範囲や隠し忘れがないか確認してください。`);
+  } catch (error) {
+    console.error(error);
+    updateStatus(`${outputKind}PDFの保存を中止しました。ファイルは保存していません。`);
+    showToast(error?.message || `${outputKind}PDFの作成に失敗しました。`, true);
+  } finally {
+    for (const doc of sources.values()) {
+      try { await doc.destroy(); } catch (error) { console.warn("墨消し用PDFの解放に失敗しました。", error); }
+    }
+    setBusy(false);
+  }
+}
+
+async function exportPdf(extract = false, rasterize = false) {
   extract = extract === true;
   const exportPages = extract ? selectedPages() : [...state.pages];
   if (
     !exportPages.length ||
-    state.busy
+    state.busy || state.pdfSavePending || $("pdfSaveDialog").open
   ) {
     return;
   }
 
   finishTextEditing();
 
+  // All PDF save paths (including extraction and Ctrl/Command+S) share this guard.
+  if (rasterize === true || hasRedactions(state.pages)) return exportRedactedPdf(exportPages, extract);
+
   if (
     hasCoveringAnnotations(
       exportPages
     )
   ) {
-    const accepted =
-      confirm(
-        "【必読】\nマスキング用途で使用しないでください（データは見えます）\n四角・丸・テキスト・画像・手書きを重ねても、元の文字や画像データはPDF内に残ります。\n個人情報・機密情報の削除や非表示には使用しないでください。\n\nPDFを保存しますか？"
-      );
-
-    if (!accepted) {
-      return;
-    }
+    const choice = await confirmPdfSave({ rasterize: false, extract, masked: false });
+    if (choice === "rasterized") return exportRedactedPdf(exportPages, extract, true);
+    if (choice !== "normal") return;
   }
 
   setBusy(
@@ -5200,6 +5369,8 @@ async function clearDocument() {
     for (const asset of state.images.values()) URL.revokeObjectURL(asset.url);
     state.images.clear();
     state.pages = [];
+    // 初期画面では作業ファイルも選べるよう、選択条件を戻します。
+    els.input.accept = initialFileAccept;
     state.currentPageId = null;
     state.selectedAnnotationId =
       null;
@@ -5247,7 +5418,7 @@ async function clearDocument() {
  */
 
 const PROJECT_COVERING_MESSAGE =
-  "【必読】\n作業ファイルは続きを編集するためのファイルです。配布しないでください。\n四角・丸・テキスト・画像・手書きで覆った部分は、作業ファイルを開いて図形を動かすとそのまま見えます。\n\n作業ファイルを保存しますか？";
+  "【必読】\n作業ファイルは続きを編集するためのファイルです。配布しないでください。\n墨消し範囲を指定していても、元の文字や画像データは作業ファイルに残ります。\n四角・丸・テキスト・画像・手書きで覆った部分は、作業ファイルを開いて図形を動かすとそのまま見えます。\n\n作業ファイルを保存しますか？";
 
 async function saveProjectFile() {
   if (
@@ -5820,6 +5991,7 @@ els.append.addEventListener(
   "click",
   () => {
     if (!state.busy) {
+      els.input.accept = "application/pdf,.pdf";
       els.input.click();
     }
   }
@@ -5847,6 +6019,7 @@ $("selectPdfBtn").addEventListener(
   "click",
   () => {
     if (!state.busy) {
+      els.input.accept = initialFileAccept;
       els.input.click();
     }
   }
@@ -5997,7 +6170,7 @@ els.layer.addEventListener(
         )
       );
     } else if (
-      ["rect", "ellipse", "arrow", "line"].includes(state.tool)
+      ["rect", "ellipse", "arrow", "line", "redact"].includes(state.tool)
     ) {
       beginDrawing(
         event,
@@ -6710,6 +6883,7 @@ document.addEventListener(
  */
 
 setupSaveMenu();
+$("redactionColorInput").addEventListener("change", event => applyRedactionColor(event.target.value));
 
 els.undo.addEventListener(
   "click",
@@ -7505,6 +7679,7 @@ function syncFloatingProperties() {
     image: "画像",
     text: "テキスト",
     rect: "四角",
+    redact: "墨消し範囲",
     ellipse: "丸",
     arrow: "矢印",
     line: "線",
@@ -7516,7 +7691,12 @@ function syncFloatingProperties() {
   $("formatTitle").textContent =
     selected.length > 1 ? `${selected.length}個の図形` : (a?.stamp ? "スタンプ" : labels[type]) + "の設定";
   const mixed = selected.length > 1;
-  panel.querySelector(".property-controls").classList.toggle("hidden", mixed || type === "select" || type === "image");
+  const allRedactions = selected.length ? selected.every(a => a.type === "redact") : type === "redact";
+  $("redactionColorField").hidden = !allRedactions;
+  const maskColors = new Set(selected.map(a => a.type === "redact" ? redactionColor(a) : null));
+  $("redactionColorInput").value = maskColors.size > 1 ? "" : a?.type === "redact" ? redactionColor(a) : state.redactionColor;
+  $("redactionColorInput").disabled = state.busy;
+  panel.querySelector(".property-controls").classList.toggle("hidden", mixed || type === "select" || type === "image" || type === "redact");
   $("inkTouchControls").hidden = !["ink", "ink-eraser"].includes(state.tool);
   $("inkTouchInput").checked = state.inkTouch;
   $("inkTouchInput").disabled = state.busy;
@@ -7554,6 +7734,8 @@ function syncFloatingProperties() {
   $("canvasHint").textContent =
     ["ink", "ink-eraser"].includes(state.tool)
       ? `${state.tool === "ink" ? "ドラッグして手書き" : "なぞった手書きを1本ずつ消去"}。指でスクロールするには「選択」へ切替（Esc）`
+      : state.tool === "redact"
+      ? "ドラッグして墨消し範囲を追加。選択で移動・サイズ変更、Deleteで削除。保存後のPDFで確認してください。"
       : state.tool === "highlight"
       ? state.textReady
         ? "PDFの文字をドラッグして選択してください。"
@@ -7571,12 +7753,18 @@ function svgNode(name, attrs = {}) {
   for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, String(value));
   return node;
 }
-// The header save button opens a menu so PDF and the work file are chosen by visible text.
+// Ordinary PDF, image-only PDF and the work file are separate visible choices.
 function saveMenuItems() {
   return [...$("saveMenu").querySelectorAll('[role="menuitem"]')].filter(item => !item.disabled);
 }
+function syncPdfSaveOptions() {
+  const guarded = state.pages.some(page => page.annotations?.some(a => a.type === "redact"));
+  $("savePdfMenuItem").disabled = state.busy || !state.pages.length || guarded;
+  $("savePdfGuardNote").hidden = !guarded;
+}
 function openSaveMenu(focus = "first") {
   if (state.busy || els.save.disabled) return;
+  syncPdfSaveOptions();
   $("saveMenu").hidden = false;
   els.save.setAttribute("aria-expanded", "true");
   const items = saveMenuItems();
@@ -7600,7 +7788,8 @@ function setupSaveMenu() {
     event.stopPropagation();
     openSaveMenu(event.key === "ArrowUp" ? "last" : "first");
   });
-  for (const [id, action] of [["savePdfMenuItem", exportPdf], ["saveProjectBtn", saveProjectFile]]) {
+  for (const [id, action] of [["savePdfMenuItem", exportPdf],
+    ["saveRedactedPdfMenuItem", () => exportPdf(false, true)], ["saveProjectBtn", saveProjectFile]]) {
     $(id).addEventListener("click", () => {
       // Hide the menu and return focus first so no hidden item keeps focus during the save.
       closeSaveMenu({ restoreFocus: true });
@@ -8303,6 +8492,7 @@ function setupStamping() {
 
 function renderFigures() {
   const page = currentPage();
+  const redactionOverlays = [];
   els.layer.replaceChildren();
   if (!page) {
     syncToolProperties();
@@ -8358,6 +8548,15 @@ function renderFigures() {
       if (a.points.length === 1) el.append(svgNode("circle", { cx: a.points[0].x, cy: a.points[0].y, r: a.strokeWidth / 2, fill: a.color }));
       else el.append(svgNode("path", { d: inkPath(a.points), fill: "none", stroke: a.color,
         "stroke-width": a.strokeWidth, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+    } else if (a.type === "redact") {
+      el = document.createElement("div");
+      el.className = "ann ann-redact";
+      el.dataset.redactionColor = redactionColor(a) === "#ffffff" ? "white" : "black";
+      redactionOverlays.push(el);
+      el.setAttribute("role", "group");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", `${redactionColor(a) === "#ffffff" ? "白" : "黒"}の墨消し範囲（Enterで選択・矢印キーで移動）`);
+      el.addEventListener("keydown", event => moveInkByKey(event, a));
     } else if (["rect", "ellipse"].includes(a.type)) {
       el = document.createElement("div");
       el.className = `ann ann-${a.type}`;
@@ -8420,13 +8619,22 @@ function renderFigures() {
       });
     }
     if (!el) continue;
-    if (!isLine(a) && a.type !== "ink")
+    if (!isLine(a) && a.type !== "ink") {
+      let box = b;
+      if (a.type === "text") {
+        const placement = imagePlacement(a, 0), rotation = placement.rotation;
+        el.dataset.rotation = String(rotation);
+        box = { x: b.x + ([90, 180].includes(rotation) ? b.w : 0),
+          y: b.y + ([180, 270].includes(rotation) ? b.h : 0),
+          w: placement.width, h: placement.height };
+      }
       Object.assign(el.style, {
-        left: `${b.x * scale}px`,
-        top: `${b.y * scale}px`,
-        width: `${b.w * scale}px`,
-        height: `${b.h * scale}px`,
+        left: `${box.x * scale}px`,
+        top: `${box.y * scale}px`,
+        width: `${box.w * scale}px`,
+        height: `${box.h * scale}px`,
       });
+    }
     el.dataset.annId = a.id;
     if (selection.has(a.id)) {
       el.classList.add("selected");
@@ -8476,6 +8684,8 @@ function renderFigures() {
   }
   const number = resolvedPageNumber(page);
   if (number) els.layer.append(pageNumberOverlay(page, number));
+  // Masks always cover ordinary edits in both preview and output, regardless of figure order.
+  redactionOverlays.forEach(mask => els.layer.append(mask));
   syncToolProperties();
 }
 function inkAccessibility() {
@@ -8826,10 +9036,10 @@ function addTextHighlight() {
 }
 let figureContextTargetId = null;
 function syncFigureOrderControls() {
-  const annotations = currentPage()?.annotations || [],
+  const annotations = currentPage()?.annotations.filter(a => a.type !== "redact") || [],
     selected = selectedFigures(),
     ids = new Set(selected.map((a) => a.id)),
-    inactive = state.busy || state.mode !== "edit" || !selected.length,
+    inactive = state.busy || state.mode !== "edit" || !selected.length || selected.some(a => a.type === "redact"),
     atFront = !annotations.slice(-selected.length).some((a) => !ids.has(a.id)),
     atBack = !annotations.slice(0, selected.length).some((a) => !ids.has(a.id));
   for (const id of ["bringFiguresFrontBtn", "figureContextFrontBtn"])

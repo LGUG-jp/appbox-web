@@ -176,6 +176,10 @@
   function calculateAutoLayout(people, families, options = {}) {
     const startX = options.startX ?? START_X;
     const startY = options.startY ?? START_Y;
+    // 呼び出し元の表示寸法を使う。保存座標やモデルの形式には関与しない。
+    const dimensions = options.getNodeDimensions || (() => ({ width: NODE_W, height: NODE_H }));
+    const nodeWidth = Math.max(...people.map(person => dimensions(person).width), 0);
+    const nodeHeight = Math.max(...people.map(person => dimensions(person).height), 0);
     const peopleById = new Map(
       people.map(person => [person.id, person])
     );
@@ -214,7 +218,7 @@
           normalizedFamilies
         );
         const generationY =
-          startY + generation * (NODE_H + VERTICAL_GAP);
+          startY + generation * (nodeHeight + VERTICAL_GAP);
         let x = startX;
         let hasPlacedGroup = false;
         let previousWasFamilyGroup = false;
@@ -229,13 +233,13 @@
 
           group.ids.forEach((id, index) => {
             positions.set(id, {
-              x: x + index * (NODE_W + HORIZONTAL_GAP),
+              x: x + index * (nodeWidth + HORIZONTAL_GAP),
               y: generationY
             });
           });
 
           x +=
-            group.ids.length * NODE_W +
+            group.ids.length * nodeWidth +
             Math.max(0, group.ids.length - 1) * HORIZONTAL_GAP;
           hasPlacedGroup = true;
           previousWasFamilyGroup = group.isFamilyGroup;
@@ -267,7 +271,7 @@
       connectedMinX = Math.min(connectedMinX, position.x);
       connectedMaxY = Math.max(
         connectedMaxY,
-        position.y + NODE_H
+        position.y + dimensions(person).height
       );
     });
 
@@ -285,8 +289,8 @@
         const column = index % UNCONNECTED_COLUMNS;
         const row = Math.floor(index / UNCONNECTED_COLUMNS);
         positions.set(id, {
-          x: unconnectedStartX + column * (NODE_W + HORIZONTAL_GAP),
-          y: unconnectedStartY + row * (NODE_H + VERTICAL_GAP)
+          x: unconnectedStartX + column * (nodeWidth + HORIZONTAL_GAP),
+          y: unconnectedStartY + row * (nodeHeight + VERTICAL_GAP)
         });
       });
 

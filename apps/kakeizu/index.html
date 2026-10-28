@@ -2,6 +2,8 @@
 <html lang="ja" data-appbox-theme="purple">
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-store, no-cache,must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -9,20 +11,21 @@
   <meta name="color-scheme" content="light">
 
   <title>相続関係図（ジェノグラム）作成ツール | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.3.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.3.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
 
 
 
   <!-- 共通アセット。kakeizu.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.3.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.3.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
 
-  <link rel="stylesheet" href="./kakeizu.css?v=1.3.2">
+  <link rel="stylesheet" href="./kakeizu.css?v=2.2.0">
 </head>
 
 
@@ -31,8 +34,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.3.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.3.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -98,105 +101,111 @@
         </div>
         <h1 class="appbox-app-h1">相続関係図（ジェノグラム）作成ツール</h1>
       </div>
-      <p class="appbox-app-desc">表入力・図上編集・夫婦二重線・固定資産業務に対応</p>
+      <p class="appbox-app-desc">人物と関係をつないで図を作成。相続相談に必要な詳細情報も管理できます。</p>
     </div>
 
     <div class="app-shell">
     <div class="workspace-card appbox-panel--accent">
+      <div class="drawing-toolbar" aria-label="作図ツール">
+        <div class="mode-switch" role="group" aria-label="利用モード">
+          <button type="button" data-ui-mode="drawing" aria-pressed="true" data-kakeizu-click="setUiMode:drawing">簡易モード</button>
+          <button type="button" data-ui-mode="consultation" aria-pressed="false" data-kakeizu-click="setUiMode:consultation" title="相続相談に必要な詳細情報を入力・管理します">詳細モード</button>
+        </div>
+        <span id="uiModeDescription" class="appbox-sr-only">人物・関係・注釈を図上で作成します。</span>
+        <div class="toolbar-group" role="group" aria-label="作図">
+        <button id="addPersonTool" class="creation-tool-button creation-tool-button--primary" type="button" aria-pressed="false" data-kakeizu-click="startPersonTool">＋ 人物追加</button>
+        <details class="tool-menu">
+          <summary>関係</summary>
+          <div class="tool-menu-items">
+            <button class="relation-tool-button" type="button" data-relation-mode="spouse" aria-pressed="false" data-kakeizu-click="startRelationMode:spouse">夫婦関係を作成</button>
+            <button class="relation-tool-button" type="button" data-relation-mode="child1" aria-pressed="false" data-kakeizu-click="startRelationMode:child1">親子関係を作成（親1人を指定）</button>
+            <button class="relation-tool-button" type="button" data-relation-mode="child2" aria-pressed="false" data-kakeizu-click="startRelationMode:child2">親子関係を作成（親2人を指定）</button>
+            <p class="hint relation-model-note">現在は親2人を指定すると夫婦線も作成されます。</p>
+          </div>
+        </details>
+        <button class="annotation-tool-button creation-tool-button" type="button" data-annotation-tool="text" aria-pressed="false" data-kakeizu-click="startAnnotationTool:text"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#text"></use></svg><span>テキスト</span></button>
+        <details class="tool-menu">
+          <summary><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rectangle"></use></svg><span>図形</span></summary>
+          <div class="tool-menu-items">
+            <button class="annotation-tool-button" type="button" data-annotation-tool="rect" aria-pressed="false" data-kakeizu-click="startAnnotationTool:rect" title="四角" aria-label="四角"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rectangle"></use></svg><span>四角</span></button>
+            <button class="annotation-tool-button" type="button" data-annotation-tool="ellipse" aria-pressed="false" data-kakeizu-click="startAnnotationTool:ellipse" title="丸" aria-label="丸"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#ellipse"></use></svg><span>丸</span></button>
+            <button class="annotation-tool-button" type="button" data-annotation-tool="cross" aria-pressed="false" data-kakeizu-click="startAnnotationTool:cross" title="×印" aria-label="×印"><svg class="shape-tool-cross-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 5 14 14M19 5 5 19"></path></svg><span>×印</span></button>
+            <button class="annotation-tool-button" type="button" data-annotation-tool="arrow" aria-pressed="false" data-kakeizu-click="startAnnotationTool:arrow" title="矢印" aria-label="矢印"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#arrow"></use></svg><span>矢印</span></button>
+          </div>
+        </details>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="整理・編集履歴">
+        <details class="tool-menu">
+          <summary>整列</summary>
+          <div class="tool-menu-items">
+            <button type="button" data-kakeizu-click="arrangeSelectedFamily">この人物の家族を整列</button>
+            <button type="button" data-kakeizu-click="arrangeSelectedPeople">選択した人物を整列</button>
+            <button type="button" data-kakeizu-click="arrangeAll">全体を整列</button>
+            <button type="button" data-kakeizu-click="moveChartNearOrigin">図を原点付近へ移動</button>
+          </div>
+        </details>
+        <button id="undoButton" class="icon-button" type="button" data-kakeizu-click="undo" title="元に戻す（Ctrl+Z / Command+Z）" aria-label="元に戻す">
+          <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg>
+        </button>
+        <button id="redoButton" class="icon-button" type="button" data-kakeizu-click="redo" title="やり直し（Ctrl+Y / Command+Shift+Z）" aria-label="やり直し">
+          <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg>
+        </button>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="一括管理">
+        <details class="tool-menu">
+          <summary>一括操作</summary>
+          <div class="tool-menu-items">
+            <button type="button" data-kakeizu-click="openBulkEditModal">一括編集</button>
+            <button type="button" data-kakeizu-click="openKinshipDialog">続柄を自動設定</button>
+            <button type="button" data-kakeizu-click="openRelationListModal">関係一覧・解除</button>
+            <button type="button" data-kakeizu-click="openValidationDialog">図のチェック</button>
+          </div>
+        </details>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="ファイル操作">
+        <details class="tool-menu">
+          <summary><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>保存 / 復元</span></summary>
+          <div class="tool-menu-items">
+            <button type="button" data-kakeizu-click="saveData">保存</button>
+            <button type="button" data-kakeizu-click="restoreData">ファイルを読み込む</button>
+            <button type="button" data-kakeizu-click="downloadPng">画像として出力（PNG）</button>
+            <button type="button" data-kakeizu-click="downloadSvg">SVG形式で出力</button>
+          </div>
+        </details>
+        <button id="openPrintDialogButton" class="tool-button" type="button" data-kakeizu-click="openPrintModal" title="印刷設定・プレビューを開く">
+          <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#print"></use></svg>
+          <span>印刷</span>
+        </button>
+        <button type="button" data-kakeizu-click="openSamplePicker">新規 / サンプル</button>
+        </div>
+        <div id="personSearch" class="person-search">
+          <label class="appbox-sr-only" for="personSearchInput">人物を検索</label>
+          <input id="personSearchInput" type="search" role="combobox" placeholder="人物を検索" autocomplete="off" aria-autocomplete="list" aria-controls="personSearchResults" aria-expanded="false" title="氏名・続柄・人物IDで検索（Ctrl+K / Command+K）">
+          <div id="personSearchPopup" class="person-search-popup" hidden>
+            <p id="personSearchSummary" class="hint" role="status" aria-live="polite"></p>
+            <div id="personSearchResults" role="listbox" aria-label="人物検索結果"></div>
+          </div>
+        </div>
+      </div>
       <div class="app">
 
-        <aside aria-label="相続関係図の編集メニュー">
-          <div class="side-tabs" role="tablist" aria-label="編集メニュー">
-            <button
-              class="side-tab-button active"
-              type="button"
-              role="tab"
-              aria-selected="true"
-              data-side-tab="people"
-              onclick="switchSideTab('people')"
-            >
-              人物
-            </button>
-
-            <button
-              class="side-tab-button"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-side-tab="relation"
-              onclick="switchSideTab('relation')"
-            >
-              関係
-            </button>
-
-            <button
-              class="side-tab-button"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-side-tab="check"
-              onclick="switchSideTab('check')"
-            >
-              整理
-            </button>
-
-            <button
-              class="side-tab-button"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-side-tab="saveprint"
-              onclick="switchSideTab('saveprint')"
-            >
-              保存・印刷
-            </button>
-          </div>
-
-          <div id="sideTab_people" class="side-tab-panel active">
-            <section class="section">
-              <h2>人物一覧</h2>
-
-              <div id="personList" class="person-list"></div>
-
-              <div class="buttons">
-                <button
-                  class="primary"
-                  type="button"
-                  onclick="newPerson()"
-                >
-                  人物を追加
-                </button>
-
-                <button
-                  class="danger"
-                  type="button"
-                  onclick="deleteSelected()"
-                >
-                  選択人物を削除
-                </button>
-              </div>
-            </section>
-
-            <section class="section">
-              <h2>人物情報</h2>
-
-              <p
-                id="personEditorStatus"
-                class="hint person-editor-status"
-                role="status"
-                aria-live="polite"
-              >
-                人物一覧から人物を選択するか、「人物を追加」してください。
-              </p>
-
+        <aside id="selectionSidebar" aria-label="選択対象の詳細" hidden>
+          <section id="selectionPanel" class="section" aria-labelledby="selectionHeading">
+            <div class="selection-panel-heading">
+              <h2 id="selectionHeading">選択対象</h2>
+              <button id="closeSelectionPanel" class="panel-close-button" type="button" aria-label="選択を解除して詳細パネルを閉じる" data-kakeizu-click="closeSelectionPanel">×</button>
+            </div>
+            <p id="selectionStatus" class="hint" role="status" aria-live="polite">人物または図形を選択してください。</p>
+            <div id="relationProperties" hidden>
+              <button class="danger full-button" type="button" data-kakeizu-click="deleteSelectedRelation">選択した関係を解除</button>
+            </div>
+            <div id="personProperties" hidden>
+              <p id="personEditorStatus" class="hint person-editor-status" role="status" aria-live="polite"></p>
               <fieldset
                 id="personEditorFields"
                 class="person-editor-fields"
                 aria-label="選択中の人物情報"
               >
-                <p class="person-management-id" id="personManagementId" hidden>
-                  管理用ID: <code id="idView"></code>
-                </p>
 
               <label for="name">氏名</label>
               <input
@@ -220,6 +229,23 @@
                 placeholder="例: 被相続人、配偶者、長男、長女"
               >
 
+              <label class="check-option" for="deceased">
+                <input id="deceased" type="checkbox" aria-describedby="deathHelp">
+                <span>死亡</span>
+              </label>
+              <label for="death">死亡年月日</label>
+              <input id="death" type="date" max="9999-12-31" aria-describedby="deathHelp">
+              <div id="deathLegacyField" hidden>
+                <label for="deathLegacy">以前の死亡情報・補足</label>
+                <input id="deathLegacy" type="text" aria-describedby="deathHelp">
+              </div>
+              <p id="deathHelp" class="hint">死亡のチェックを外すと、死亡年月日と以前の死亡情報・補足も消去します。「元に戻す」で復元できます。</p>
+
+              <div data-ui-panel="personDetails" hidden>
+              <h3 class="subsection-title">相続相談情報</h3>
+                <p class="person-management-id" id="personManagementId" hidden>
+                  管理用ID: <code id="idView"></code>
+                </p>
               <label for="address">住所</label>
               <input
                 id="address"
@@ -227,21 +253,9 @@
                 placeholder="例: 村山市..."
               >
 
-              <div class="row">
-                <div>
-                  <label for="birth">生年月日</label>
-                  <input id="birth" type="date">
-                </div>
+              <label for="birth">生年月日</label>
+              <input id="birth" type="date" max="9999-12-31">
 
-                <div>
-                  <label for="death">死亡年月日</label>
-                  <input
-                    id="death"
-                    type="text"
-                    placeholder="例: 2024-01-01、不明"
-                  >
-                </div>
-              </div>
 
               <div class="row">
                 <div>
@@ -264,6 +278,7 @@
                 </div>
               </div>
 
+              <h3 class="subsection-title">業務情報</h3>
               <div class="check-list">
                 <label class="check-option" for="representative">
                   <input id="representative" type="checkbox">
@@ -280,640 +295,136 @@
                   <span>納税管理人候補</span>
                 </label>
               </div>
-
-              <div class="buttons">
-                <button
-                  class="primary full-button"
-                  type="button"
-                  onclick="savePersonForm()"
-                >
-                  人物情報を反映
-                </button>
               </div>
+
+              <button class="danger full-button person-delete-button" type="button" data-kakeizu-click="deleteSelected">人物を削除</button>
               </fieldset>
-            </section>
-
-            <section class="section">
-              <h2>一括編集</h2>
-
-              <p class="hint">
-                人物情報、親子・配偶者関係、業務情報を表形式でまとめて編集できます。
-              </p>
-
-              <div class="buttons">
-                <button type="button" onclick="openBulkEditModal()">
-                  一括編集を開く
-                </button>
+            </div>
+            <div id="annotationProperties" hidden>
+              <div id="annotationQuickTextArea">
+                <label for="annotationQuickText">表示テキスト</label>
+                <textarea id="annotationQuickText" maxlength="4000"></textarea>
+                <label for="annotationQuickFontSize">文字サイズ</label>
+                <input id="annotationQuickFontSize" type="number" min="8" max="72">
+                <div class="color-picker-row">
+                  <label id="annotationQuickColorLabel">文字色</label>
+                  <details class="color-picker-menu" data-color-target="annotationQuickColor">
+                    <summary class="color-picker-trigger" aria-labelledby="annotationQuickColorLabel" title="文字色を選択">
+                      <span class="color-preview" id="annotationQuickColorPreview"></span>
+                    </summary>
+                    <div class="color-palette-popover" role="radiogroup" aria-labelledby="annotationQuickColorLabel">
+                      <button type="button" class="color-swatch" data-color="#222222" title="黒" aria-label="黒" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#ffffff" title="白" aria-label="白" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#68707c" title="グレー" aria-label="グレー" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#7557a6" title="紫" aria-label="紫" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#2563a8" title="青" aria-label="青" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#c33f53" title="赤" aria-label="赤" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#228657" title="緑" aria-label="緑" role="radio" aria-checked="false"></button>
+                      <button type="button" class="color-swatch" data-color="#d9730d" title="オレンジ" aria-label="オレンジ" role="radio" aria-checked="false"></button>
+                    </div>
+                  </details>
+                  <input id="annotationQuickColor" type="hidden" value="#222222">
+                </div>
               </div>
-            </section>
-
-            <section class="section">
-              <h2>図形・注釈</h2>
-
-              <p class="hint">
-                テキストは図上をクリックして入力します（Enterで確定、Shift+Enterで改行、Escで取消。入力欄から移動すると確定）。ダブルクリックで再編集できます。
-                四角、丸・楕円、×印、矢印は図上をドラッグして作成します。
-                Shiftキーを押しながらドラッグすると形状や方向を固定できます。
-                人物と重なる注釈はAlt（MacではOption）を押しながら操作します。図形は右クリックで人物の前面・背面を切り替えられます。
-              </p>
-
-              <div class="annotation-tool-grid">
-                <button
-                  class="annotation-tool-button"
-                  type="button"
-                  data-annotation-tool="text"
-                  aria-pressed="false"
-                  onclick="startAnnotationTool('text')"
-                >
-                  テキスト
-                </button>
-
-                <button
-                  class="annotation-tool-button"
-                  type="button"
-                  data-annotation-tool="rect"
-                  aria-pressed="false"
-                  onclick="startAnnotationTool('rect')"
-                >
-                  四角
-                </button>
-
-                <button
-                  class="annotation-tool-button"
-                  type="button"
-                  data-annotation-tool="ellipse"
-                  aria-pressed="false"
-                  onclick="startAnnotationTool('ellipse')"
-                >
-                  丸・楕円
-                </button>
-
-                <button
-                  class="annotation-tool-button"
-                  type="button"
-                  data-annotation-tool="cross"
-                  aria-pressed="false"
-                  onclick="startAnnotationTool('cross')"
-                >
-                  ×印
-                </button>
-
-                <button
-                  class="annotation-tool-button"
-                  type="button"
-                  data-annotation-tool="arrow"
-                  aria-pressed="false"
-                  onclick="startAnnotationTool('arrow')"
-                >
-                  矢印
-                </button>
-
-                <button
-                  class="danger"
-                  type="button"
-                  onclick="cancelAnnotationTool()"
-                >
-                  追加を中止
-                </button>
+              <div class="color-picker-row">
+                <label id="annotationQuickStrokeLabel">線の色</label>
+                <details class="color-picker-menu" data-color-target="annotationQuickStroke">
+                  <summary class="color-picker-trigger" aria-labelledby="annotationQuickStrokeLabel" title="線の色を選択">
+                    <span class="color-preview" id="annotationQuickStrokePreview"></span>
+                  </summary>
+                  <div class="color-palette-popover" role="radiogroup" aria-labelledby="annotationQuickStrokeLabel">
+                    <button type="button" class="color-swatch" data-color="#222222" title="黒" aria-label="黒" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#ffffff" title="白" aria-label="白" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#68707c" title="グレー" aria-label="グレー" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#7557a6" title="紫" aria-label="紫" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#2563a8" title="青" aria-label="青" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#c33f53" title="赤" aria-label="赤" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#228657" title="緑" aria-label="緑" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#d9730d" title="オレンジ" aria-label="オレンジ" role="radio" aria-checked="false"></button>
+                  </div>
+                </details>
+                <input id="annotationQuickStroke" type="hidden" value="#7557a6">
               </div>
-
-              <p
-                id="annotationToolStatus"
-                class="hint annotation-tool-status"
-                role="status"
-                aria-live="polite"
-              >
-                図形追加ツールは未選択です。
-              </p>
-
-              <hr>
-
-              <h3 class="subsection-title">選択した図形の配置</h3>
-
-              <p class="hint">
-                Ctrl、ShiftまたはCommandキーを押しながら図形をクリックすると、
-                複数選択できます。
-              </p>
-
-              <div class="annotation-arrange-grid">
-                <button type="button" onclick="alignSelectedAnnotationsLeft()">
-                  左揃え
-                </button>
-
-                <button type="button" onclick="alignSelectedAnnotationsTop()">
-                  上揃え
-                </button>
-
-                <button type="button" onclick="distributeSelectedAnnotationsHorizontally()">
-                  横に均等配置
-                </button>
-
-                <button type="button" onclick="distributeSelectedAnnotationsVertically()">
-                  縦に均等配置
-                </button>
-
-                <button type="button" onclick="clearAnnotationSelection()">
-                  図形の選択解除
-                </button>
+              <div class="color-picker-row">
+                <label id="annotationQuickFillLabel">背景色</label>
+                <details class="color-picker-menu" data-color-target="annotationQuickFill">
+                  <summary class="color-picker-trigger" aria-labelledby="annotationQuickFillLabel" title="背景色を選択">
+                    <span class="color-preview" id="annotationQuickFillPreview"></span>
+                  </summary>
+                  <div class="color-palette-popover" role="radiogroup" aria-labelledby="annotationQuickFillLabel">
+                    <button id="annotationTextStandardFill" type="button" class="color-swatch" data-color="#fffceb" title="標準色（テキスト・薄い黄）" aria-label="標準色（テキスト・薄い黄）" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#222222" title="黒" aria-label="黒" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#ffffff" title="白" aria-label="白" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#68707c" title="グレー" aria-label="グレー" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#7557a6" title="紫" aria-label="紫" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#2563a8" title="青" aria-label="青" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#c33f53" title="赤" aria-label="赤" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#228657" title="緑" aria-label="緑" role="radio" aria-checked="false"></button>
+                    <button type="button" class="color-swatch" data-color="#d9730d" title="オレンジ" aria-label="オレンジ" role="radio" aria-checked="false"></button>
+                  </div>
+                </details>
+                <input id="annotationQuickFill" type="hidden" value="#ffffff">
               </div>
-            </section>
-
-          </div>
-
-          <div id="sideTab_relation" class="side-tab-panel">
-            <section class="section">
-              <h2>関係を登録</h2>
-
-              <label for="spouseSelect">配偶者にする相手</label>
-              <select id="spouseSelect"></select>
-
-              <div class="buttons">
-                <button type="button" onclick="addSpouse()">
-                  夫婦関係を追加
-                </button>
-              </div>
-
-              <hr>
-
-              <label for="childSelect">子</label>
-              <select id="childSelect"></select>
-
-              <label for="otherParentSelect">もう一方の親（任意）</label>
-              <select id="otherParentSelect"></select>
-
-              <div class="buttons">
-                <button type="button" onclick="addChild()">
-                  子を追加
-                </button>
-              </div>
-
-              <p class="hint">
-                子の登録は、選択中の人物を親1として扱います。<br>
-                夫婦を指定すると、夫婦の中央から子へ線を引きます。
-              </p>
-            </section>
-
-            <section class="section">
-              <h2>図上で関係作成</h2>
-
-              <div class="buttons vertical-buttons relation-tool-buttons">
-                <button
-                  id="relationToolSpouse"
-                  class="relation-tool-button"
-                  type="button"
-                  data-relation-mode="spouse"
-                  aria-pressed="false"
-                  onclick="startRelationMode('spouse')"
-                >
-                  夫婦関係を作成
-                </button>
-
-                <button
-                  id="relationToolChild1"
-                  class="relation-tool-button"
-                  type="button"
-                  data-relation-mode="child1"
-                  aria-pressed="false"
-                  onclick="startRelationMode('child1')"
-                >
-                  親子関係を作成（1親）
-                </button>
-
-                <button
-                  id="relationToolChild2"
-                  class="relation-tool-button"
-                  type="button"
-                  data-relation-mode="child2"
-                  aria-pressed="false"
-                  onclick="startRelationMode('child2')"
-                >
-                  親子関係を作成（2親）
-                </button>
-
-                <button
-                  class="danger"
-                  type="button"
-                  onclick="cancelRelationMode()"
-                >
-                  関係作成を中止
-                </button>
-              </div>
-
-              <p
-                id="relationModeStatus"
-                class="hint relation-mode-status"
-                role="status"
-                aria-live="polite"
-              >
-                関係作成モードは未選択です。
-              </p>
-            </section>
-
-            <section class="section">
-              <h2>関係の確認・解除</h2>
-
-              <p class="hint">
-                登録済みの夫婦関係・親子関係を一覧で確認し、必要に応じて解除できます。
-              </p>
-
-              <div class="buttons">
-                <button type="button" onclick="openRelationListModal()">
-                  関係一覧を開く
-                </button>
-              </div>
-            </section>
-          </div>
-
-          <div id="sideTab_check" class="side-tab-panel">
-            <section class="section">
-              <h2>関係チェック</h2>
-
-              <p class="hint">
-                登録されている人物・夫婦・親子関係に矛盾がないか確認します。<br>
-                エラーは修正推奨、警告・注意は内容確認が必要な項目です。
-              </p>
-
-              <div class="buttons">
-                <button
-                  class="primary"
-                  type="button"
-                  onclick="validateDataAndShow()"
-                >
-                  関係チェックを実行
-                </button>
-
-                <button
-                  type="button"
-                  onclick="clearValidationResult()"
-                >
-                  チェック結果を消去
-                </button>
-              </div>
-
-              <div
-                id="validationSummary"
-                class="hint validation-summary"
-                role="status"
-                aria-live="polite"
-              ></div>
-
-              <div
-                id="validationResult"
-                class="validation-result"
-              ></div>
-            </section>
-
-            <section class="section">
-              <h2>配置</h2>
-
-              <div class="buttons vertical-buttons">
-                <button
-                  type="button"
-                  onclick="arrangeSelectedFamily()"
-                >
-                  選択人物の家族を整列
-                </button>
-
-                <button
-                  type="button"
-                  onclick="arrangeSelectedPeople()"
-                >
-                  選択した人物を整列
-                </button>
-
-                <button
-                  type="button"
-                  onclick="arrangeAll()"
-                >
-                  全体を自動整列
-                </button>
-              </div>
-
-              <p class="hint">
-                「選択人物の家族を整列」は、選択人物が所属する家族だけを整えます。<br>
-                「選択した人物を整列」は、2人以上を選択してその範囲だけを整えます。<br>
-                「全体を自動整列」は、人物を世代ごとに原点付近へ並べ、
-                関係のない人物を図の下へ配置します。<br>
-                人物の近くに置いた図形・注釈は、整列後も可能な範囲で追従します。
-              </p>
-            </section>
-          </div>
-
-          <div id="sideTab_saveprint" class="side-tab-panel">
-            <section class="section">
-              <h2>保存・復元</h2>
-
-              <div class="buttons">
-                <button
-                  class="primary"
-                  type="button"
-                  onclick="saveData()"
-                >
-                  データを保存
-                </button>
-
-                <button type="button" onclick="restoreData()">
-                  データを復元
-                </button>
-
-                <button
-                  class="danger"
-                  type="button"
-                  onclick="clearAll()"
-                >
-                  全消去
-                </button>
-              </div>
-
-              <input
-                id="jsonFileInput"
-                type="file"
-                accept=".json,application/json"
-                hidden
-                onchange="handleJsonFile(event)"
-              >
-
-              <p class="hint warning-hint">
-                現在の相続関係図はJSONファイルとして保存・復元できます。<br>
-                個人情報を含むため、保存先・共有先には注意してください。
-              </p>
-
-              <hr>
-
-              <h3 class="subsection-title">自動保存</h3>
-
-              <label class="check-option" for="autoSaveEnabled">
-                <input
-                  id="autoSaveEnabled"
-                  type="checkbox"
-                  onchange="toggleAutoSave()"
-                >
-                <span>自動保存を有効にする</span>
+              <label class="check-option" for="annotationQuickNoFill">
+                <input id="annotationQuickNoFill" type="checkbox">背景を透明にする
               </label>
-
-              <div
-                id="autoSaveStatus"
-                class="hint autosave-status"
-                role="status"
-                aria-live="polite"
-              >
-                自動保存: OFF
-              </div>
-
-              <div class="buttons">
-                <button
-                  type="button"
-                  onclick="restoreAutoSaveManually()"
-                >
-                  自動保存から復元
-                </button>
-
-                <button
-                  class="danger"
-                  type="button"
-                  onclick="deleteAutoSaveBackup()"
-                >
-                  自動保存データを削除
-                </button>
-              </div>
-
-              <p class="hint warning-hint">
-                自動保存を有効にすると、作業中のデータがこの端末のブラウザ内に一時保存されます。共用端末では使用に注意してください。
-              </p>
-            </section>
-
-            <section class="section">
-              <h2>全体メモ</h2>
-
-              <p class="hint">
-                家系図全体に関するメモを入力できます。保存データに含まれ、印刷時は4行目まで印刷できます。
-              </p>
-
-              <textarea
-                id="chartMemo"
-                maxlength="10000"
-                placeholder="例: 戸籍確認中、相続放棄申述受理通知書確認予定など"
-                oninput="updateChartMemoFromInput()"
-              ></textarea>
-            </section>
-
-            <section class="section">
-              <h2>印刷設定・出力</h2>
-
-              <label for="printTitle">印刷タイトル</label>
-              <input
-                id="printTitle"
-                type="text"
-                value="相続関係図"
-              >
-
-              <label for="printSubject">被相続人・対象者名</label>
-              <input
-                id="printSubject"
-                type="text"
-                placeholder="例: 被相続人 山田 太郎"
-              >
-
+              <label for="annotationQuickStrokeWidth">線の太さ</label>
+              <input id="annotationQuickStrokeWidth" type="number" min="1" max="12">
               <div class="row">
-                <div>
-                  <label for="printPaper">用紙</label>
-                  <select id="printPaper">
-                    <option value="a4-landscape">A4 横</option>
-                    <option value="a4-portrait">A4 縦</option>
-                    <option value="a3-landscape">A3 横</option>
-                    <option value="a3-portrait">A3 縦</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="printMarginMm">余白（mm）</label>
-                  <input
-                    id="printMarginMm"
-                    type="number"
-                    value="8"
-                    min="0"
-                    max="30"
-                  >
-                </div>
+                <div><label for="annotationQuickWidth">幅</label><input id="annotationQuickWidth" type="number" min="0" max="1000000" step="any"></div>
+                <div><label for="annotationQuickHeight">高さ</label><input id="annotationQuickHeight" type="number" min="0" max="1000000" step="any"></div>
               </div>
-
-              <div class="row">
-                <div>
-                  <label for="printTarget">印刷対象</label>
-                  <select id="printTarget">
-                    <option value="all">図全体</option>
-                    <option value="selected">選択人物のみ</option>
-                    <option value="current">現在の表示範囲</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="printScalePercent">印刷倍率（%）</label>
-                  <input
-                    id="printScalePercent"
-                    type="number"
-                    value="100"
-                    min="50"
-                    max="250"
-                  >
-                </div>
-              </div>
-
-              <div class="check-list">
-                <label class="check-option" for="printShowLegend">
-                  <input
-                    id="printShowLegend"
-                    type="checkbox"
-                    checked
-                  >
-                  <span>凡例を印刷する</span>
-                </label>
-
-                <label class="check-option" for="printShowMemo">
-                  <input
-                    id="printShowMemo"
-                    type="checkbox"
-                    checked
-                  >
-                  <span>メモ欄を印刷する</span>
-                </label>
-
-                <label class="check-option" for="printAutoFit">
-                  <input
-                    id="printAutoFit"
-                    type="checkbox"
-                    checked
-                  >
-                  <span>印刷時に図全体を自動で収める</span>
-                </label>
-              </div>
-
               <div class="buttons">
-                <button type="button" onclick="downloadSvg()">
-                  SVG出力
-                </button>
-
-                <button
-                  class="primary"
-                  type="button"
-                  onclick="printChart()"
-                >
-                  印刷
-                </button>
+                <button type="button" data-kakeizu-click="bringSelectedAnnotationToFront">最前面</button>
+                <button type="button" data-kakeizu-click="sendSelectedAnnotationToBack">最背面</button>
+                <button id="annotationQuickPersonFront" type="button" data-kakeizu-click="setSelectedAnnotationPersonLayer:front">人物の前面</button>
+                <button id="annotationQuickPersonBack" type="button" data-kakeizu-click="setSelectedAnnotationPersonLayer:back">人物の背面</button>
+                <button class="danger" type="button" data-kakeizu-click="deleteSelectedAnnotation">図形を削除</button>
               </div>
-
-              <p class="hint">
-                印刷時は編集画面を非表示にし、図・タイトル・凡例・メモ欄だけを出力します。必要に応じて印刷画面の「背景のグラフィック」を有効にしてください。
-              </p>
-            </section>
-          </div>
+            </div>
+            <div id="multipleProperties" hidden>
+              <div id="multiplePeopleActions" class="buttons" hidden>
+                <button type="button" data-kakeizu-click="arrangeSelectedPeople">選択した人物を整列</button>
+              </div>
+              <div id="multipleAnnotationActions" class="annotation-arrange-grid" hidden>
+                <button type="button" data-kakeizu-click="alignSelectedAnnotationsLeft">左揃え</button>
+                <button type="button" data-kakeizu-click="alignSelectedAnnotationsTop">上揃え</button>
+                <button type="button" data-kakeizu-click="distributeSelectedAnnotationsHorizontally">横に均等配置</button>
+                <button type="button" data-kakeizu-click="distributeSelectedAnnotationsVertically">縦に均等配置</button>
+                <button class="danger" type="button" data-kakeizu-click="deleteSelectedAnnotation">選択図形を削除</button>
+              </div>
+              <button type="button" data-kakeizu-click="clearSelectionAndRender">選択解除</button>
+            </div>
+          </section>
         </aside>
 
-        <div
-          id="paneResizer"
-          title="ドラッグしてメニュー幅を変更"
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="メニュー幅を変更"
-        ></div>
 
         <section class="canvas-panel" aria-label="相続関係図の作図領域">
-          <div class="canvas-topbar">
-            <div class="canvas-heading">
-              <div>
-                <span class="canvas-kicker">CHART</span>
-                <strong>相続関係図</strong>
-              </div>
-
-              <span class="canvas-guide">
-                背景ドラッグで移動、Shift+背景ドラッグで人物を範囲選択、<span class="canvas-guide-emphasis">人物右クリックで親族追加</span>
-              </span>
+          <div class="viewport-controls" role="group" aria-label="表示操作">
+            <button class="icon-button" type="button" data-kakeizu-click="zoomOut" title="縮小" aria-label="縮小"><span aria-hidden="true">−</span></button>
+            <button id="zoomLevel" class="zoom-level-button" type="button" data-kakeizu-click="resetView" title="表示を初期位置・100%に戻す" aria-label="表示倍率。クリックで初期位置・100%に戻す">100%</button>
+            <button class="icon-button" type="button" data-kakeizu-click="zoomIn" title="拡大" aria-label="拡大"><span aria-hidden="true">＋</span></button>
+            <button class="icon-button" type="button" data-kakeizu-click="fitAll" title="全体表示" aria-label="全体表示">
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#fit-screen"></use></svg>
+            </button>
+          </div>
+          <div id="canvasFirstHint" class="canvas-first-hint" hidden>
+            <span>人物クリックで編集 · 親族追加は［•••］／右クリック</span>
+            <button id="dismissCanvasHint" type="button" aria-label="操作ヒントを閉じる" data-kakeizu-click="dismissCanvasHint">×</button>
+          </div>
+          <div id="canvasModeBanner" class="canvas-mode-banner" role="status" aria-live="polite" hidden>
+            <div class="canvas-mode-message">
+              <span id="canvasModeStep" class="canvas-mode-step" aria-hidden="true"></span>
+              <span id="canvasModeTitle" class="appbox-sr-only"></span>
+              <span id="canvasModeText"></span>
             </div>
-
-            <div class="toolbar" aria-label="作図領域の操作">
-              <button class="small" type="button" onclick="undo()">
-                元に戻す
-              </button>
-
-              <button class="small" type="button" onclick="redo()">
-                やり直し
-              </button>
-
-              <button class="small" type="button" onclick="zoomIn()">
-                拡大
-              </button>
-
-              <button class="small" type="button" onclick="zoomOut()">
-                縮小
-              </button>
-
-              <button class="small" type="button" onclick="fitAll()">
-                全体表示
-              </button>
-
-              <button class="small" type="button" onclick="focusSelected()">
-                選択へ移動
-              </button>
-              <button class="small" type="button" onclick="resetView()">
-                表示リセット
-              </button>
-              <button class="small" type="button" onclick="moveChartNearOrigin()">
-                図を原点付近へ移動
-              </button>
-              <button class="small" type="button" onclick="clearSelectionAndRender()">
-                選択解除
-              </button>
-            </div>
-
-            <div
-              id="canvasModeBanner"
-              class="canvas-mode-banner"
-              role="status"
-              aria-live="polite"
-              hidden
-            >
-              <div class="canvas-mode-message">
-                <span id="canvasModeStep" class="canvas-mode-step"></span>
-                <strong id="canvasModeTitle"></strong>
-                <span id="canvasModeText"></span>
-              </div>
-
-              <button
-                class="canvas-mode-cancel"
-                type="button"
-                onclick="cancelRelationMode()"
-              >
-                中止
-              </button>
-            </div>
-
+            <button id="cancelCanvasTool" class="canvas-mode-cancel" type="button" data-kakeizu-click="cancelCanvasTool" aria-label="操作モードを中止（Esc）" hidden>×</button>
           </div>
 
-          <div id="printPageHeader" class="appbox-print-only">
-            <div>
-              <div id="printHeaderTitle" class="print-title">
-                相続関係図
-              </div>
-              <div id="printHeaderSubject" class="print-subtitle"></div>
-            </div>
-
-            <div id="printHeaderMeta" class="print-meta"></div>
-          </div>
-
-          <div id="printLegend" class="appbox-print-only">
-            <span class="legend-box gender-male"></span>男性
-            <span class="legend-box gender-female"></span>女性
-            <span class="legend-box deceased"></span>死亡
-            <span class="legend-box renounced"></span>相続放棄済
-            <span class="legend-box representative"></span>代表相続人
-            <span class="legend-box taxpayer"></span>納税義務者候補
-            <span class="legend-line spouse"></span>夫婦関係
-            <span class="legend-line child"></span>親子関係
-          </div>
 
           <svg
             id="canvas"
-            role="img"
+            role="group"
             tabindex="0"
             aria-label="相続関係図の編集キャンバス"
             aria-describedby="canvasKeyboardHelp"
@@ -933,6 +444,9 @@
           </div>
 
           <p id="canvasKeyboardHelp" class="appbox-sr-only">
+            人物は左クリックまたはタップで選択し、詳細パネルで情報を編集します。
+            親や子の追加は人物右上の操作メニューボタン、または右クリックから行えます。
+            人物を5px以上ドラッグすると移動します。タッチでも同じ操作ができます。
             人物はShiftキーを押しながら背景をドラッグすると範囲選択できます。
             人物または図形はCtrlキー、Shiftキー、Commandキーを押しながら
             クリックすると複数選択できます。
@@ -940,20 +454,143 @@
             Ctrl+Zで元に戻すことができます。
           </p>
 
-          <div id="printMemoBox" class="appbox-print-only">
-            <div class="memo-title">メモ</div>
-            <div id="printMemoContent" class="memo-content"></div>
-            <div id="printMemoLines" class="memo-lines"></div>
-          </div>
         </section>
       </div>
     </div>
   </div>
 
   <footer class="appbox-footer">
-    共創アプリBOX / 相続関係図（ジェノグラム）作成ツール Version 1.3.3
+    共創アプリBOX / 相続関係図（ジェノグラム）作成ツール Version 2.2.0
   </footer>
 </main>
+
+  <input
+    id="jsonFileInput"
+    type="file"
+    accept=".json,application/json"
+    hidden
+    data-kakeizu-change="handleJsonFile"
+  >
+  <textarea id="chartMemo" maxlength="10000" hidden data-kakeizu-input="updateChartMemoFromInput"></textarea>
+
+  <dialog id="validationDialog" class="workspace-dialog" aria-labelledby="validationTitle">
+    <div class="dialog-heading">
+      <h2 id="validationTitle">図のチェック</h2>
+      <button type="button" data-kakeizu-click="closeValidationDialog">閉じる</button>
+    </div>
+    <p class="hint">
+      登録されている人物・夫婦・親子関係に矛盾がないか確認します。<br>
+      エラーは修正推奨、警告・注意は内容確認が必要な項目です。
+    </p>
+    <div class="buttons">
+      <button class="primary" type="button" data-kakeizu-click="validateDataAndShow">図のチェックを実行</button>
+      <button type="button" data-kakeizu-click="clearValidationResult">チェック結果を消去</button>
+    </div>
+    <div id="validationSummary" class="hint validation-summary" role="status" aria-live="polite"></div>
+    <div id="validationResult" class="validation-result"></div>
+  </dialog>
+
+  <dialog id="printDialog" class="workspace-dialog print-dialog" aria-labelledby="printDialogTitle">
+    <div class="dialog-heading">
+      <h2 id="printDialogTitle">印刷設定・プレビュー</h2>
+      <button type="button" data-kakeizu-click="closePrintModal">閉じる</button>
+    </div>
+    <div class="print-dialog__body">
+      <div class="print-dialog__settings">
+        <h3 class="subsection-title">印刷設定</h3>
+        <label for="printTitle">印刷タイトル</label>
+        <input id="printTitle" type="text" value="相続関係図">
+
+        <div class="print-settings-row">
+          <div>
+            <label for="printOrientation">用紙の向き</label>
+            <select id="printOrientation">
+              <option value="landscape">横（A4）</option>
+              <option value="portrait">縦（A4）</option>
+            </select>
+          </div>
+          <div>
+            <label for="printTarget">印刷する範囲</label>
+            <select id="printTarget">
+              <option value="all">図全体</option>
+              <option value="viewport">現在の表示範囲</option>
+            </select>
+          </div>
+        </div>
+        <div class="print-settings-row">
+          <div>
+            <label for="printScalePercent">倍率（%）</label>
+            <input id="printScalePercent" type="number" min="10" max="400" step="1" value="100" required aria-describedby="printScaleHint">
+          </div>
+          <div>
+            <label for="printMarginMm">余白（mm）</label>
+            <input id="printMarginMm" type="number" value="8" min="0" max="30" required>
+          </div>
+        </div>
+        <p id="printScaleHint" class="hint">対象範囲が収まる倍率を100%とします（10～400%）。100%を超えると一部が用紙外になる場合があります。</p>
+
+        <label class="check-option" for="printShowLegend">
+          <input id="printShowLegend" type="checkbox">
+          <span>凡例を表示する</span>
+        </label>
+      </div>
+
+      <div class="print-dialog__preview-pane">
+        <h3 class="subsection-title">印刷プレビュー</h3>
+        <div id="printPreviewContainer" class="print-preview-container">
+          <div id="printPreviewSheet" class="print-sheet">
+            <div class="print-sheet__header">
+              <div id="printPreviewTitle" class="print-sheet__title">相続関係図</div>
+              <div id="printPreviewMeta" class="print-sheet__meta"></div>
+            </div>
+            <div id="printPreviewSvgWrap" class="print-sheet__chart"></div>
+            <div id="printPreviewLegend" class="print-sheet__legend" hidden>
+              <span><span class="legend-box gender-male"></span>男性</span>
+              <span><span class="legend-box gender-female"></span>女性</span>
+              <span><span class="legend-box deceased"></span>死亡</span>
+              <span><span class="legend-box renounced"></span>相続放棄済</span>
+              <span><span class="legend-box representative"></span>代表相続人</span>
+              <span><span class="legend-box taxpayer"></span>納税義務者候補</span>
+              <span><span class="legend-line spouse"></span>夫婦関係</span>
+              <span><span class="legend-line child"></span>親子関係</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="buttons print-dialog__footer">
+      <button type="button" data-kakeizu-click="closePrintModal">キャンセル</button>
+      <button class="primary" type="button" data-kakeizu-click="executePrint">印刷する</button>
+    </div>
+  </dialog>
+
+  <div id="printOutputHost" aria-hidden="true"></div>
+
+  <dialog id="legacyMigrationDialog" class="workspace-dialog" aria-labelledby="legacyMigrationTitle">
+    <div class="dialog-heading">
+      <h2 id="legacyMigrationTitle">旧自動保存データの移行</h2>
+      <button type="button" data-kakeizu-click="closeLegacyMigrationDialog">閉じる</button>
+    </div>
+    <div id="legacyAutoSaveMigration" hidden>
+      <p class="hint warning-hint">
+        以前のバージョンでブラウザ内に保存されたデータが見つかりました。<br>
+        必要なら復元してファイルに保存してください。不要になったら削除できます。
+      </p>
+      <p id="legacyAutoSaveDetails" class="hint"></p>
+      <div class="buttons">
+        <button class="primary" type="button" data-kakeizu-click="restoreLegacyAutoSaveManually">旧データを復元</button>
+        <button class="danger" type="button" data-kakeizu-click="deleteLegacyAutoSaveBackup">旧データを削除</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="sampleDialog" class="workspace-dialog" aria-labelledby="sampleTitle">
+    <div class="dialog-heading">
+      <h2 id="sampleTitle">新規 / サンプル</h2>
+      <button type="button" data-kakeizu-click="closeSamplePicker">閉じる</button>
+    </div>
+    <p class="hint">空白・基本の3世代・夫婦と子・ひとり親・子のいない夫婦と双方の親兄弟・兄弟姉妹と甥姪・死亡した親を含む家族・再婚・4世代から選べます。氏名・家族構成・出生順はすべて架空です。現在の図を置き換えるため、必要なデータは先にJSON保存してください。</p>
+    <div id="sampleCards" class="sample-cards"></div>
+  </dialog>
 
   <div id="nodeContextMenu" class="custom-menu" role="menu">
     <div id="nodeContextMenuTitle" class="menu-title">
@@ -965,7 +602,7 @@
     <button
       class="menu-add-button"
       type="button"
-      onclick="nodeMenuAddNewSpouse()"
+      data-kakeizu-click="nodeMenuAddNewSpouse"
     >
       ＋ 配偶者を新規追加
     </button>
@@ -973,7 +610,7 @@
     <button
       class="menu-add-button"
       type="button"
-      onclick="nodeMenuAddNewParent()"
+      data-kakeizu-click="nodeMenuAddNewParent"
     >
       ＋ 親を新規追加
     </button>
@@ -981,7 +618,7 @@
     <button
       class="menu-add-button"
       type="button"
-      onclick="nodeMenuAddNewChild()"
+      data-kakeizu-click="nodeMenuAddNewChild"
     >
       ＋ 子を新規追加
     </button>
@@ -989,44 +626,33 @@
     <div class="menu-separator"></div>
     <div class="menu-group-label">既存人物との関係</div>
 
-    <button type="button" onclick="nodeMenuStartSpouse()">
+    <button type="button" data-kakeizu-click="nodeMenuStartSpouse">
       既存人物と夫婦関係を作成
     </button>
 
-    <button type="button" onclick="nodeMenuStartChild1()">
-      この人物を親にして親子関係を作成（1親）
+    <button type="button" data-kakeizu-click="nodeMenuStartChild1">
+      この人物を親にして親子関係を作成（親1人を指定）
     </button>
 
-    <button type="button" onclick="nodeMenuStartChild2()">
-      この人物を親1にして親子関係を作成（2親）
-    </button>
-
-    <div class="menu-separator"></div>
-    <div class="menu-group-label">人物操作</div>
-
-    <button type="button" onclick="nodeMenuSelect()">
-      この人物を選択
-    </button>
-
-    <button type="button" onclick="nodeMenuFocus()">
-      この人物へ移動
+    <button type="button" data-kakeizu-click="nodeMenuStartChild2">
+      この人物を親の1人にして親子関係を作成（親2人を指定）
     </button>
 
     <div class="menu-separator"></div>
     <div class="menu-group-label">関係の解除</div>
 
-    <button type="button" onclick="nodeMenuDetachAsChild()">
+    <button type="button" data-kakeizu-click="nodeMenuDetachAsChild">
       この人物を子関係から外す
     </button>
 
-    <button type="button" onclick="nodeMenuDetachAsParent()">
+    <button type="button" data-kakeizu-click="nodeMenuDetachAsParent">
       この人物を親・配偶者関係から外す
     </button>
 
     <button
       class="danger"
       type="button"
-      onclick="nodeMenuDetachAllRelations()"
+      data-kakeizu-click="nodeMenuDetachAllRelations"
     >
       この人物の全関係を解除
     </button>
@@ -1036,7 +662,7 @@
     <button
       class="danger"
       type="button"
-      onclick="nodeMenuDeletePerson()"
+      data-kakeizu-click="nodeMenuDeletePerson"
     >
       この人物を削除
     </button>
@@ -1047,24 +673,24 @@
     図形・注釈メニュー
   </div>
 
-  <button type="button" onclick="openAnnotationEditModal()">
+  <button type="button" data-kakeizu-click="focusAnnotationProperties">
     内容・表示を編集
   </button>
 
   <div class="menu-separator"></div>
   <div class="menu-group-label">コピー</div>
 
-  <button type="button" onclick="copySelectedAnnotation()">
+  <button type="button" data-kakeizu-click="copySelectedAnnotation">
     コピー
     <span class="menu-shortcut">Ctrl+C</span>
   </button>
 
-  <button type="button" onclick="pasteAnnotation()">
+  <button type="button" data-kakeizu-click="pasteAnnotation">
     貼り付け
     <span class="menu-shortcut">Ctrl+V</span>
   </button>
 
-  <button type="button" onclick="duplicateSelectedAnnotation()">
+  <button type="button" data-kakeizu-click="duplicateSelectedAnnotation">
     複製
     <span class="menu-shortcut">Ctrl+D</span>
   </button>
@@ -1072,36 +698,36 @@
   <div class="menu-separator"></div>
   <div class="menu-group-label">重なり順</div>
 
-  <button type="button" onclick="moveSelectedAnnotationForward()">
+  <button type="button" data-kakeizu-click="moveSelectedAnnotationForward">
     1段前面へ
     <span class="menu-shortcut">]</span>
   </button>
 
-  <button type="button" onclick="moveSelectedAnnotationBackward()">
+  <button type="button" data-kakeizu-click="moveSelectedAnnotationBackward">
     1段背面へ
     <span class="menu-shortcut">[</span>
   </button>
 
-  <button type="button" onclick="bringSelectedAnnotationToFront()">
+  <button type="button" data-kakeizu-click="bringSelectedAnnotationToFront">
     最前面へ移動
   </button>
 
-  <button type="button" onclick="sendSelectedAnnotationToBack()">
+  <button type="button" data-kakeizu-click="sendSelectedAnnotationToBack">
     最背面へ移動
   </button>
 
   <div class="menu-group-label">人物との重なり（図形のみ）</div>
-  <button id="annotationBehindPeople" type="button" onclick="setSelectedAnnotationPersonLayer('back')">
+  <button id="annotationBehindPeople" type="button" data-kakeizu-click="setSelectedAnnotationPersonLayer:back">
     人物の背面へ移動
   </button>
-  <button id="annotationInFrontOfPeople" type="button" onclick="setSelectedAnnotationPersonLayer('front')">
+  <button id="annotationInFrontOfPeople" type="button" data-kakeizu-click="setSelectedAnnotationPersonLayer:front">
     人物の前面へ移動
   </button>
 
   <div class="menu-separator"></div>
   <div class="menu-group-label">矢印の吸着</div>
 
-  <button type="button" onclick="detachSelectedArrowEndpoints()">
+  <button type="button" data-kakeizu-click="detachSelectedArrowEndpoints">
     人物への吸着を解除
   </button>
 
@@ -1110,7 +736,7 @@
   <button
     class="danger"
     type="button"
-    onclick="deleteSelectedAnnotation()"
+    data-kakeizu-click="deleteSelectedAnnotation"
   >
 
     この図形・注釈を削除
@@ -1138,7 +764,7 @@
           class="modal-close-button"
           type="button"
           aria-label="一括編集画面を閉じる"
-          onclick="closeBulkEditModal()"
+          data-kakeizu-click="closeBulkEditModal"
         >
           ×
         </button>
@@ -1150,7 +776,7 @@
             class="bulk-tab-button active"
             type="button"
             data-bulk-tab="person"
-            onclick="switchBulkEditTab('person')"
+            data-kakeizu-click="switchBulkEditTab:person"
           >
             人物情報
           </button>
@@ -1159,7 +785,7 @@
             class="bulk-tab-button"
             type="button"
             data-bulk-tab="relation"
-            onclick="switchBulkEditTab('relation')"
+            data-kakeizu-click="switchBulkEditTab:relation"
           >
             関係
           </button>
@@ -1168,7 +794,7 @@
             class="bulk-tab-button"
             type="button"
             data-bulk-tab="business"
-            onclick="switchBulkEditTab('business')"
+            data-kakeizu-click="switchBulkEditTab:business"
           >
             業務情報
           </button>
@@ -1195,7 +821,7 @@
 
         <div id="bulkTab_relation" class="bulk-tab-panel">
           <p class="hint">
-            親1ID・親2ID・配偶者IDを編集できます。配偶者IDが複数ある場合はカンマ区切りで入力します。
+            親1・親2・配偶者を「ID:氏名」のプルダウンから選択します。配偶者を選ぶと追加の選択欄が表示されます。「未設定」で選択を解除できます。
           </p>
 
           <div class="bulk-table-wrap">
@@ -1235,28 +861,38 @@
       </div>
 
       <div class="app-modal-footer">
-        <button type="button" onclick="checkBulkEditInputsOnly()">
+        <button type="button" data-kakeizu-click="checkBulkEditInputsOnly">
           入力チェック
         </button>
 
-        <button type="button" onclick="applyBulkEdit()">
+        <button type="button" data-kakeizu-click="applyBulkEdit">
           変更を反映
         </button>
 
         <button
           class="primary"
           type="button"
-          onclick="applyBulkEditAndClose()"
+          data-kakeizu-click="applyBulkEditAndClose"
         >
           反映して閉じる
         </button>
 
-        <button type="button" onclick="closeBulkEditModal()">
+        <button type="button" data-kakeizu-click="closeBulkEditModal">
           閉じる
         </button>
       </div>
     </section>
   </div>
+
+  <dialog id="bulkEditCloseDialog" class="workspace-dialog bulk-close-dialog" aria-labelledby="bulkEditCloseTitle" aria-describedby="bulkEditCloseDescription">
+    <h2 id="bulkEditCloseTitle">一括編集の変更を反映しますか？</h2>
+    <p id="bulkEditCloseDescription">未反映の変更があります。図に反映して閉じるか、変更を破棄してください。JSONファイルへの保存は別途必要です。</p>
+    <div class="bulk-close-actions">
+      <button type="button" class="primary" data-kakeizu-click="saveBulkEditBeforeClose">反映して閉じる</button>
+      <button type="button" data-kakeizu-click="discardBulkEditAndClose">破棄して閉じる</button>
+      <button type="button" data-kakeizu-click="continueBulkEdit" autofocus>編集を続ける</button>
+    </div>
+  </dialog>
 
   <div
     id="relationListModalBackdrop"
@@ -1278,7 +914,7 @@
           class="modal-close-button"
           type="button"
           aria-label="関係一覧を閉じる"
-          onclick="closeRelationListModal()"
+          data-kakeizu-click="closeRelationListModal"
         >
           ×
         </button>
@@ -1306,149 +942,38 @@
       </div>
 
       <div class="app-modal-footer">
-        <button type="button" onclick="renderFamilyTable()">
+        <button type="button" data-kakeizu-click="renderFamilyTable">
           一覧を更新
         </button>
 
-        <button type="button" onclick="closeRelationListModal()">
+        <button type="button" data-kakeizu-click="closeRelationListModal">
           閉じる
         </button>
       </div>
     </section>
   </div>
 
-  <div
-    id="annotationEditModalBackdrop"
-    class="app-modal-backdrop"
-    role="presentation"
-  >
-    <section
-      class="app-modal annotation-edit-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="annotationEditModalTitle"
-    >
-      <div class="app-modal-header">
-        <div id="annotationEditModalTitle" class="app-modal-title">
-          図形・注釈の編集
-        </div>
-
-        <button
-          class="modal-close-button"
-          type="button"
-          aria-label="図形・注釈の編集画面を閉じる"
-          onclick="closeAnnotationEditModal()"
-        >
-          ×
-        </button>
-      </div>
-
-      <div class="app-modal-body">
-        <input id="annotationEditId" type="hidden">
-
-        <div id="annotationTextEditArea">
-          <label for="annotationEditText">表示テキスト</label>
-          <textarea
-            id="annotationEditText"
-            maxlength="4000"
-            placeholder="図形内に表示する文字を入力"
-          ></textarea>
-
-          <p class="hint">
-            テキスト、四角、丸・楕円で表示できます。
-            ×印と矢印には表示されません。
-          </p>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="annotationEditWidth">幅</label>
-            <input
-              id="annotationEditWidth"
-              type="number"
-              min="20"
-              max="3000"
-            >
-          </div>
-
-          <div>
-            <label for="annotationEditHeight">高さ</label>
-            <input
-              id="annotationEditHeight"
-              type="number"
-              min="20"
-              max="3000"
-            >
-          </div>
-        </div>
-
-        <div class="row">
-          <div>
-            <label for="annotationEditStroke">線の色</label>
-            <input id="annotationEditStroke" type="color">
-          </div>
-
-          <div>
-            <label for="annotationEditFill">背景色</label>
-            <input id="annotationEditFill" type="color">
-          </div>
-        </div>
-
-        <label class="check-option" for="annotationEditNoFill">
-          <input id="annotationEditNoFill" type="checkbox">
-          <span>背景を透明にする</span>
-        </label>
-
-        <div class="row">
-          <div>
-            <label for="annotationEditStrokeWidth">線の太さ</label>
-            <input
-              id="annotationEditStrokeWidth"
-              type="number"
-              min="1"
-              max="12"
-            >
-          </div>
-
-          <div id="annotationFontSizeArea">
-            <label for="annotationEditFontSize">文字サイズ</label>
-            <input
-              id="annotationEditFontSize"
-              type="number"
-              min="8"
-              max="72"
-            >
-          </div>
-        </div>
-
-        <div id="annotationTextColorArea">
-          <label for="annotationEditColor">文字色</label>
-          <input id="annotationEditColor" type="color">
-        </div>
-
-        <p class="hint">
-          矢印の幅・高さには方向も含まれます。右下方向以外へ向ける場合は、キャンバス上の終点ハンドルをドラッグしてください。
-        </p>
-      </div>
-
-      <div class="app-modal-footer">
-        <button
-          class="primary"
-          type="button"
-          onclick="applyAnnotationEdit()"
-        >
-          変更を反映
-        </button>
-
-        <button type="button" onclick="closeAnnotationEditModal()">
-          キャンセル
-        </button>
-      </div>
-    </section>
-  </div>
 
 
-  <script src="./kakeizu-layout.js?v=1.3.0"></script>
-  <script src="./kakeizu.js?v=1.3.3"></script>
+  <dialog id="kinshipDialog" class="kinship-dialog" aria-labelledby="kinshipTitle">
+    <header><h2 id="kinshipTitle">続柄を自動設定</h2><button id="kinshipClose" type="button" aria-label="続柄を自動設定画面を閉じる">閉じる</button></header>
+    <p>図に登録された関係から続柄の候補を算出します。戸籍上の親族関係や法定相続人・相続分を確定するものではありません。</p>
+    <p class="hint">この画面の選択・編集は一時状態で、JSONには保存されません。「続柄を反映」するまで図は変わりません。空文字で既存の続柄を消去することはありません。</p>
+    <label for="kinshipSearch">基準人物を検索（氏名・続柄・人物ID、空白区切りでAND検索）</label>
+    <input id="kinshipSearch" type="search" role="combobox" autocomplete="off" aria-autocomplete="list" aria-controls="kinshipSearchResults" aria-expanded="false">
+    <div id="kinshipSearchResults" class="kinship-search-results" role="listbox" aria-label="基準人物の検索結果" hidden></div>
+    <p id="kinshipBase" role="status"></p>
+    <div class="kinship-tools"><button id="kinshipRecalculate" type="button">再計算</button><button id="kinshipSelectReady" type="button">空欄の候補ありだけ選択</button><button id="kinshipClear" type="button">全解除</button></div>
+    <p class="hint">要確認・複数候補は候補を明示選択するか手入力し、反映欄にチェックしてください。矛盾・判定不可は手入力のみ反映できます。既存値の置換には確認が必要です。</p>
+    <div class="kinship-table-scroll"><table class="kinship-table"><thead><tr><th>反映</th><th>氏名 / ID</th><th>既存の続柄</th><th>候補</th><th>反映する文字列</th><th>状態・理由</th></tr></thead><tbody id="kinshipRows"></tbody></table></div>
+    <footer><p id="kinshipSummary" role="status" aria-live="polite"></p><button id="kinshipApply" type="button">続柄を反映</button></footer>
+  </dialog>
+  <script src="./kakeizu-layout.js?v=2.2.0"></script>
+  <script src="./kakeizu-samples.js?v=2.2.0"></script>
+  <script src="./kakeizu-workspace.js?v=2.2.0"></script>
+  <script src="./kakeizu-preview.js?v=2.2.0"></script>
+  <script src="./kakeizu-kinship.js?v=2.2.0"></script>
+  <script src="./kakeizu-kinship-ui.js?v=2.2.0"></script>
+  <script src="./kakeizu.js?v=2.2.0"></script>
 </body>
 </html>
