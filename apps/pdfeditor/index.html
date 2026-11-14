@@ -33,21 +33,21 @@
   <title>
     PDFかんたん編集 | 共創アプリBOX
   </title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
 
   <!-- 共通アセット。app.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=a8515e56">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=450e4ca4">
 
   <link
     rel="stylesheet"
-    href="./app.css?v=1.14.2"
+    href="./app.css?v=7dccbbc4"
   >
 </head>
 
@@ -56,38 +56,41 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
       <div id="pdfHeaderActions" class="pdf-header-actions" role="group" aria-label="PDFの操作" hidden>
         <button id="appendPdfBtn" class="tool-action" type="button" aria-label="PDFを追加" aria-describedby="appendPdfDescription" title="PDFを末尾に追加（結合）" disabled>
-          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#open"></use></svg>
           <span>PDFを追加</span>
         </button>
         <button id="closePdfBtn" class="tool-action" type="button" aria-label="PDFを閉じる" title="PDFを閉じる" disabled>
-          <svg class="appbox-icon appbox-icon--action appbox-icon--close" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#close"></use></svg>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--close" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#close"></use></svg>
           <span>閉じる</span>
         </button>
         <div class="toolbar-group history-actions" role="group" aria-label="履歴操作">
           <button id="undoBtn" class="tool-action icon-button" type="button" aria-label="元に戻す" title="元に戻す" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#undo"></use></svg>
           </button>
           <button id="redoBtn" class="tool-action icon-button" type="button" aria-label="やり直す" title="やり直す" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#redo"></use></svg>
           </button>
         </div>
         <div id="saveMenuGroup" class="save-menu">
           <button id="saveBtn" class="tool-action primary save-menu-trigger" type="button" aria-label="保存" aria-haspopup="menu" aria-expanded="false" aria-controls="saveMenu" title="保存（PDF・作業ファイル）" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg>
             <span>保存</span>
           </button>
-          <div id="saveMenu" class="save-menu-list" role="menu" aria-labelledby="saveBtn" hidden>
-            <button id="savePdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="savePdfDescription" disabled>PDFを保存（通常）</button>
-            <button id="saveRedactedPdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="saveRedactedPdfDescription" disabled>墨消しPDFとして保存</button>
-            <button id="saveProjectBtn" type="button" role="menuitem" tabindex="-1" aria-describedby="saveProjectDescription" disabled>作業ファイル（.abpdf）を保存</button>
-            <p id="savePdfGuardNote" class="save-menu-note" hidden>墨消し範囲があるため、通常保存は使えません。</p>
+          <!-- 開閉はsaveMenuPopupで行い、role="menu"には項目だけを置く。理由の注記はメニューの外に置き、aria-describedbyで項目へ関連付ける。 -->
+          <div id="saveMenuPopup" class="save-menu-list" hidden>
+            <div id="saveMenu" role="menu" aria-labelledby="saveBtn">
+              <button id="savePdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="savePdfDescription" disabled>PDFを保存（通常）</button>
+              <button id="saveRedactedPdfMenuItem" type="button" role="menuitem" tabindex="-1" aria-describedby="saveRedactedPdfDescription" disabled>墨消しPDFとして保存</button>
+              <button id="saveProjectBtn" type="button" role="menuitem" tabindex="-1" aria-describedby="saveProjectDescription" disabled>作業ファイル（.abpdf）を保存</button>
+            </div>
+            <p id="savePdfGuardNote" class="save-menu-note" hidden>墨消し範囲があるため、PDFとして保存する場合は「墨消しPDFとして保存」を使ってください。</p>
           </div>
         </div>
       </div>
@@ -96,10 +99,10 @@
           type="button"
           class="appbox-collapse-toggle"
           aria-expanded="true"
-          aria-controls="pdfBrand pdfNotice"
-          data-appbox-collapse="pdfBrand pdfNotice"
-          data-appbox-collapse-label-expanded="アプリ名と注意を閉じてプレビューを広くする"
-          data-appbox-collapse-label-collapsed="アプリ名と注意を表示する"
+          aria-controls="pdfBrand"
+          data-appbox-collapse="pdfBrand"
+          data-appbox-collapse-label-expanded="アプリ名と説明を閉じてプレビューを広くする"
+          data-appbox-collapse-label-collapsed="アプリ名と説明を表示する"
           data-appbox-collapse-text-expanded="説明を閉じる"
           data-appbox-collapse-text-collapsed="説明を表示"
         >
@@ -156,35 +159,6 @@
       aria-labelledby="dropTitle"
     >
       <div class="empty-card">
-        <aside
-          class="redaction-notice"
-          id="pdfNotice"
-          role="note"
-          aria-label="マスキングに関する重要な注意"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-
-          <div>
-            <strong>通常保存ではマスキングできません（元データが残ります）</strong>
-
-            <span>
-              通常保存では、四角・丸・テキスト・画像・手書きを重ねても、元の文字や画像はPDF内に残ります。
-              隠す場合は「墨消しPDFとして保存」を選んでください。専用の「墨消し」は黒・白から選べます。
-            </span>
-          </div>
-        </aside>
       <div
         id="dropZone"
         class="drop-zone"
@@ -267,35 +241,42 @@
         <div class="toolbar-controls">
           <div class="toolbar-group edit-only page-navigation" role="group" aria-label="ページ一覧">
             <button id="backToPagesBtn" class="tool-action back-to-pages" type="button" aria-label="ページ一覧へ戻る" title="ページ一覧へ戻る">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#back"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#back"></use></svg>
               <span>一覧へ戻る</span>
             </button>
             <button id="togglePagesBtn" class="tool-action icon-button" type="button" aria-label="ページ一覧を閉じる" title="ページ一覧を閉じる" aria-expanded="true" aria-controls="pagesPanel" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#sidebar"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#sidebar"></use></svg>
             </button>
           </div>
           <div class="toolbar-group selection-actions overview-only" role="group" aria-label="選択ページの操作">
             <span id="selectionCount" class="selection-count" role="status">0ページ選択</span>
             <div class="page-actions">
               <button id="rotateLeftBtn" class="tool-action icon-button" type="button" aria-label="選択ページを左へ90度回転" title="選択ページを左へ90度回転" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-left"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rotate-left"></use></svg>
               </button>
               <button id="rotateRightBtn" class="tool-action icon-button" type="button" aria-label="選択ページを右へ90度回転" title="選択ページを右へ90度回転" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-right"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rotate-right"></use></svg>
               </button>
               <button id="movePageUpBtn" class="tool-action icon-button" type="button" aria-label="選択ページを前へ移動" title="選択ページを前へ移動" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#page-before"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#page-before"></use></svg>
               </button>
               <button id="movePageDownBtn" class="tool-action icon-button" type="button" aria-label="選択ページを後ろへ移動" title="選択ページを後ろへ移動" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#page-after"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--move" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#page-after"></use></svg>
               </button>
               <button id="deletePageBtn" class="tool-action icon-button" type="button" aria-label="選択ページを削除" title="選択ページを削除" disabled>
-                <svg class="appbox-icon appbox-icon--action appbox-icon--delete" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#delete"></use></svg>
+                <svg class="appbox-icon appbox-icon--action appbox-icon--delete" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#delete"></use></svg>
               </button>
             </div>
             <button id="extractBtn" class="tool-action extract-action" type="button" aria-label="選択を保存" aria-describedby="extractPdfDescription" title="選択ページのみをPDFに保存" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#download"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#download"></use></svg>
               <span>選択を保存</span>
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <button id="bookmarksBtn" class="tool-action" type="button" aria-label="しおり" title="しおり" aria-expanded="false" aria-controls="bookmarksPanel" disabled>
+              <span>しおり</span>
+              <span id="bookmarksCount" class="bookmarks-count" aria-hidden="true" hidden>0</span>
+              <span id="bookmarksWarning" class="bookmarks-warning" aria-hidden="true" hidden>!</span>
             </button>
           </div>
           <div class="toolbar-group overview-only">
@@ -304,50 +285,54 @@
           </div>
           <div id="annotationToolsMenu" class="toolbar-group tools edit-only" role="group" aria-label="選択・図形の追加・重ね順">
             <button class="mode-btn icon-button" data-tool="select" type="button" aria-label="選択" title="選択" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#select"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#select"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="text" type="button" aria-label="テキスト" title="テキスト" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#text"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#text"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="rect" type="button" aria-label="四角" title="四角" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rectangle"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rectangle"></use></svg>
             </button>
             <button class="mode-btn" data-tool="redact" type="button" aria-label="墨消し" title="黒・白の墨消し範囲を指定" aria-pressed="false">墨消し</button>
             <button class="mode-btn icon-button" data-tool="ellipse" type="button" aria-label="丸" title="丸" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#ellipse"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#ellipse"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="arrow" type="button" aria-label="矢印" title="矢印" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#arrow"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#arrow"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="line" type="button" aria-label="線" title="線" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#line"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#line"></use></svg>
             </button>
             <button id="insertImageBtn" class="icon-button" type="button" aria-label="画像を挿入" title="画像を挿入" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#image"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#image"></use></svg>
             </button>
             <input id="imageInput" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" hidden>
             <button id="stampBtn" class="icon-button" type="button" aria-label="スタンプ" title="スタンプ" aria-haspopup="dialog" aria-controls="stampDialog" disabled>
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#stamp"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#stamp"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="ink" type="button" aria-label="手書き" title="手書き" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#pen"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#pen"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="ink-eraser" type="button" aria-label="手書き消しゴム" title="手書き消しゴム" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#eraser"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#eraser"></use></svg>
             </button>
             <button class="mode-btn icon-button" data-tool="highlight" type="button" aria-label="マーカー" title="マーカー" aria-pressed="false">
-              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#highlight"></use></svg>
+              <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#highlight"></use></svg>
             </button>
             <div id="figureOrderControls" class="figure-order-controls" role="group" aria-label="図形の重ね順">
               <button id="bringFiguresFrontBtn" class="tool-action icon-button" type="button" aria-label="最前面に移動" title="最前面に移動" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#bring-front"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#bring-front"></use></svg>
               </button>
               <button id="sendFiguresBackBtn" class="tool-action icon-button" type="button" aria-label="最背面に移動" title="最背面に移動" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#send-back"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#send-back"></use></svg>
               </button>
             </div>
           </div>
         </div>
+      </div>
+      <div id="coveringNotice" class="covering-notice" data-open="false">
+        <p id="coveringNoticeText" role="status" aria-atomic="true"></p>
+        <button id="coveringNoticeClose" class="mini-btn" type="button" aria-label="通常保存の注意を閉じる" hidden>閉じる</button>
       </div>
       <div class="overview-status overview-only">
         <strong id="documentName" class="doc-name"></strong>
@@ -363,6 +348,21 @@
         <span class="overview-hint">余白ドラッグで複数選択・ページドラッグで並べ替え</span>
       </div>
       <div class="workspace-body">
+        <aside id="bookmarksPanel" class="bookmarks-panel" aria-labelledby="bookmarksHeading" hidden>
+          <div class="bookmarks-head">
+            <h2 id="bookmarksHeading">しおり</h2>
+            <button id="bookmarkAddBtn" class="tool-action primary" type="button" aria-haspopup="dialog" aria-controls="bookmarkDialog"><span id="bookmarkAddLabel">追加</span></button>
+          </div>
+          <div class="bookmarks-actions" role="group" aria-label="選択したしおりの操作">
+            <button id="bookmarkEditBtn" class="mini-btn" type="button" aria-haspopup="dialog" aria-controls="bookmarkDialog" disabled>編集</button>
+            <button id="bookmarkUpBtn" class="mini-btn" type="button" disabled>上へ</button>
+            <button id="bookmarkDownBtn" class="mini-btn" type="button" disabled>下へ</button>
+            <button id="bookmarkDeleteBtn" class="mini-btn" type="button" disabled>削除</button>
+          </div>
+          <p id="bookmarksNotice" class="bookmarks-notice" hidden></p>
+          <p id="bookmarksEmpty" class="bookmarks-empty">しおりはありません。ページを選んで「追加」を押すと、保存するPDFにしおりを入れられます。</p>
+          <div id="bookmarkTree" class="bookmark-tree"></div>
+        </aside>
         <aside id="pagesPanel" class="pages-panel" aria-label="ページ一覧">
           <div
             id="thumbList"
@@ -727,11 +727,11 @@
             </div>
             <div class="page-stepper" role="group" aria-label="ページ移動">
               <button id="prevPageBtn" class="tool-action icon-button" type="button" aria-label="前のページ" title="前のページ" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#chevron-left"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#chevron-left"></use></svg>
               </button>
               <span id="pageIndicator" aria-live="polite">0 / 0ページ</span>
               <button id="nextPageBtn" class="tool-action icon-button" type="button" aria-label="次のページ" title="次のページ" disabled>
-                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#chevron-right"></use></svg>
+                <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#chevron-right"></use></svg>
               </button>
             </div>
           </div>
@@ -747,97 +747,110 @@
       </div>
     </section>
     <footer class="appbox-footer pdfeditor-footer">
-      共創アプリBOX / PDFかんたん編集 Version 1.14.2
+      共創アプリBOX / PDFかんたん編集 Version 1.16.0
     </footer>
     </div>
   </main>
 
-  <dialog id="pageNumberDialog" class="page-number-dialog" aria-labelledby="pageNumberTitle" aria-describedby="pageNumberDescription">
+  <dialog id="pageNumberDialog" class="page-number-dialog settings-preview-dialog" aria-labelledby="pageNumberTitle" aria-describedby="pageNumberDescription">
     <form id="pageNumberForm">
       <h2 id="pageNumberTitle">ページ番号を追加</h2>
       <p id="pageNumberDescription">開始ページから最後のページまで連番を追加します。表紙を除く場合は開始ページを2にしてください。</p>
-      <div class="page-number-fields">
-        <label for="pageNumberStartPage">開始ページ<input id="pageNumberStartPage" type="number" min="1" step="1" value="1" required autofocus></label>
-        <label for="pageNumberStartNumber">開始番号<input id="pageNumberStartNumber" type="number" min="0" max="999999" step="1" value="1" required></label>
-        <label for="pageNumberPosition">表示位置<select id="pageNumberPosition">
-          <option value="top-left">上・左</option><option value="top-center">上・中央</option><option value="top-right">上・右</option>
-          <option value="bottom-left">下・左</option><option value="bottom-center" selected>下・中央</option><option value="bottom-right">下・右</option>
-        </select></label>
-        <label for="pageNumberFontSize">文字サイズ（pt）<input id="pageNumberFontSize" type="number" min="6" max="72" step="0.5" value="12" required></label>
-        <label for="pageNumberLayout">見開き配置<select id="pageNumberLayout" aria-describedby="pageNumberLayoutHelp">
-          <option value="same" selected>すべて同じ位置</option>
-          <option value="mirror-x">偶数の番号は左右を入れ替え</option>
-          <option value="mirror-y">偶数の番号は上下を入れ替え</option>
-        </select></label>
-        <label for="pageNumberFormat">書式<select id="pageNumberFormat">
-          <option value="number" selected>3</option>
-          <option value="number-last">3 / 10（番号 / 最終番号）</option>
-          <option value="dash">- 3 -</option>
-        </select></label>
-        <label for="pageNumberMarginMode">余白<select id="pageNumberMarginMode">
-          <option value="auto" selected>自動（約11mm）</option>
-          <option value="custom">mmで指定する</option>
-        </select></label>
-        <div id="pageNumberMarginFields" class="page-number-margin-fields" hidden>
-          <label for="pageNumberMarginY">上下の余白（mm）<input id="pageNumberMarginY" type="number" min="3" max="50" step="0.5" value="10" required></label>
-          <label for="pageNumberMarginX">左右の余白（mm）<input id="pageNumberMarginX" type="number" min="3" max="50" step="0.5" value="10" required></label>
+      <div class="settings-preview-layout">
+        <div class="settings-preview-main">
+          <div class="page-number-fields">
+            <label for="pageNumberStartPage">開始ページ<input id="pageNumberStartPage" type="number" min="1" step="1" value="1" required autofocus></label>
+            <label for="pageNumberStartNumber">開始番号<input id="pageNumberStartNumber" type="number" min="0" max="999999" step="1" value="1" required></label>
+            <label for="pageNumberPosition">表示位置<select id="pageNumberPosition">
+              <option value="top-left">上・左</option><option value="top-center">上・中央</option><option value="top-right">上・右</option>
+              <option value="bottom-left">下・左</option><option value="bottom-center" selected>下・中央</option><option value="bottom-right">下・右</option>
+            </select></label>
+            <label for="pageNumberFontSize">文字サイズ（pt）<input id="pageNumberFontSize" type="number" min="6" max="72" step="0.5" value="12" required></label>
+            <label for="pageNumberLayout">見開き配置<select id="pageNumberLayout" aria-describedby="pageNumberLayoutHelp">
+              <option value="same" selected>すべて同じ位置</option>
+              <option value="mirror-x">偶数の番号は左右を入れ替え</option>
+              <option value="mirror-y">偶数の番号は上下を入れ替え</option>
+            </select></label>
+            <label for="pageNumberFormat">書式<select id="pageNumberFormat">
+              <option value="number" selected>3</option>
+              <option value="number-last">3 / 10（番号 / 最終番号）</option>
+              <option value="dash">- 3 -</option>
+            </select></label>
+            <label for="pageNumberMarginMode">余白<select id="pageNumberMarginMode">
+              <option value="auto" selected>自動（約11mm）</option>
+              <option value="custom">mmで指定する</option>
+            </select></label>
+            <div id="pageNumberMarginFields" class="page-number-margin-fields" hidden>
+              <label for="pageNumberMarginY">上下の余白（mm）<input id="pageNumberMarginY" type="number" min="3" max="50" step="0.5" value="10" required></label>
+              <label for="pageNumberMarginX">左右の余白（mm）<input id="pageNumberMarginX" type="number" min="3" max="50" step="0.5" value="10" required></label>
+            </div>
+          </div>
+          <p id="pageNumberLayoutHelp" class="page-number-note">表示位置は奇数の番号に使います。両面印刷して綴じるとき、縦向きの資料は左右、横向きで上下の辺を綴じる資料は上下を入れ替えると、番号が外側に来ます（表紙など番号のないページがあると、印刷の表裏とずれることがあります）。</p>
         </div>
-      </div>
-      <p id="pageNumberLayoutHelp" class="page-number-note">表示位置は奇数の番号に使います。両面印刷して綴じるとき、縦向きの資料は左右、横向きで上下の辺を綴じる資料は上下を入れ替えると、番号が外側に来ます（表紙など番号のないページがあると、印刷の表裏とずれることがあります）。</p>
-      <p id="pageNumberSummary" role="status" aria-live="polite"></p>
-      <figure class="page-number-preview-figure">
-        <div id="pageNumberPreview" class="page-number-preview"></div>
-        <figcaption id="pageNumberPreviewLabel">プレビューを準備しています。</figcaption>
-      </figure>
-      <p class="page-number-note">プレビューは元PDFと、最初の対象ページに追加予定の番号を表示します。追加済みの図形は省略しています。番号は黒色です。余白は用紙の端から番号の文字枠までの距離で、自動では従来どおり約11mm（小さい用紙では縮めます）です。元PDFにある番号は消えません。</p>
-      <p id="pageNumberError" class="page-number-error" role="alert"></p>
-      <div class="page-number-actions">
-        <button id="pageNumberDelete" class="appbox-button page-number-delete" type="button" disabled>ページ番号を削除</button>
-        <button id="pageNumberCancel" class="appbox-button" type="button">キャンセル</button>
-        <button id="pageNumberApply" class="appbox-button appbox-button--primary" type="submit" disabled>適用する</button>
+        <div class="settings-preview-side">
+          <p id="pageNumberSummary" role="status" aria-live="polite"></p>
+          <figure class="page-number-preview-figure">
+            <div id="pageNumberPreview" class="page-number-preview"></div>
+            <figcaption id="pageNumberPreviewLabel">プレビューを準備しています。</figcaption>
+          </figure>
+          <p class="page-number-note">プレビューは元PDFと、最初の対象ページに追加予定の番号を表示します。追加済みの図形は省略しています。番号は黒色です。余白は用紙の端から番号の文字枠までの距離で、自動では従来どおり約11mm（小さい用紙では縮めます）です。元PDFにある番号は消えません。</p>
+          <p id="pageNumberError" class="page-number-error" role="alert"></p>
+          <div class="page-number-actions">
+            <button id="pageNumberDelete" class="appbox-button page-number-delete" type="button" disabled>ページ番号を削除</button>
+            <button id="pageNumberCancel" class="appbox-button" type="button">キャンセル</button>
+            <button id="pageNumberApply" class="appbox-button appbox-button--primary" type="submit" disabled>適用する</button>
+          </div>
+        </div>
       </div>
     </form>
   </dialog>
 
-  <dialog id="watermarkDialog" class="page-number-dialog watermark-dialog" aria-labelledby="watermarkTitle">
+  <dialog id="watermarkDialog" class="page-number-dialog settings-preview-dialog watermark-dialog" aria-labelledby="watermarkTitle" aria-describedby="watermarkDescription">
     <form id="watermarkForm">
       <h2 id="watermarkTitle">透かしを追加</h2>
-      <div class="page-number-fields">
-        <label for="watermarkPreset">プリセット<select id="watermarkPreset">
-          <option value="取扱注意" selected>取扱注意</option>
-          <option value="部外秘">部外秘</option>
-          <option value="庁内限り">庁内限り</option>
-          <option value="案">案</option>
-          <option value="参考">参考</option>
-          <option value="見本">見本</option>
-          <option value="DRAFT">DRAFT</option>
-          <option value="custom">自由入力</option>
-        </select></label>
-        <label for="watermarkText">文字<input id="watermarkText" type="text" maxlength="40" value="取扱注意" required></label>
-        <label for="watermarkColor">色<input id="watermarkColor" type="color" value="#6b7280"></label>
-        <label for="watermarkOpacity">不透明度
-          <span class="watermark-range"><input id="watermarkOpacity" type="range" min="10" max="80" step="5" value="20"><output id="watermarkOpacityValue" for="watermarkOpacity">20%</output></span>
-        </label>
-        <label for="watermarkFontSize">文字サイズ（pt）<input id="watermarkFontSize" type="number" min="24" max="120" step="2" value="72" required></label>
-        <label for="watermarkAngle">角度<select id="watermarkAngle">
-          <option value="-45" selected>-45°</option><option value="0">0°</option><option value="45">45°</option>
-        </select></label>
-      </div>
-      <fieldset class="watermark-targets">
-        <legend>対象ページ</legend>
-        <label><input id="watermarkTargetAll" type="radio" name="watermarkTarget" value="all" checked>全ページ</label>
-        <label><input id="watermarkTargetSelected" type="radio" name="watermarkTarget" value="selected">選択したページ</label>
-      </fieldset>
-      <p id="watermarkSummary" role="status" aria-live="polite"></p>
-      <figure class="page-number-preview-figure">
-        <div id="watermarkPreview" class="page-number-preview watermark-preview"></div>
-        <figcaption id="watermarkPreviewLabel">プレビューを準備しています。</figcaption>
-      </figure>
-      <p id="watermarkError" class="page-number-error" role="alert"></p>
-      <div class="page-number-actions">
-        <button id="watermarkDelete" class="appbox-button watermark-delete" type="button">透かしを削除</button>
-        <button id="watermarkCancel" class="appbox-button" type="button">キャンセル</button>
-        <button id="watermarkApply" class="appbox-button appbox-button--primary" type="submit" disabled>適用する</button>
+      <p id="watermarkDescription" class="watermark-caution">透かしでは元の文字や画像は消えません。情報を隠す用途には「墨消し」を使ってください。</p>
+      <div class="settings-preview-layout">
+        <div class="settings-preview-main">
+          <div class="page-number-fields">
+            <label for="watermarkPreset">プリセット<select id="watermarkPreset">
+              <option value="取扱注意" selected>取扱注意</option>
+              <option value="部外秘">部外秘</option>
+              <option value="庁内限り">庁内限り</option>
+              <option value="案">案</option>
+              <option value="参考">参考</option>
+              <option value="見本">見本</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="custom">自由入力</option>
+            </select></label>
+            <label for="watermarkText">文字<input id="watermarkText" type="text" maxlength="40" value="取扱注意" required></label>
+            <label for="watermarkColor">色<input id="watermarkColor" type="color" value="#6b7280"></label>
+            <label for="watermarkOpacity">不透明度
+              <span class="watermark-range"><input id="watermarkOpacity" type="range" min="10" max="80" step="5" value="20"><output id="watermarkOpacityValue" for="watermarkOpacity">20%</output></span>
+            </label>
+            <label for="watermarkFontSize">文字サイズ（pt）<input id="watermarkFontSize" type="number" min="24" max="120" step="2" value="72" required></label>
+            <label for="watermarkAngle">角度<select id="watermarkAngle">
+              <option value="-45" selected>-45°</option><option value="0">0°</option><option value="45">45°</option>
+            </select></label>
+          </div>
+          <fieldset class="watermark-targets">
+            <legend>対象ページ</legend>
+            <label><input id="watermarkTargetAll" type="radio" name="watermarkTarget" value="all" checked>全ページ</label>
+            <label><input id="watermarkTargetSelected" type="radio" name="watermarkTarget" value="selected">選択したページ</label>
+          </fieldset>
+        </div>
+        <div class="settings-preview-side">
+          <p id="watermarkSummary" role="status" aria-live="polite"></p>
+          <figure class="page-number-preview-figure">
+            <div id="watermarkPreview" class="page-number-preview watermark-preview"></div>
+            <figcaption id="watermarkPreviewLabel">プレビューを準備しています。</figcaption>
+          </figure>
+          <p id="watermarkError" class="page-number-error" role="alert"></p>
+          <div class="page-number-actions">
+            <button id="watermarkDelete" class="appbox-button watermark-delete" type="button">透かしを削除</button>
+            <button id="watermarkCancel" class="appbox-button" type="button">キャンセル</button>
+            <button id="watermarkApply" class="appbox-button appbox-button--primary" type="submit" disabled>適用する</button>
+          </div>
+        </div>
       </div>
     </form>
   </dialog>
@@ -903,6 +916,20 @@
       </details>
     </form>
   </dialog>
+  <dialog id="bookmarkDialog" class="page-number-dialog" aria-labelledby="bookmarkDialogTitle">
+    <form id="bookmarkForm" novalidate>
+      <h2 id="bookmarkDialogTitle">しおりを追加</h2>
+      <div class="page-number-fields bookmark-fields">
+        <label for="bookmarkTitleInput">タイトル<input id="bookmarkTitleInput" type="text" required autofocus></label>
+        <label for="bookmarkPageInput">移動先ページ<input id="bookmarkPageInput" type="number" min="1" step="1" required aria-describedby="bookmarkPageHint"></label>
+      </div>
+      <p id="bookmarkPageHint" class="bookmark-page-hint"></p>
+      <div class="page-number-actions">
+        <button id="bookmarkDialogCancel" class="appbox-button" type="button">キャンセル</button>
+        <button id="bookmarkDialogSave" class="appbox-button appbox-button--primary" type="submit">追加</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="pdfSaveDialog" class="page-number-dialog pdf-save-dialog" aria-labelledby="pdfSaveTitle" aria-describedby="pdfSaveSummary">
     <form id="pdfSaveForm" method="dialog">
       <h2 id="pdfSaveTitle">墨消しPDFを保存しますか？</h2>
@@ -914,6 +941,7 @@
           <li>文字検索・コピーなどができなくなります。</li>
           <li>画質やファイル容量が変わることがあります。</li>
           <li>元のPDFや作業ファイルには、元の情報が残ります。</li>
+          <li>しおりは保存したPDFへ引き継がれません（タイトルに機密情報が残らないようにするためです）。</li>
         </ul>
       </section>
       <div id="pdfSaveReview" class="pdf-save-review">
@@ -941,11 +969,11 @@
   ></div>
 
   <!-- 共通の折りたたみ処理。app.jsとは独立して動きます。 -->
-  <script src="../../assets/appbox-collapse.js?v=2.5.0"></script>
+  <script src="../../assets/appbox-collapse.js?v=f0c53091"></script>
 
   <script
     type="module"
-    src="./app.js?v=1.14.1"
+    src="./app.js?v=e79d3704"
   ></script>
 </body>
 </html>

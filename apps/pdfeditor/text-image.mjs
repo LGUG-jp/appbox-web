@@ -1,4 +1,4 @@
-import { PDFImage, PngEmbedder } from "./vendor/pdf-lib.esm.js";
+import { PDFImage, PngEmbedder } from "./vendor/pdf-lib.esm.js?v=c1879c6d";
 
 /** Embed outlined text without a dark fringe at the transparent edge. */
 export async function embedTextPng(document, pngBytes, whiteOutline) {

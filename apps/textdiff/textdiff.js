@@ -37,6 +37,130 @@
   const wordCopyDialogNote = $("wordCopyDialogNote");
   const wordCopySelectBtn = $("wordCopySelectBtn");
   const wordCopyCloseBtn = $("wordCopyCloseBtn");
+  const normalTab = $("normalTab");
+  const amendmentTab = $("amendmentTab");
+  const normalPanel = $("normalPanel");
+  const amendmentPanel = $("amendmentPanel");
+  const amendmentOutput = $("amendmentOutput");
+  const amendmentWarning = $("amendmentWarning");
+  const amendmentTitle = $("amendmentTitle");
+  const amendmentOrientation = $("amendmentOrientation");
+  const amendmentCopyBtn = $("amendmentCopyBtn");
+  const amendmentPrintBtn = $("amendmentPrintBtn");
+  const amendmentCopyStatus = $("amendmentCopyStatus");
+  let amendmentRows = null;
+  let amendmentReversed = false;
+  let outputVersion = 0;
+
+  function amendmentAvailable() {
+    return hasComparisonResult && !isComparing && amendmentRows !== null;
+  }
+
+  function updateAmendmentControls() {
+    amendmentCopyBtn.disabled = !amendmentAvailable() || isCopyingWord;
+    amendmentPrintBtn.disabled = !amendmentAvailable();
+    amendmentWarning.hidden = amendmentWarning.textContent === "";
+  }
+
+  function switchResultView(view) {
+    clearWordCopyPreview();
+    outputVersion++;
+    document.body.dataset.resultView = view;
+    normalPanel.hidden = view !== "normal";
+    amendmentPanel.hidden = view !== "amendment";
+    [normalTab, amendmentTab].forEach((tab, index) => {
+      const selected = (index === 0 ? "normal" : "amendment") === view;
+      tab.setAttribute("aria-selected", String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+    });
+  }
+
+  function appendAmendmentText(parent, value) {
+    value.split("\n").forEach((line, index) => {
+      if (index) parent.appendChild(document.createElement("br"));
+      parent.appendChild(document.createTextNode(line));
+    });
+  }
+
+  function buildAmendmentTable(forExport = false) {
+    const table = document.createElement("table");
+    table.className = "amendment-table";
+    if (forExport) {
+      table.setAttribute("style", "border:1px solid #000;border-collapse:collapse;table-layout:fixed;width:100%;color:#000;font-family:Meiryo,sans-serif;font-size:11pt;");
+    }
+    const caption = document.createElement("caption");
+    caption.textContent = amendmentTitle.value;
+    table.appendChild(caption);
+    const sides = amendmentReversed ? ["old", "new"] : ["new", "old"];
+    const headings = sides.map(side => side === "new" ? "改正後" : "改正前");
+    const thead = document.createElement("thead");
+    const head = document.createElement("tr");
+    headings.forEach(label => {
+      const th = document.createElement("th");
+      th.setAttribute("scope", "col");
+      if (forExport) {
+        th.setAttribute("style", "border:1px solid #000;width:50%;padding:6pt;text-align:center;");
+      }
+      th.textContent = label;
+      head.appendChild(th);
+    });
+    thead.appendChild(head);
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+    for (const row of amendmentRows || []) {
+      const tr = document.createElement("tr");
+      tr.dataset.changeType = row.type;
+      sides.forEach(side => {
+        const td = document.createElement("td");
+        if (forExport) {
+          td.setAttribute("style", "border-left:1px solid #000;border-right:1px solid #000;border-top:none;border-bottom:none;width:50%;padding:6pt;vertical-align:top;white-space:pre-wrap;mso-spacerun:yes;");
+        }
+        for (const edit of row.edits) {
+          if (edit.type === (side === "old" ? "insert" : "delete")) continue;
+          const node = document.createElement(edit.type === "equal" ? "span" : "u");
+          if (edit.type !== "equal") node.className = `amendment-${edit.type}`;
+          if (forExport) {
+            node.setAttribute("style", "white-space:pre-wrap;mso-spacerun:yes;" +
+              (edit.type === "equal" ? "" : "text-decoration:underline;"));
+          }
+          appendAmendmentText(node, edit.value);
+          td.appendChild(node);
+        }
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    return table;
+  }
+
+  function tsvCell(value) {
+    const text = value === null ? "" : value.replace(/\r?\n$/, "");
+    return /[\t\r\n"]/.test(text)
+      ? '"' + text.replace(/"/g, '""') + '"'
+      : text;
+  }
+
+  function buildAmendmentContent() {
+    const sides = amendmentReversed ? ["old", "new"] : ["new", "old"];
+    const headings = sides.map(side => side === "new" ? "改正後" : "改正前");
+    const text = [tsvCell(amendmentTitle.value), headings.map(tsvCell).join("\t")];
+    for (const row of amendmentRows || []) {
+      text.push(sides.map(side => tsvCell(row[side])).join("\t"));
+    }
+    return {
+      element: buildAmendmentTable(false),
+      html: buildAmendmentTable(true).outerHTML,
+      text: text.join("\n"),
+      amendment: true
+    };
+  }
+
+  function renderAmendment() {
+    amendmentOutput.replaceChildren();
+    if (amendmentRows !== null) amendmentOutput.appendChild(buildAmendmentTable(false));
+    updateAmendmentControls();
+  }
 
   const status = $("status");
   const resultsPanel = $("resultsPanel");
@@ -63,7 +187,8 @@
   const nextDiffBtn = $("nextDiffBtn");
   const diffPosition = $("diffPosition");
 
-  const MAX_CHAR_TOTAL = 30000;
+  const MAX_LINE_CHAR_TOTAL = 100000;
+  const MAX_CHAR_TOTAL = 60000;
   const MAX_LINE_TOTAL = 10000;
   const MAX_MYERS_D = 1200;
   const MAX_DIFF_MILLISECONDS = 1500;
@@ -254,9 +379,12 @@
     copyBtn.disabled = comparing || !hasComparisonResult;
     printBtn.disabled = comparing || !hasComparisonResult;
     setWordCopyEnabled(!comparing && hasComparisonResult);
+    updateAmendmentControls();
 
     if (comparing) {
+      amendmentRows = null;
       clearWordCopyPreview();
+      amendmentOutput.replaceChildren();
     }
 
     resultsPanel.setAttribute(
@@ -270,6 +398,10 @@
     newResult.replaceChildren();
     unifiedResult.replaceChildren();
     clearWordCopyPreview();
+    amendmentRows = null;
+    amendmentOutput.replaceChildren();
+    amendmentWarning.textContent = "";
+    updateAmendmentControls();
 
     statAdded.textContent = "0";
     statDeleted.textContent = "0";
@@ -478,32 +610,28 @@
     const maximumDistance =
       oldLength + newLength;
 
-    if (maximumDistance > MAX_MYERS_D * 2) {
-      /*
-       * 探索深度が上限以内なら処理可能なので、
-       * 長さだけでは直ちに中止しません。
-       */
-    }
-
-    const size = maximumDistance * 2 + 5;
-    const offset = maximumDistance + 2;
-    const v = new Int32Array(size);
-    const trace = [];
-
-    v.fill(-1);
-    v[offset + 1] = 0;
-
     const distanceLimit = Math.min(
       maximumDistance,
       MAX_MYERS_D
     );
+    // 探索する対角線だけ確保し、入力長に比例する履歴コピーを避けます。
+    const offset = distanceLimit + 1;
+    const v = new Int32Array(distanceLimit * 2 + 3);
+    const trace = [];
+
+    v.fill(-1);
+    v[offset + 1] = 0;
 
     for (
       let distance = 0;
       distance <= distanceLimit;
       distance++
     ) {
-      const snapshot = new Int32Array(v);
+      // 逆追跡で参照する直前の対角線と両端の番兵だけを保持します。
+      const snapshot = v.slice(
+        offset - distance - 1,
+        offset + distance + 2
+      );
       trace.push(snapshot);
 
       for (
@@ -567,8 +695,7 @@
             trace,
             a,
             b,
-            distance,
-            offset
+            distance
           );
         }
       }
@@ -581,8 +708,7 @@
     trace,
     oldTokens,
     newTokens,
-    maximumDistance,
-    offset
+    maximumDistance
   ) {
     let x = oldTokens.length;
     let y = newTokens.length;
@@ -594,6 +720,7 @@
       distance--
     ) {
       const previousV = trace[distance];
+      const offset = distance + 1;
       const diagonal = x - y;
 
       let previousDiagonal;
@@ -975,42 +1102,6 @@
     }
 
     /*
-    * 削除行数と追加行数が同じ変更ブロックは、
-    * 行順を最優先して同じ位置同士を対応させます。
-    *
-    * これにより、旧側に同一行が連続している場合でも、
-    * 12345 → 12335
-    * 12345 → 12445
-    * のような変更を別の行へ吸着させません。
-    */
-    if (oldLength === newLength) {
-      const pairs = [];
-
-      for (
-        let index = 0;
-        index < oldLength;
-        index++
-      ) {
-        context.operations++;
-        ensureWithinTime(
-          context.startedAt,
-          context.operations
-        );
-
-        pairs.push({
-          oldIndex: index,
-          newIndex: index,
-          similarity: lineSimilarity(
-            oldLines[index],
-            newLines[index]
-          )
-        });
-      }
-
-      return pairs;
-    }
-
-    /*
     * 大きな変更ブロックは、誤対応や長時間処理を避けるため、
     * 行内対応を行いません。
     */
@@ -1058,9 +1149,22 @@
     }
 
     /*
-    * 行数が異なる変更ブロックでは、
+    * 変更ブロックでは、
     * 順序を保つ動的計画法で対応行を決定します。
     */
+    // 同点や僅差の候補は、誤った対比を避けるため未対応のまま残します。
+    const similarities = oldLines.map(oldLine =>
+      newLines.map(newLine => lineSimilarity(oldLine, newLine)));
+    const reliable = (oldIndex, newIndex) => {
+      const score = similarities[oldIndex][newIndex];
+      for (let index = 0; index < newLength; index++) {
+        if (index !== newIndex && similarities[oldIndex][index] >= score - 0.015) return false;
+      }
+      for (let index = 0; index < oldLength; index++) {
+        if (index !== oldIndex && similarities[index][newIndex] >= score - 0.015) return false;
+      }
+      return true;
+    };
     const columns = newLength + 1;
 
     const scores = new Float64Array(
@@ -1121,10 +1225,7 @@
           oldIndex * columns +
           newIndex;
 
-        const similarity = lineSimilarity(
-          oldLines[oldIndex - 1],
-          newLines[newIndex - 1]
-        );
+        const similarity = similarities[oldIndex - 1][newIndex - 1];
 
         const oldPosition =
           (oldIndex - 1) /
@@ -1143,7 +1244,7 @@
           (1 - positionDistance) * 0.12;
 
         const pairScore =
-          similarity >= MIN_LINE_SIMILARITY
+          similarity >= MIN_LINE_SIMILARITY && reliable(oldIndex - 1, newIndex - 1)
             ? scores[
                 (oldIndex - 1) *
                   columns +
@@ -1298,177 +1399,46 @@
   }
 
 
-  function buildLineCharacterDiff(
-    oldNormalized,
-    newNormalized,
-    context
-  ) {
-    const oldLines =
-      splitLinesKeepEnds(oldNormalized);
-
-    const newLines =
-      splitLinesKeepEnds(newNormalized);
-
-    const lineDiff = diffTokens(
-      oldLines,
-      newLines,
+  function buildLineCharacterDiff(oldNormalized, newNormalized, context, rows = [], lineDiff = null) {
+    const blocks = extractChangedBlocks(lineDiff || diffTokens(
+      splitLinesKeepEnds(oldNormalized),
+      splitLinesKeepEnds(newNormalized),
       context
-    );
-
-    const blocks =
-      extractChangedBlocks(lineDiff);
-
+    ));
     const result = [];
-
+    const addRow = (old, newer, edits) => {
+      edits = compactDiff(edits);
+      rows.push({
+        old, new: newer, edits,
+        type: old === null ? "insert" : newer === null ? "delete" :
+          old === newer ? "equal" : "modify"
+      });
+      result.push(...edits);
+    };
+    const unpaired = (value, type) => addRow(
+      type === "delete" ? value : null,
+      type === "insert" ? value : null,
+      [makeEdit(type, value, toCodePoints(value).length)]
+    );
     for (const block of blocks) {
       if (block.equal) {
-        result.push(
-          makeEdit(
-            "equal",
-            block.value,
-            toCodePoints(
-              block.value
-            ).length
-          )
-        );
+        addRow(block.value, block.value,
+          [makeEdit("equal", block.value, toCodePoints(block.value).length)]);
         continue;
       }
-
-      const pairs = pairChangedLines(
-        block.oldLines,
-        block.newLines,
-        context
-      );
-
-      /*
-      * 対応行が1つもない場合は、ブロック全体を
-      * 旧行の削除、新行の追加として扱います。
-      */
-      if (pairs.length === 0) {
-        for (const oldLine of block.oldLines) {
-          result.push(
-            makeEdit(
-              "delete",
-              oldLine,
-              toCodePoints(oldLine).length
-            )
-          );
-        }
-
-        for (const newLine of block.newLines) {
-          result.push(
-            makeEdit(
-              "insert",
-              newLine,
-              toCodePoints(newLine).length
-            )
-          );
-        }
-
-        continue;
-      }
-
+      const pairs = pairChangedLines(block.oldLines, block.newLines, context);
       let oldCursor = 0;
       let newCursor = 0;
-
       for (const pair of pairs) {
-        /*
-        * 次の対応行より前にある未対応旧行・新行を、
-        * 同じ配置スロットの変更として出力します。
-        *
-        * 削除を先、追加を後にすることで、
-        * 統合表示の順序を安定させます。
-        */
-        while (
-          oldCursor < pair.oldIndex
-        ) {
-          const oldLine =
-            block.oldLines[oldCursor];
-
-          result.push(
-            makeEdit(
-              "delete",
-              oldLine,
-              toCodePoints(oldLine).length
-            )
-          );
-
-          oldCursor++;
-        }
-
-        while (
-          newCursor < pair.newIndex
-        ) {
-          const newLine =
-            block.newLines[newCursor];
-
-          result.push(
-            makeEdit(
-              "insert",
-              newLine,
-              toCodePoints(newLine).length
-            )
-          );
-
-          newCursor++;
-        }
-
-        /*
-        * 対応した旧行・新行の内部だけを文字単位で比較します。
-        */
-        result.push(
-          ...diffLinePair(
-            block.oldLines[pair.oldIndex],
-            block.newLines[pair.newIndex],
-            context
-          )
-        );
-
-        oldCursor =
-          pair.oldIndex + 1;
-
-        newCursor =
-          pair.newIndex + 1;
+        while (oldCursor < pair.oldIndex) unpaired(block.oldLines[oldCursor++], "delete");
+        while (newCursor < pair.newIndex) unpaired(block.newLines[newCursor++], "insert");
+        const old = block.oldLines[oldCursor++];
+        const newer = block.newLines[newCursor++];
+        addRow(old, newer, diffLinePair(old, newer, context));
       }
-
-      /*
-      * 最後の対応行より後ろに残った未対応行を出力します。
-      */
-      while (
-        oldCursor < block.oldLines.length
-      ) {
-        const oldLine =
-          block.oldLines[oldCursor];
-
-        result.push(
-          makeEdit(
-            "delete",
-            oldLine,
-            toCodePoints(oldLine).length
-          )
-        );
-
-        oldCursor++;
-      }
-
-      while (
-        newCursor < block.newLines.length
-      ) {
-        const newLine =
-          block.newLines[newCursor];
-
-        result.push(
-          makeEdit(
-            "insert",
-            newLine,
-            toCodePoints(newLine).length
-          )
-        );
-
-        newCursor++;
-      }
+      while (oldCursor < block.oldLines.length) unpaired(block.oldLines[oldCursor++], "delete");
+      while (newCursor < block.newLines.length) unpaired(block.newLines[newCursor++], "insert");
     }
-
     return result;
   }
 
@@ -2075,6 +2045,7 @@
   function setWordCopyEnabled(enabled) {
     wordCopyBtn.disabled = !enabled || isCopyingWord;
     wordCopyPreviewBtn.disabled = !enabled;
+    updateAmendmentControls();
   }
 
   function clearWordCopyPreview() {
@@ -2085,6 +2056,7 @@
     wordCopyPreview.replaceChildren();
     wordCopyStatus.textContent = "";
     wordCopyDialogNote.textContent = "";
+    amendmentCopyStatus.textContent = "";
   }
 
   /*
@@ -2224,21 +2196,26 @@
     selectCopyContent(wordCopyPreview);
   }
 
-  async function copyWordResult() {
-    if (wordCopyBtn.disabled || !hasComparisonResult || isComparing) {
+  async function copyWordResult(amendment = false) {
+    amendment = amendment === true;
+    const button = amendment ? amendmentCopyBtn : wordCopyBtn;
+    const copyStatus = amendment ? amendmentCopyStatus : wordCopyStatus;
+    if (button.disabled || !hasComparisonResult || isComparing ||
+        (amendment && !amendmentAvailable())) {
       return;
     }
 
-    const payload = buildWordCopyContent();
+    const payload = amendment ? buildAmendmentContent() : buildWordCopyContent();
     if (!payload.text) {
-      wordCopyStatus.textContent = "コピーする本文がありません。";
+      copyStatus.textContent = "コピーする本文がありません。";
       return;
     }
 
     const currentVersion = compareVersion;
+    const currentOutputVersion = outputVersion;
     isCopyingWord = true;
     setWordCopyEnabled(true);
-    wordCopyStatus.textContent = "コピーしています。";
+    copyStatus.textContent = "コピーしています。";
     let succeeded = false;
 
     try {
@@ -2260,7 +2237,8 @@
         }
       }
 
-      if (currentVersion !== compareVersion || !hasComparisonResult) {
+      if (currentVersion !== compareVersion || currentOutputVersion !== outputVersion ||
+          !hasComparisonResult || isComparing) {
         return;
       }
 
@@ -2268,11 +2246,13 @@
         succeeded = copyWordWithLegacyApi(payload);
       }
 
-      wordCopyStatus.textContent = succeeded
+      copyStatus.textContent = succeeded
         ? "書式付きでコピーしました。Wordで「元の書式を保持」を選んで貼り付けてください。"
-        : "自動コピーできませんでした。コピー用表示から手動でコピーしてください。";
+        : (amendment
+          ? "自動コピーできませんでした。画面上の新旧対照表を直接選択してコピーしてください。"
+          : "自動コピーできませんでした。コピー用表示から手動でコピーしてください。");
 
-      if (!succeeded) {
+      if (!succeeded && !amendment) {
         showWordCopyPreview(payload, true);
       }
     } finally {
@@ -2463,21 +2443,16 @@
       return;
     }
 
-    const characterTotal =
-      toCodePoints(
-        oldNormalized
-      ).length +
-      toCodePoints(
-        newNormalized
-      ).length;
-
-    if (
-      characterTotal >
-      MAX_CHAR_TOTAL
-    ) {
-      throw new DiffLimitError(
-        "CHAR_LENGTH_LIMIT"
-      );
+    const characterLimit = selectedMode === "line-char"
+      ? MAX_LINE_CHAR_TOTAL
+      : MAX_CHAR_TOTAL;
+    let characterTotal = 0;
+    for (const value of [oldNormalized, newNormalized]) {
+      for (const character of value) {
+        if (++characterTotal > characterLimit) {
+          throw new DiffLimitError("CHAR_LENGTH_LIMIT");
+        }
+      }
     }
   }
 
@@ -2536,6 +2511,9 @@
         };
 
         let edits;
+        const rows = [];
+        amendmentRows = null;
+        amendmentWarning.textContent = "";
 
         if (
           selectedMode === "line-char"
@@ -2544,7 +2522,7 @@
             buildLineCharacterDiff(
               oldNormalized,
               newNormalized,
-              context
+              context, rows
             );
         } else {
           const oldTokens =
@@ -2564,6 +2542,29 @@
             newTokens,
             context
           );
+        }
+        if (oldNormalized !== normalizeNewlines(oldText.value) ||
+            newNormalized !== normalizeNewlines(newText.value)) {
+          amendmentWarning.textContent = "正規化により原文の表記が変わるため、新旧対照表は出力できません。空白・全半角・空行の正規化設定を解除して再比較してください。";
+        } else {
+          try {
+            if (selectedMode !== "line-char") {
+              // 行モードは文字数無制限です。追加処理のための配列化より前に打ち切ります。
+              let characters = 0;
+              for (const value of [oldNormalized, newNormalized]) {
+                for (const character of value) {
+                  if (++characters > MAX_LINE_CHAR_TOTAL) throw new DiffLimitError("CHAR_LENGTH_LIMIT");
+                }
+              }
+              const modelEdits = buildLineCharacterDiff(oldNormalized, newNormalized,
+                { startedAt: performance.now(), operations: 0 }, rows,
+                selectedMode === "line" ? edits : null);
+              compactDiff(modelEdits);
+            }
+            amendmentRows = rows;
+          } catch (error) {
+            amendmentWarning.textContent = "新旧対照表の行内比較が処理上限を超えたため、対照表のみ出力できません。文章を分割してください。";
+          }
         }
 
         if (
@@ -2598,6 +2599,7 @@
           selectedMode,
           options
         );
+        renderAmendment();
 
         hasComparedCurrentInput = true;
 
@@ -2618,6 +2620,9 @@
         ) {
           return;
         }
+        amendmentRows = null;
+        amendmentOutput.replaceChildren();
+        clearWordCopyPreview();
 
         hasComparisonResult = false;
         copyBtn.disabled = true;
@@ -2632,7 +2637,7 @@
             "CHAR_LENGTH_LIMIT"
         ) {
           message =
-            "文字数が上限を超えています。左右合計30,000文字以内にするか、文章を分割してください。";
+            `文字数が上限を超えています。${selectedMode === "line-char" ? "行内文字単位は左右合計100,000" : "全文文字単位は左右合計60,000"}文字以内にするか、文章を分割してください。`;
         } else if (
           error &&
           error.code ===
@@ -2745,15 +2750,93 @@
 
   function fillSample() {
     oldText.value = [
-      "第1条　この規則は、必要な事項を定める。",
-      "第2条　申請者は、市長に届け出る。",
-      "第3条　申請書を提出する。"
+      "地域交流施設利用規則（架空のサンプル）",
+      "",
+      "（目的）",
+      "第1条　この規則は、地域交流施設の利用に関し必要な事項を定め、市民の交流及び地域活動の推進を図ることを目的とする。",
+      "",
+      "（利用時間）",
+      "第2条　施設の利用時間は、午前9時から午後5時までとする。",
+      "2　休館日は、毎週月曜日及び12月29日から翌年1月3日までとする。",
+      "3　市長は、施設の管理上必要があると認めるときは、利用時間又は休館日を変更することができる。",
+      "",
+      "（利用の申請）",
+      "第3条　施設を利用しようとする者は、利用日の7日前までに、利用申請書を市長に提出しなければならない。",
+      "2　利用申請書には、次に掲げる事項を記載するものとする。",
+      "（1）申請者の氏名及び住所",
+      "（2）利用の目的、日時及び利用人数",
+      "（3）利用する設備及び備品",
+      "3　申請者は、利用申請書を窓口に持参して提出するものとする。",
+      "",
+      "（利用の許可）",
+      "第4条　市長は、前条の申請があったときは、その内容を審査し、適当と認めるときは利用を許可するものとする。",
+      "2　市長は、施設の管理上必要な範囲で、利用の許可に条件を付すことができる。",
+      "",
+      "（利用者の遵守事項）",
+      "第5条　利用者は、次に掲げる事項を守らなければならない。",
+      "（1）許可を受けた目的以外に施設を利用しないこと。",
+      "（2）施設、設備及び備品を適切に取り扱うこと。",
+      "（3）利用後は清掃を行い、備品を所定の位置に戻すこと。",
+      "（4）施設内で飲食しないこと。",
+      "",
+      "（利用の取消し）",
+      "第6条　利用者は、利用を取り消そうとするときは、利用日の前日までに、窓口に申し出なければならない。",
+      "2　市長は、利用者がこの規則又は許可の条件に違反したときは、利用の許可を取り消すことができる。",
+      "",
+      "（損害の賠償）",
+      "第7条　利用者は、故意又は過失により施設、設備又は備品を損傷したときは、その損害を賠償しなければならない。",
+      "",
+      "（委任）",
+      "第8条　この規則に定めるもののほか、施設の管理に関し必要な事項は、市長が別に定める。",
+      "",
+      "附則",
+      "この規則は、令和8年4月1日から施行する。"
     ].join("\n");
 
     newText.value = [
-      "第1条　この規則は、必要な事項を定める。",
-      "第2条　申請者は、市長へ届け出る。",
-      "第3条　申請書及び添付書類を提出する。"
+      "地域交流施設利用規則（架空のサンプル）",
+      "",
+      "（目的）",
+      "第1条　この規則は、地域交流施設の利用に関し必要な事項を定め、市民の交流及び地域活動の推進並びに多様な世代の学習機会の充実を図ることを目的とする。",
+      "",
+      "（利用時間）",
+      "第2条　施設の利用時間は、午前9時から午後8時までとする。",
+      "2　休館日は、毎週月曜日及び12月29日から翌年1月3日までとする。",
+      "3　市長は、施設の管理上必要があると認めるときは、利用時間又は休館日を変更することができる。",
+      "4　市長は、前項の規定により利用時間又は休館日を変更するときは、あらかじめ施設内の掲示及び市のホームページにより周知するものとする。",
+      "",
+      "（利用の申請）",
+      "第3条　施設を利用しようとする者は、利用日の3日前までに、利用申請書を市長に提出しなければならない。",
+      "2　利用申請書には、次に掲げる事項を記載するものとする。",
+      "（1）申請者の氏名、住所及び連絡先",
+      "（2）利用の目的、日時及び利用人数",
+      "（3）利用する設備及び備品",
+      "（4）利用責任者の氏名及び緊急時の連絡先",
+      "3　申請者は、利用申請書を窓口に持参し、郵送し、又は市の電子申請システムを利用して提出するものとする。",
+      "",
+      "（利用の許可）",
+      "第4条　市長は、前条の申請があったときは、その内容を審査し、適当と認めるときは利用を許可するものとする。",
+      "2　市長は、施設の管理上必要な範囲で、利用の許可に条件を付すことができる。",
+      "",
+      "（利用者の遵守事項）",
+      "第5条　利用者は、次に掲げる事項を守らなければならない。",
+      "（1）許可を受けた目的以外に施設を利用しないこと。",
+      "（2）施設、設備及び備品を適切に取り扱い、破損又は不具合を発見したときは、速やかに職員へ報告すること。",
+      "（3）利用後は清掃を行い、備品を所定の位置に戻すこと。",
+      "",
+      "（利用の取消し）",
+      "第6条　利用者は、利用を取り消そうとするときは、利用日の2日前までに、窓口、電話又は市の電子申請システムにより申し出なければならない。",
+      "2　市長は、利用者がこの規則又は許可の条件に違反したときは、利用の許可を取り消すことができる。",
+      "3　市長は、災害その他やむを得ない事情により施設を利用できなくなったときは、利用者に速やかに連絡するものとする。",
+      "",
+      "（損害の賠償）",
+      "第7条　利用者は、故意又は過失により施設、設備又は備品を損傷したときは、その損害を賠償しなければならない。",
+      "",
+      "（委任）",
+      "第8条　この規則に定めるもののほか、施設の管理に関し必要な事項は、市長が別に定める。",
+      "",
+      "附則",
+      "この規則は、令和9年4月1日から施行する。"
     ].join("\n");
 
     setSelectedMode("line-char");
@@ -2963,6 +3046,7 @@
     event => {
       if (
         !event.altKey ||
+        document.body.dataset.resultView !== "normal" ||
         changeGroups.length === 0
       ) {
         return;
@@ -2983,6 +3067,40 @@
       }
     }
   );
+  normalTab.addEventListener("click", () => switchResultView("normal"));
+  amendmentTab.addEventListener("click", () => switchResultView("amendment"));
+  [normalTab, amendmentTab].forEach((tab, index) => {
+    tab.addEventListener("keydown", event => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
+      switchResultView(next === 0 ? "normal" : "amendment");
+      [normalTab, amendmentTab][next].focus();
+    });
+  });
+  $("amendmentSwapBtn").addEventListener("click", () => {
+    clearWordCopyPreview();
+    outputVersion++;
+    amendmentReversed = !amendmentReversed;
+    renderAmendment();
+  });
+  amendmentTitle.addEventListener("input", () => {
+    clearWordCopyPreview();
+    outputVersion++;
+    renderAmendment();
+  });
+  amendmentOrientation.addEventListener("change", () => {
+    document.body.dataset.amendmentOrientation =
+      amendmentOrientation.value === "portrait" ? "portrait" : "landscape";
+  });
+  amendmentCopyBtn.addEventListener("click", () => copyWordResult(true));
+  amendmentPrintBtn.addEventListener("click", () => {
+    if (!amendmentAvailable()) return;
+    switchResultView("amendment");
+    window.print();
+  });
+  document.body.dataset.amendmentOrientation = "landscape";
+  switchResultView("normal");
 
   updateModeNote();
   updateSyncScrollState();

@@ -1,5 +1,5 @@
 // Geometry is stored in displayed page points (top-left origin), independent of zoom.
-import { inkBounds } from "./ink.mjs?v=1.8.0";
+import { inkBounds } from "./ink.mjs?v=dcc7885c";
 export const isLine = (a) => a.type === "arrow" || a.type === "line";
 export function bounds(a) {
   if (a.type === "ink") return inkBounds(a.points);

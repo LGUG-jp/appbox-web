@@ -431,6 +431,30 @@ function openSamplePicker() {
   document.getElementById("sampleDialog").showModal();
 }
 
+// サンプル読込みの由来だけを保持するUI状態。保存データ・Undoには含めない。
+let sampleNoticeContentKey = null;
+
+function setSampleNotice(kind) {
+  const sample = kind !== "blank" && KakeizuSamples.catalog.find(entry => entry.id === kind);
+  sampleNoticeContentKey = sample ? getCurrentContentKey() : null;
+  const title = document.getElementById("canvasSampleTitle");
+  if (title) title.textContent = sample ? sample.title : "";
+  updateSampleNotice();
+}
+
+function updateSampleNotice() {
+  if (sampleNoticeContentKey !== null && sampleNoticeContentKey !== getCurrentContentKey()) {
+    // 内容を元に戻しても復活させず、次のサンプル読込みでのみ再表示する。
+    sampleNoticeContentKey = null;
+  }
+  const notice = document.getElementById("canvasSampleNotice");
+  if (notice) notice.hidden = sampleNoticeContentKey === null;
+  if (sampleNoticeContentKey !== null) {
+    const hint = document.getElementById("canvasFirstHint");
+    if (hint) hint.hidden = true;
+  }
+}
+
 const CANVAS_HINT_DISMISS_KEY = "kakeizu.ui.canvasFirstHint.dismissed";
 let canvasHintDismissed = false;
 let personSearchMatches = [];
@@ -457,7 +481,7 @@ function initializeCanvasHint() {
     // ストレージを利用できなくてもヒントは操作できる。
   }
   const hint = document.getElementById("canvasFirstHint");
-  if (hint) hint.hidden = canvasHintDismissed;
+  if (hint) hint.hidden = canvasHintDismissed || sampleNoticeContentKey !== null;
   svg.addEventListener("pointerdown", dismissCanvasHint, true);
 }
 

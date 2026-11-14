@@ -7,6 +7,11 @@
 
   const TEXT_OUTLINE_WIDTH = 6;
   const SHAPE_OUTLINE_EXTRA = 8;
+  const DEFAULT_LINE_SPACING = 1.32;
+  const safeLineSpacing = value => Number.isFinite(value) && value >= 1 && value <= 3 ? value : DEFAULT_LINE_SPACING;
+  const TEXT_ALIGNS = Object.freeze(["left","center","right"]);
+  const safeTextAlign = value => TEXT_ALIGNS.includes(value) ? value : "left";
+  const textLineOffset = (width,lineWidth,align) => (width-lineWidth)*(align === "center" ? .5 : align === "right" ? 1 : 0);
 
   // PDFかんたん編集と同じ端末内フォントを使用する。Webフォント通信は行わない。
   const FONT_STACKS = Object.freeze({
@@ -137,20 +142,22 @@
     const metrics = lines.map(line => context.measureText(line || "Ｍ"));
     const ascent = Math.max(1,...metrics.map(item => Number.isFinite(item.actualBoundingBoxAscent) && item.actualBoundingBoxAscent > 0 ? item.actualBoundingBoxAscent : layer.fontSize));
     const descent = Math.max(0,...metrics.map(item => Number.isFinite(item.actualBoundingBoxDescent) ? item.actualBoundingBoxDescent : layer.fontSize*.25));
-    const lineHeight = layer.fontSize*1.32;
+    const lineHeight = layer.fontSize*safeLineSpacing(layer.lineSpacing);
     const width = wrapWidth ?? Math.max(1,...lines.map(line => textAdvance(context,line)));
+    const align = safeTextAlign(layer.textAlign);
+    const offsets = lines.map(line => align === "left" ? 0 : textLineOffset(width,textAdvance(context,line),align));
     const pad = Math.max(layer.bgTransparent === false ? 4 : 0,layer.outline ? TEXT_OUTLINE_WIDTH/2 : 0);
     const bounds = {
       x:layer.x-pad,y:layer.y-ascent-pad,
       w:Math.max(1,width+pad*2),h:Math.max(1,(lines.length-1)*lineHeight+ascent+descent+pad*2)
     };
     context.restore();
-    return {lines,lineHeight,ascent,descent,localBounds:bounds,bounds:transformedTextBounds(layer,bounds)};
+    return {lines,offsets,lineHeight,ascent,descent,localBounds:bounds,bounds:transformedTextBounds(layer,bounds)};
   }
 
   function editingTextBox(context,layer){
     const fontSize = Number.isFinite(layer.fontSize) && layer.fontSize > 0 ? layer.fontSize : 42;
-    const lineHeight = fontSize*1.32;
+    const lineHeight = fontSize*safeLineSpacing(layer.lineSpacing);
     context.save();
     context.font = fontFor({...layer,fontSize});
     // Font-wide metrics keep the input baseline still while its glyphs change.
@@ -162,7 +169,9 @@
       ? metrics.fontBoundingBoxDescent : fontSize*.2;
     const wrapWidth = effectiveWrapWidth(context,layer);
     const lines = wrapText(context,layer.text,wrapWidth);
-    const width = wrapWidth ?? Math.max(300,...lines.map(line => textAdvance(context,line)));
+    // 旧来の左揃えの入力幅は維持し、中央・右揃えではCanvasと同じ枠幅を使う。
+    const width = wrapWidth ?? Math.max(safeTextAlign(layer.textAlign) === "left" ? 300 : 1,
+      ...lines.map(line => textAdvance(context,line)));
     context.restore();
     const origin = transformTextPoint(layer,{x:layer.x,y:layer.y-((lineHeight-ascent-descent)/2+ascent)});
     return {
@@ -183,7 +192,7 @@
     const lines = wrappedTextRanges(context,layer.text,width);
     const row = Math.max(0,Math.min(lines.length-1,Math.floor((point.y-box.top)/box.lineHeight)));
     const line = lines[row];
-    const x = point.x-layer.x;
+    const x = point.x-layer.x-textLineOffset(box.width,textAdvance(context,line.text),safeTextAlign(layer.textAlign));
     let index = line.start;
     let prefix = "";
     let previousWidth = 0;
@@ -222,34 +231,56 @@
     context.lineWidth = TEXT_OUTLINE_WIDTH;
     context.lineJoin = "round";
     layout.lines.forEach((line,index) => {
+      const x = layer.x+layout.offsets[index];
       const y = layer.y+index*layout.lineHeight;
       if(!line.includes("\t")){
-        if(layer.outline) context.strokeText(line,layer.x,y);
-        context.fillText(line,layer.x,y);
+        if(layer.outline) context.strokeText(line,x,y);
+        context.fillText(line,x,y);
         return;
       }
       const {runs} = tabbedTextRuns(context,line);
-      if(layer.outline) runs.forEach(run => context.strokeText(run.text,layer.x+run.x,y));
-      runs.forEach(run => context.fillText(run.text,layer.x+run.x,y));
+      if(layer.outline) runs.forEach(run => context.strokeText(run.text,x+run.x,y));
+      runs.forEach(run => context.fillText(run.text,x+run.x,y));
     });
     context.restore();
     return layout;
   }
 
-  function drawArrow(context,layer){
-    if(![layer.x1,layer.y1,layer.x2,layer.y2,layer.lineWidth].every(Number.isFinite) || layer.lineWidth <= 0) return false;
+  const ARROW_HEAD_SCALES = Object.freeze({small:.5,medium:.75,large:1});
+  function safeArrowHeadSize(value){
+    return typeof value === "string" && Object.hasOwn(ARROW_HEAD_SCALES,value) ? value : "large";
+  }
+
+  function arrowGeometry(layer){
+    if(![layer.x1,layer.y1,layer.x2,layer.y2,layer.lineWidth].every(Number.isFinite) || layer.lineWidth <= 0) return null;
     const dx = layer.x2-layer.x1,dy = layer.y2-layer.y1;
     const length = Math.hypot(dx,dy);
-    if(!Number.isFinite(length) || !length) return false;
+    if(!Number.isFinite(length) || !length) return null;
     const ux = dx/length,uy = dy/length,nx = -uy,ny = ux;
     const angle = Math.atan2(dy,dx);
-    // One filled silhouette prevents a round shaft cap from protruding beyond
-    // the tip. Short arrows use a head that fits between their two endpoints.
-    const headLength = Math.min(length,Math.max(12,layer.lineWidth*4)*Math.cos(Math.PI/6));
+    const headLength = Math.min(length,Math.max(12,layer.lineWidth*4)*ARROW_HEAD_SCALES[safeArrowHeadSize(layer.arrowHeadSize)]*Math.cos(Math.PI/6));
     const headHalfWidth = headLength*Math.tan(Math.PI/6);
     const neckX = layer.x2-ux*headLength,neckY = layer.y2-uy*headLength;
     const hasShaft = length > headLength;
     const shaftHalfWidth = layer.lineWidth/2;
+    const head = [{x:neckX+nx*headHalfWidth,y:neckY+ny*headHalfWidth},
+      {x:layer.x2,y:layer.y2},{x:neckX-nx*headHalfWidth,y:neckY-ny*headHalfWidth}];
+    const points = hasShaft ? [...head,{x:layer.x1-shaftHalfWidth,y:layer.y1-shaftHalfWidth},
+      {x:layer.x1+shaftHalfWidth,y:layer.y1+shaftHalfWidth}] : head;
+    // 白縁のmiterは先端で線幅全体まで延びるため、その余裕も含める。
+    const pad = layer.outline ? SHAPE_OUTLINE_EXTRA : 0;
+    const x = Math.min(...points.map(p => p.x))-pad,y = Math.min(...points.map(p => p.y))-pad;
+    const bounds = {x,y,w:Math.max(...points.map(p => p.x))+pad-x,h:Math.max(...points.map(p => p.y))+pad-y};
+    if(!Object.values(bounds).every(Number.isFinite)) return null;
+    return {length,ux,uy,nx,ny,angle,headLength,headHalfWidth,neckX,neckY,hasShaft,shaftHalfWidth,head,bounds};
+  }
+
+  function drawArrow(context,layer){
+    const geometry = arrowGeometry(layer);
+    if(!geometry) return false;
+    const {nx,ny,angle,headHalfWidth,neckX,neckY,hasShaft,shaftHalfWidth} = geometry;
+    // One filled silhouette prevents a round shaft cap from protruding beyond
+    // the tip. Short arrows use a head that fits between their two endpoints.
     context.save();
     context.beginPath();
     if(hasShaft) context.moveTo(neckX+nx*shaftHalfWidth,neckY+ny*shaftHalfWidth);
@@ -289,7 +320,7 @@
       context.ellipse(layer.x+layer.w/2,layer.y+layer.h/2,Math.abs(layer.w/2),Math.abs(layer.h/2),0,0,Math.PI*2);
     }
     if(layer.type !== "line" && layer.fillNone === false){
-      context.fillStyle = layer.fill || "#ffff00";
+      context.fillStyle = layer.fill || "#ffffff";
       if(layer.type === "rect") context.fillRect(layer.x,layer.y,layer.w,layer.h);
       else context.fill();
     }
@@ -304,8 +335,9 @@
   }
 
   function eligibleForField(layer,property){
+    if(property === "arrowHeadSize") return layer.type === "arrow";
     if(property === "opacity") return layer.type === "image";
-    if(["text","fontSize","fontFamily","bold","textWidth","bgColor","bgTransparent"].includes(property)) return layer.type === "text";
+    if(["text","fontSize","fontFamily","bold","textWidth","textAlign","lineSpacing","bgColor","bgTransparent"].includes(property)) return layer.type === "text";
     if(property === "outline") return ["text","arrow","line","rect","ellipse"].includes(layer.type);
     if(["fill","fillNone"].includes(property)) return ["rect","ellipse"].includes(layer.type);
     if(property === "color") return ["text","rect","ellipse","arrow","line","ink"].includes(layer.type);
@@ -317,8 +349,9 @@
 
   const STYLE_DEFAULTS = Object.freeze({
     opacity:100,
-    fontFamily:DEFAULT_FONT_FAMILY,bold:true,textWidth:300,bgColor:"#ffffff",bgTransparent:true,
-    outline:false,fill:"#ffff00",fillNone:true
+    arrowHeadSize:"large",
+    fontFamily:DEFAULT_FONT_FAMILY,bold:true,textWidth:300,textAlign:"left",lineSpacing:DEFAULT_LINE_SPACING,bgColor:"#ffffff",bgTransparent:true,
+    outline:false,fill:"#ffffff",fillNone:true
   });
   function valueForField(layer,property){
     return layer[property] ?? STYLE_DEFAULTS[property];
@@ -330,5 +363,5 @@
     return {eligible,mixed:eligible.some(layer => valueForField(layer,property) !== value),value};
   }
 
-  return Object.freeze({TEXT_OUTLINE_WIDTH,SHAPE_OUTLINE_EXTRA,FONT_STACKS,DEFAULT_FONT_FAMILY,textTransform,transformTextPoint,safeFontFamily,fontStackFor,fontFor,wrapText,layoutText,editingTextBox,textCaretIndex,drawText,drawArrow,drawShape,eligibleForField,valueForField,commonFieldValue});
+  return Object.freeze({TEXT_OUTLINE_WIDTH,SHAPE_OUTLINE_EXTRA,DEFAULT_LINE_SPACING,safeLineSpacing,TEXT_ALIGNS,safeTextAlign,ARROW_HEAD_SCALES,FONT_STACKS,DEFAULT_FONT_FAMILY,textTransform,transformTextPoint,safeFontFamily,safeArrowHeadSize,fontStackFor,fontFor,wrapText,layoutText,editingTextBox,textCaretIndex,drawText,arrowGeometry,drawArrow,drawShape,eligibleForField,valueForField,commonFieldValue});
 });

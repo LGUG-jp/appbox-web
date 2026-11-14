@@ -34,6 +34,10 @@
 /* ページのスクロールバーによる画像領域の横幅変化を防ぐ。 */
 html{scrollbar-gutter:stable}
 
+/* 共通ベースの常時表示を単体画面では読込み前から解除する。内容が収まらない画面では
+   通常のページスクロールを残し、画面外の操作を切り捨てない。 */
+html:has(#singlePanel:not([hidden])){overflow-y:auto}
+
 html,body{
   margin:0;
   min-height:100%;
@@ -112,6 +116,7 @@ summary:focus-visible{
 }
 
 #singleWorkspace:has(#singleEmpty:not(.hidden)) .left-panel,
+#singleWorkspace:has(#singleEmpty:not(.hidden)) .editor-options,
 #singleWorkspace:has(#singleEmpty:not(.hidden)) .right-panel{
   opacity:.5;
   pointer-events:none;
@@ -122,13 +127,21 @@ summary:focus-visible{
   display:none;
 }
 .canvas-stage .drop-zone{
-  min-height:460px;
-  width:100%;
+  min-height:min(460px,100%);
+  width:calc(100% - 32px);
   max-width:680px;
   margin:auto;
+  padding:16px;
+  row-gap:8px;
   border:2px dashed #c9b277;
   background:#ffffff;
 }
+
+/* 読込み前も選択ボタンまで収め、画像がない間の倍率行は表示しない。 */
+.canvas-stage .drop-zone .drop-icon{width:48px;height:48px;margin:0;border-radius:16px}
+.canvas-stage .drop-zone h2{margin:0;font-size:24px;line-height:1.3}
+.canvas-stage .drop-zone p{margin:0}
+#singleWorkspace:has(#singleEmpty:not(.hidden)) #zoomControls{display:none}
 
 .drop-zone.compact{
   min-height:230px;
@@ -255,9 +268,22 @@ summary:focus-visible{
   width:calc(100% - 32px);
 }
 
+body:has(#singlePanel:not([hidden])) .imageedit-workspace-shell{width:calc(100% - 16px);margin-block:4px}
+
+body:has(#singlePanel:not([hidden])) #singlePanel{
+  padding:0;
+  border:0;
+  background:transparent;
+}
+
+body:has(#singlePanel:not([hidden])) .appbox-footer{
+  margin-top:8px;
+  padding-top:0;
+  border-top:0;
+}
+
 /* 編集中の主要操作を共通ヘッダーへ置き、導入部の高さを画像に使う。 */
-.image-header-actions,
-.image-history-actions{
+.image-header-actions{
   display:flex;
   align-items:center;
   flex-wrap:wrap;
@@ -285,13 +311,6 @@ summary:focus-visible{
   white-space:nowrap;
 }
 
-.image-header-actions .header-icon-button{
-  min-width:var(--appbox-header-action-height,36px);
-  padding:0 6px;
-}
-
-.image-header-actions .image-history-actions{flex-wrap:nowrap}
-
 body.image-editor-active .appbox-header__inner{
   height:auto;
   min-height:var(--appbox-header-height,44px);
@@ -308,43 +327,96 @@ body.image-editor-active .appbox-header__actions{
   flex-wrap:wrap;
 }
 
-/* CSSOMの実測値が使えない場合も、導入部を省いた編集領域を確保する。 */
-body.image-editor-active .canvas-stage{
-  height:max(240px,calc(100vh - 210px));
-  height:max(240px,calc(100dvh - 210px));
+/* JSの実測が使えない場合も、画像の上に設定バーの高さを確保する。 */
+body:has(#singlePanel:not([hidden])) .workspace{
+  --image-workspace-height:max(360px,calc(100vh - 260px));
+  --image-workspace-height:max(360px,calc(100dvh - 260px));
 }
 
 .workspace{
   display:grid;
-  grid-template-columns:260px minmax(0,1fr) 260px;
-  grid-template-areas:"sidebar stage settings";
-  gap:16px;
-  align-items:start;
+  grid-template-columns:208px minmax(0,1fr) var(--image-layer-sidebar-width,200px);
+  grid-template-areas:"options options options" "sidebar stage settings";
+  grid-template-rows:auto minmax(0,1fr);
+  gap:0;
+  align-items:stretch;
+  border:1px solid var(--line);
+  background:var(--surface);
 }
 
+/* 編集画面は1枚の面としてつなぎ、隣り合うパネルを1本の線で区切る。 */
+.workspace > .panel{border:0;border-radius:0;box-shadow:none}
+.workspace > .editor-options{border-bottom:1px solid var(--line)}
+.workspace > .editor-sidebar{border-right:1px solid var(--line)}
+.workspace > .editor-settings{border-left:1px solid var(--line);padding:0}
+
 .editor-sidebar,
+.stage-panel,
 .editor-settings{
-  height:var(--image-sidebar-height,calc(100dvh - 160px));
+  height:var(--image-workspace-height,calc(100dvh - 160px));
   min-height:300px;
   min-width:0;
 }
 
 .editor-sidebar{
   grid-area:sidebar;
+  position:relative;
   display:flex;
   flex-direction:column;
+  /* ツール欄自身に余白があるため、共通パネルの二重の余白を解除する。 */
+  padding:0;
 }
 
 .editor-toolbar{
   display:grid;
   flex:1 1 auto;
   align-content:start;
-  gap:16px;
-  padding:12px 14px;
+  gap:12px;
+  padding:8px;
   min-height:160px;
   overflow-y:auto;
   scrollbar-width:thin;
 }
+
+.editor-sidebar-toggle-wrap{
+  display:flex;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  padding:5px 7px 0;
+}
+/* 通常表示は操作見出しの右上へ添え、高さを余分に使わない。 */
+.workspace:not(.toolbar-compact) .editor-sidebar-toggle-wrap{
+  position:absolute;
+  top:7px;
+  right:8px;
+  padding:0;
+  z-index:1;
+}
+.editor-sidebar-toggle{
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  padding:2px;
+  border:1px solid #e5d5ba;
+  border-radius:7px;
+  background:#fffdfa;
+  color:#464747;
+  cursor:pointer;
+}
+.editor-sidebar-toggle svg{width:17px;height:17px}
+.editor-sidebar-toggle:hover{background:#f7f2e5;border-color:#c9b58e}
+.editor-sidebar-toggle:focus-visible{outline:2px solid #946f17;outline-offset:2px}
+.workspace.toolbar-compact .editor-sidebar .editor-sidebar-toggle svg{transform:scaleX(-1)}
+
+.layer-sidebar-toggle-wrap{
+  display:flex;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  padding:5px 7px 0;
+}
+.workspace.layer-sidebar-collapsed .layer-sidebar-toggle svg{transform:scaleX(-1)}
+#layerSidebarContent[hidden]{display:none}
 
 .toolbar-group{
   min-width:0;
@@ -365,9 +437,16 @@ body.image-editor-active .canvas-stage{
 .toolbar-buttons .tool{
   justify-content:flex-start;
   min-height:40px;
-  padding:7px 9px;
-  border-radius:10px;
+  gap:4px;
+  padding:7px 3px;
+  border-radius:6px;
   font-size:12px;
+}
+
+.toolbar-buttons .tool > span{
+  /* 単語の途中では分割せず、HTMLのwbrで指定した境界で折り返す。 */
+  word-break:keep-all;
+  overflow-wrap:normal;
 }
 
 .editor-tool-icon{
@@ -511,7 +590,7 @@ label{
 
 label:first-child{margin-top:0}
 
-input:not([type="checkbox"]):not([type="color"]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
 select{
   width:100%;
   height:40px;
@@ -525,7 +604,7 @@ select{
   outline:none;
 }
 
-input:not([type="checkbox"]):not([type="color"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):focus,
 select:focus{
   border-color:#c6b37f;
   box-shadow:0 0 0 3px rgba(168,120,24,.07);
@@ -656,6 +735,10 @@ input[type="color"]{
 .stage-panel{
   grid-area:stage;
   min-width:0;
+  /* 共通パネルの余白を解除し、画像領域と倍率行を枠内に収める。 */
+  padding:0;
+  display:flex;
+  flex-direction:column;
 }
 
 .editor-actions{
@@ -709,26 +792,66 @@ input[type="color"]{
 .canvas-workarea{
   position:relative;
   isolation:isolate;
+  flex:1 1 auto;
   min-width:0;
+  min-height:0;
 }
 
 .editor-settings{
-  /* 設定用に100px以上残す。狭幅時は下の480px上限に合わせて切り替える。 */
-  --image-layer-list-max-height:min(260px,38dvh,calc(max(300px,var(--image-sidebar-height,calc(100dvh - 160px))) - 180px));
+  --image-layer-list-max-height:min(260px,38dvh,calc(max(300px,var(--image-workspace-height,calc(100dvh - 260px))) - 180px));
   grid-area:settings;
   display:flex;
   flex-direction:column;
-  padding:12px 14px;
+  padding:0;
   overflow:hidden;
 }
 
+.editor-layer-controls{
+  display:flex;
+  flex-direction:column;
+  flex:1 1 auto;
+  min-height:0;
+  min-width:0;
+  padding:5px 10px 10px;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+}
+
 .layer-list-panel{
-  margin-top:auto;
+  margin-top:0;
   border:1px solid var(--line);
   border-radius:12px;
   background:var(--surface);
   flex:0 0 auto;
   min-width:0;
+}
+
+.image-navigator{flex:0 0 auto;margin-bottom:8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.image-navigator[hidden]{display:none}
+.image-navigator:not([open]) .image-navigator-body{display:none}
+.image-navigator[open] > .layer-list-summary::before{content:"▼" / ""}
+.image-navigator-body{padding:0 8px 8px}
+.image-navigator-viewport{position:relative;aspect-ratio:8/5;max-width:320px;margin-inline:auto;overflow:hidden;background:#eceef1;border:1px solid var(--line);border-radius:3px;cursor:crosshair;touch-action:none}
+.image-navigator-viewport canvas{display:block;width:100%;height:100%;pointer-events:none}
+.image-navigator-frame{position:absolute;border:2px solid #d22e2e;outline:1px solid #fff;box-shadow:0 0 0 1px #333;pointer-events:none}
+.image-navigator-viewport.is-panning{cursor:grabbing}
+.image-navigator-viewport[aria-disabled="true"]{cursor:default}
+.image-navigator-zoom{display:grid;grid-template-columns:20px minmax(0,1fr) 20px 50px;align-items:center;gap:3px;margin-top:7px}
+.image-navigator-zoom .button{min-height:28px;padding:0;border-radius:4px;font-size:14px}
+.image-navigator-zoom input[type="range"]{width:100%;min-width:0;margin:0;height:28px;accent-color:var(--yellow-strong)}
+.image-navigator-percent{display:flex;align-items:center;min-width:0;gap:1px;margin:0;font-size:10px}
+.image-navigator-percent input{width:100%;min-width:0;height:28px;margin:0;padding:2px;border-radius:4px;font-size:11px;appearance:textfield}
+.image-navigator-percent input::-webkit-inner-spin-button,.image-navigator-percent input::-webkit-outer-spin-button{appearance:none;margin:0}
+@media(pointer:coarse){
+  .image-navigator-zoom{grid-template-columns:44px minmax(0,1fr) 44px}
+  .image-navigator-zoom .button{min-height:44px}
+  .image-navigator-zoom input[type="range"]{height:44px}
+  .image-navigator-percent{grid-column:2;justify-self:center;width:64px}
+  .image-navigator-percent input{height:36px;font-size:13px}
+}
+@media(forced-colors:active){
+  .image-navigator-frame{border-color:Highlight;outline-color:Canvas;box-shadow:0 0 0 1px CanvasText}
 }
 .layer-list-summary{
   display:flex;
@@ -764,6 +887,41 @@ input[type="color"]{
   overflow-y:auto;
   border-top:1px solid var(--line);
 }
+.layer-list-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 36px;
+  gap:4px;
+  align-items:stretch;
+  min-width:0;
+  position:relative;
+}
+.layer-visibility{
+  display:grid;
+  place-items:center;
+  width:36px;
+  min-height:36px;
+  margin:0;
+  padding:6px;
+  border:1px solid transparent;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text);
+  cursor:pointer;
+}
+.layer-visibility:hover:not(:disabled){background:var(--yellow-soft)}
+.layer-visibility[aria-pressed="false"]{color:var(--muted)}
+.layer-eye-icon{
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+}
+.layer-visibility[aria-pressed="false"] .layer-eye-open,
+.layer-visibility[aria-pressed="true"] .layer-eye-closed{display:none}
 .layer-list-item{
   display:flex;
   align-items:center;
@@ -780,11 +938,11 @@ input[type="color"]{
   font-size:12px;
 }
 .layer-list-item[draggable="true"]{cursor:grab}
-.layer-list-item.layer-list-dragging{opacity:.45;cursor:grabbing}
-.layer-list-item.layer-list-dragging[aria-pressed="true"]{border-color:transparent}
+.layer-list-row.layer-list-dragging{opacity:.45;cursor:grabbing}
+.layer-list-row.layer-list-dragging .layer-list-item[aria-pressed="true"]{border-color:transparent}
 /* A single straight line in the grid gap, independent of rounded row corners. */
-.layer-list-item.layer-list-drop-before::before,
-.layer-list-item.layer-list-drop-after::before{
+.layer-list-row.layer-list-drop-before::before,
+.layer-list-row.layer-list-drop-after::before{
   content:"";
   position:absolute;
   left:0;
@@ -795,11 +953,17 @@ input[type="color"]{
   pointer-events:none;
   z-index:1;
 }
-.layer-list-item.layer-list-drop-before::before{top:-4px}
-.layer-list-item.layer-list-drop-after::before{bottom:-4px}
-.layer-list-hint{margin:0;padding:0 10px 8px;font-size:11px;color:var(--muted)}
+.layer-list-row.layer-list-drop-before::before{top:-4px}
+.layer-list-row.layer-list-drop-after::before{bottom:-4px}
 .layer-list-item:hover{background:var(--yellow-soft)}
+/* Canvas hover is a hint, not selection; keep it lightweight and distinct. */
+.layer-list-row.canvas-layer-hover .layer-list-item:not([aria-pressed="true"]){
+  background:var(--yellow-soft);
+  outline:1px dashed var(--yellow-strong);
+  outline-offset:-1px;
+}
 .layer-list-item:focus-visible,
+.layer-visibility:focus-visible,
 .layer-list-summary:focus-visible{outline-color:var(--text)}
 .layer-list-item[aria-pressed="true"]{
   border-color:var(--yellow-strong);
@@ -809,7 +973,7 @@ input[type="color"]{
 .layer-list-item[aria-pressed="true"] .layer-list-name{color:var(--text)}
 .layer-list-selected{flex:0 0 auto;margin-left:auto;visibility:hidden}
 .layer-list-item[aria-pressed="true"] .layer-list-selected{visibility:visible}
-.layer-list-kind{flex:0 0 auto;font-weight:600}
+.layer-list-kind{flex:0 1 auto;min-width:0;overflow-wrap:anywhere;font-weight:600}
 .layer-list-name{
   min-width:0;
   overflow:hidden;
@@ -823,7 +987,7 @@ input[type="color"]{
   display:grid;
   flex:1 1 auto;
   align-content:start;
-  gap:6px 10px;
+  gap:12px 10px;
   min-height:0;
   min-width:0;
   max-width:100%;
@@ -833,10 +997,15 @@ input[type="color"]{
   scrollbar-width:thin;
 }
 
+.editor-toolbar,
+.context-panel,
+.layer-list{overscroll-behavior-y:contain}
+
 .context-title{
-  flex:0 0 auto;
-  color:var(--muted);
-  font-size:12px;
+  margin:0 0 4px;
+  color:var(--text);
+  font-size:16px;
+  line-height:1.5;
   font-weight:700;
 }
 
@@ -850,8 +1019,41 @@ input[type="color"]{
 
 .context-setting{display:contents}
 
-.context-setting[data-context],
-.context-setting--fill{
+/* 選択対象の設定は、見出しと書式・色・背景・縁取りの順に追えるようにする。 */
+.context-setting--typography,
+.context-setting--foreground,
+.context-setting--background,
+.context-setting--outline{
+  display:grid;
+  grid-column:1/-1;
+  min-width:0;
+  gap:10px;
+  align-items:start;
+}
+.context-setting--foreground,
+.context-setting--background,
+.context-setting--outline{
+  border-top:1px solid var(--line);
+  padding-top:12px;
+}
+
+.setting-group-title{
+  margin:0;
+  font-size:13px;
+  font-weight:700;
+  color:var(--text);
+}
+.selection-delete-actions{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+.selection-delete-actions .button{
+  width:100%;
+  min-height:40px;
+}
+
+.context-setting[data-context]{
   display:grid;
   grid-column:1/-1;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -869,7 +1071,7 @@ input[type="color"]{
   margin:0;
   min-width:0;
   max-width:100%;
-  font-size:12px;
+  font-size:13px;
   white-space:normal;
 }
 
@@ -878,48 +1080,94 @@ input[type="color"]{
   width:100%;
   max-width:100%;
   min-width:0;
-  height:32px;
+  height:38px;
   margin:0;
-  padding:0 5px;
-  font-size:12px;
+  padding:0 8px;
+  font-size:13px;
 }
 
 .context-panel .setting-field--font,
 .context-panel .setting-field--font-size{grid-column:1/-1}
+.context-panel .setting-field--range{grid-column:1/-1;width:100%}
+.setting-field--range > label{margin:0;font:inherit}
+.setting-range-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 72px auto;
+  align-items:center;
+  gap:6px;
+  width:100%;
+  min-width:0;
+}
+.setting-range-controls > input[type="range"]{
+  width:100%;
+  min-width:0;
+  height:38px;
+  margin:0;
+  padding:0;
+  accent-color:var(--yellow-strong);
+}
+.setting-range-controls > input[type="range"]:focus-visible{
+  outline:2px solid var(--yellow-strong);
+  outline-offset:2px;
+}
+.setting-range-controls > input[type="number"]{
+  width:100%;
+  min-width:0;
+  height:38px;
+  margin:0;
+  padding:0 6px;
+}
+.setting-unit{font-size:12px;color:var(--muted)}
+.setting-range-bounds{
+  display:flex;
+  justify-content:space-between;
+  gap:4px;
+  width:100%;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+.setting-range-mixed{color:var(--text);font-weight:700}
 .context-panel .setting-field--font > select{width:100%}
 .setting-field--font-size > label{margin:0;font:inherit}
 .font-size-controls{
   display:grid;
-  grid-template-columns:32px minmax(0,1fr) 32px;
+  grid-template-columns:38px minmax(0,1fr) 38px;
+  align-items:center;
   gap:6px;
   width:100%;
 }
 .font-size-controls input{
   width:100%;
   min-width:0;
-  height:32px;
+  height:38px;
   margin:0;
   padding:0 6px;
   text-align:center;
+  appearance:textfield;
+  font-variant-numeric:tabular-nums;
 }
+.font-size-controls input::-webkit-inner-spin-button,
+.font-size-controls input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .context-panel .font-size-controls .button{padding:0;font-size:18px}
 .context-panel .setting-field--color > input{
-  width:34px;
+  width:52px;
   max-width:100%;
-  height:30px;
+  height:40px;
   margin:0;
+  cursor:pointer;
 }
 
 .context-panel .setting-check{
-  min-height:32px;
+  min-height:38px;
   margin:0;
-  gap:4px;
-  font-size:12px;
+  gap:8px;
+  font-size:13px;
   white-space:normal;
 }
 .context-panel .setting-check > input{margin:0}
 .context-panel .button{
-  min-height:32px;
+  min-height:38px;
   padding:0 9px;
   white-space:normal;
 }
@@ -929,6 +1177,7 @@ input[type="color"]{
 [data-context="transform"] :is(.setting-check,.button){grid-column:1/-1}
 
 .editor-zoom-controls{
+  flex:0 0 auto;
   min-height:48px;
   padding:8px 12px;
   border-top:1px solid var(--line);
@@ -938,8 +1187,8 @@ input[type="color"]{
 .editor-zoom-controls #zoomValue{height:32px;width:76px}
 
 .canvas-stage{
-  height:max(360px,calc(100vh - 380px));
-  height:max(360px,calc(100dvh - 380px));
+  height:100%;
+  min-height:240px;
   display:flex;
   align-items:flex-start;
   justify-content:flex-start;
@@ -991,12 +1240,22 @@ input[type="color"]{
   cursor:default;
 }
 
+/* 選択ツールの実際の当たり判定に合わせて、インラインstyleなしで切り替える。 */
+.overlay-canvas.select-mode[data-selection-cursor="move"]{cursor:move}
+.overlay-canvas.select-mode[data-selection-cursor="pointer"]{cursor:pointer}
+.overlay-canvas.select-mode[data-selection-cursor="crosshair"]{cursor:crosshair}
+.overlay-canvas.select-mode[data-selection-cursor="nwse-resize"]{cursor:nwse-resize}
+.overlay-canvas.select-mode[data-selection-cursor="nesw-resize"]{cursor:nesw-resize}
+.overlay-canvas.select-mode[data-selection-cursor="ew-resize"]{cursor:ew-resize}
+.overlay-canvas.select-mode[data-selection-cursor="ns-resize"]{cursor:ns-resize}
+
 #textEditorHost{
   position:absolute;
   z-index:2;
   overflow:hidden;
-  outline:1px solid #9a721b;
-  outline-offset:2px;
+  outline:2px solid #0099cc;
+  outline-offset:0;
+  box-shadow:0 0 0 3px #fff;
 }
 
 #textEditor{
@@ -1190,6 +1449,15 @@ input[type="color"]{
 
 .save-dialog-card{width:min(600px,100%)}
 
+#canvasViewport.has-file-drag{outline:3px dashed var(--yellow-strong);outline-offset:-5px}
+.dialog-card.image-drop-card{width:min(420px,100%)}
+.image-drop-name{margin:16px;overflow-wrap:anywhere;font-size:14px;color:var(--muted)}
+.image-drop-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:0 16px}
+.image-drop-choices .button,.image-drop-cancel .button{min-height:44px;white-space:normal}
+.image-drop-cancel{display:flex;justify-content:flex-end;padding:12px 16px 16px}
+@media(max-width:480px){.image-drop-choices{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){#canvasViewport.has-file-drag{outline-color:Highlight}}
+
 #stampDialog{padding:16px}
 
 .dialog-card.stamp-dialog-card{
@@ -1293,9 +1561,46 @@ input[type="color"]{
 
 .hidden{display:none!important}
 
-@media(max-width:1200px){
-  .workspace{grid-template-columns:220px minmax(0,1fr) 220px;gap:12px}
+/* 日本語付き表示を初期値とし、広幅で指定時だけ左欄を細くする。 */
+@media(min-width:821px){
+  .workspace.toolbar-compact{grid-template-columns:96px minmax(0,1fr) var(--image-layer-sidebar-width,200px)}
+  .workspace.layer-sidebar-collapsed{--image-layer-sidebar-width:40px}
+  .workspace.toolbar-compact .editor-toolbar{padding:6px 5px;gap:8px}
+  .workspace.toolbar-compact .toolbar-group + .toolbar-group{
+    padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+  .workspace.toolbar-compact .toolbar-group h2,
+  .workspace.toolbar-compact .toolbar-buttons .tool > span{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+    border:0;
+  }
+  .workspace.toolbar-compact .toolbar-buttons{gap:4px}
+  .workspace.toolbar-compact .toolbar-buttons .tool{
+    justify-content:center;
+    min-height:38px;
+    padding:5px 0;
+  }
+}
+@media(max-width:820px){
+  .editor-sidebar-toggle-wrap,.layer-sidebar-toggle-wrap{display:none}
+}
 
+@media(min-width:821px) and (pointer:coarse){
+  .workspace.layer-sidebar-collapsed{--image-layer-sidebar-width:56px}
+  .layer-sidebar-toggle{width:44px;height:44px}
+  .layer-sidebar-toggle-wrap{padding:4px 5px 0}
+}
+
+@media(max-width:1200px){
   .batch-layout{
     grid-template-columns:300px minmax(0,1fr);
   }
@@ -1315,10 +1620,15 @@ input[type="color"]{
   }
 
   .workspace{
-    grid-template-areas:"sidebar" "stage" "settings";
+    grid-template-areas:"sidebar" "options" "stage" "settings";
+    grid-template-rows:auto;
   }
 
+  .workspace > .editor-sidebar{border-right:0;border-bottom:1px solid var(--line)}
+  .workspace > .editor-settings{border-left:0;border-top:1px solid var(--line)}
+
   .editor-sidebar{height:480px;min-height:0}
+  .stage-panel{height:auto;min-height:0}
   .editor-settings{height:auto;min-height:0;max-height:480px;--image-layer-list-max-height:min(220px,38dvh)}
 
   .right-panel,
@@ -1410,7 +1720,368 @@ input[type="color"]{
 @media(forced-colors:active){
   .tool.active{ outline:2px solid Highlight; }
   .layer-list-item:focus-visible,
+  .layer-visibility:focus-visible,
   .layer-list-summary:focus-visible{outline-color:Highlight}
-  .layer-list-item.layer-list-drop-before::before,
-  .layer-list-item.layer-list-drop-after::before{background:Highlight}
+  .layer-list-row.layer-list-drop-before::before,
+  .layer-list-row.layer-list-drop-after::before{background:Highlight}
+}
+
+.arrow-size-setting{display:block;grid-column:1/-1;min-width:0;margin:0;padding:0;border:0}
+.arrow-size-setting > legend{padding:0;font-size:13px;font-weight:600}
+.arrow-size-options{display:flex;flex-wrap:wrap;gap:4px 16px}
+.text-align-setting{display:block;grid-column:1/-1;min-width:0;margin:0;padding:0;border:0}
+.text-align-setting > legend{padding:0;font-size:13px;font-weight:600}
+.text-align-options{display:flex;flex-wrap:wrap;gap:4px 16px}
+
+/* 背景透過はネイティブcheckboxの操作を保ったON/OFFスイッチ。 */
+.context-setting--background{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.context-setting--background > .setting-range-mixed{grid-column:2}
+.context-panel .setting-switch{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
+.context-panel .setting-switch > input[role="switch"]{
+  appearance:none;
+  width:34px;
+  height:20px;
+  padding:2px;
+  border:1px solid #7b8087;
+  border-radius:999px;
+  background:#7b8087;
+  cursor:pointer;
+}
+.context-panel .setting-switch > input[role="switch"]::before{
+  content:"";
+  display:block;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#fff;
+}
+.context-panel .setting-switch > input[role="switch"]:checked{background:var(--yellow-strong);border-color:var(--yellow-strong)}
+.context-panel .setting-switch > input[role="switch"]:disabled{cursor:not-allowed}
+.context-panel .setting-switch > input[role="switch"]:checked::before{transform:translateX(14px)}
+@media (forced-colors:active){
+  .context-panel .setting-switch > input[role="switch"]{forced-color-adjust:none;background:Canvas;border-color:CanvasText}
+  .context-panel .setting-switch > input[role="switch"]::before{background:CanvasText}
+  .context-panel .setting-switch > input[role="switch"]:checked{background:Highlight;border-color:Highlight}
+  .context-panel .setting-switch > input[role="switch"]:checked::before{background:HighlightText}
+  .context-panel .setting-switch > input[role="switch"]:focus-visible{outline:2px solid CanvasText}
+}
+
+/* ツールごとの設定は横幅を使って直接操作し、まとまりごとに折り返す。
+   文字揃え・行間だけを「文字の配置」で開き、開閉で画像を押し下げない。 */
+.editor-options{
+  grid-area:options;
+  position:relative;
+  z-index:3;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 12px;
+  min-width:0;
+  min-height:56px;
+  padding:8px;
+  overflow:visible;
+}
+/* 履歴はツール設定の表示状態から独立させ、2つのボタンは同じ行に保つ。 */
+.image-history-actions{
+  display:flex;
+  flex:0 0 auto;
+  align-items:center;
+  flex-wrap:nowrap;
+  gap:4px;
+  padding-right:12px;
+  border-right:1px solid var(--line);
+}
+.image-history-actions .history-icon-button{
+  width:36px;
+  min-width:36px;
+  height:36px;
+  min-height:36px;
+  padding:0;
+  border-radius:6px;
+}
+.editor-options .context-panel{
+  display:block;
+  flex:1 1 320px;
+  min-width:0;
+  padding:0;
+  margin:0;
+  overflow:visible;
+}
+.editor-options .context-fields{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px 12px;
+  min-width:0;
+  padding:0;
+  overflow:visible;
+}
+.context-fields > .context-setting,
+.context-fields > .context-setting[data-context]{
+  display:flex;
+  flex:0 1 auto;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  max-width:100%;
+  padding:0;
+  border:0;
+}
+.context-fields > .context-setting--typography{padding-right:12px;border-right:1px solid var(--line)}
+.context-fields > .context-setting--background{padding-left:12px;border-left:1px solid var(--line)}
+.background-target{display:none;font-size:12px;color:var(--muted)}
+.mixed-backgrounds .background-target{display:inline}
+.editor-options .context-fields .setting-field{
+  flex:0 1 auto;
+  flex-direction:row;
+  align-items:center;
+  width:auto;
+  gap:6px;
+  font-size:12px;
+  white-space:nowrap;
+}
+.editor-options .context-fields .setting-field > input:not([type="color"]),
+.editor-options .context-fields .setting-field > select,
+.editor-options .context-fields .setting-field--color > input{height:32px;width:78px;border-radius:5px}
+.editor-options .context-fields .setting-field--font > select{width:150px}
+.editor-options .context-fields .setting-field--color > input{width:34px}
+.editor-options .context-fields .setting-field--font-size > label{flex:0 0 auto}
+.editor-options .context-fields .font-size-controls{width:128px;max-width:100%;flex:0 0 auto}
+.editor-options .context-fields .font-size-controls{grid-template-columns:28px minmax(0,1fr) 28px;gap:4px}
+.editor-options .context-fields .font-size-controls input{height:32px}
+.editor-options .context-fields .font-size-controls .button{height:32px;min-height:32px}
+.editor-options .context-fields .setting-field--range{display:grid;grid-template-columns:auto minmax(0,155px);gap:0 6px}
+.editor-options .context-fields .setting-range-controls{grid-template-columns:minmax(0,1fr) 58px auto;gap:4px}
+.editor-options .context-fields .setting-range-controls input[type="range"]{height:32px}
+.editor-options .context-fields .setting-range-controls input[type="number"]{height:32px;width:58px}
+.editor-options .context-fields .setting-range-bounds{grid-column:2;margin:0;font-size:11px}
+/* 上下限は読み上げで保ち、通常の1段バーには重複表示しない。混在値は表示する。 */
+.editor-options .context-fields .setting-range-bounds > span:first-child,
+.editor-options .context-fields .setting-range-bounds > span:last-child{
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+.editor-options .context-fields .setting-check,
+.editor-options .context-fields [data-context] > .button{flex:0 0 auto;min-height:32px;gap:6px;white-space:nowrap;font-size:12px}
+.editor-options .context-fields [data-context] > .button{border-radius:5px}
+.editor-options .context-fields .arrow-size-setting{display:block;flex:0 0 auto}
+.editor-options .context-fields .arrow-size-setting > legend{float:inline-start;margin-right:8px;line-height:32px;font-size:12px}
+.editor-options .context-fields .arrow-size-options{display:inline-flex;gap:8px}
+.editor-options .context-fields .setting-switch{flex-direction:row;align-items:center;gap:6px}
+.editor-options .context-fields .setting-range-mixed:empty{display:none}
+.style-details{flex:0 0 auto}
+.style-details > summary{list-style:none;display:flex;align-items:center;min-height:36px}
+.style-details > summary::-webkit-details-marker{display:none}
+.style-details > summary::after{content:"▾" / "";margin-left:6px}
+.style-details[open] > summary::after{content:"▴" / ""}
+.style-details:not([open]) > .style-details-body{display:none}
+.style-details-body{
+  position:absolute;
+  inset-inline-end:8px;
+  top:calc(100% - 1px);
+  z-index:4;
+  display:grid;
+  gap:14px;
+  width:min(320px,calc(100vw - 32px));
+  max-height:min(440px,55dvh);
+  padding:16px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+}
+.style-details-body .context-setting--text-details{display:grid;gap:12px}
+.style-details-body > .context-setting:first-child{border-top:0;padding-top:0}
+.style-details-body .setting-field--range{width:100%}
+.style-details-body #closeStyleDetails{justify-self:end}
+@media(max-width:820px){
+  .context-fields > .context-setting--typography{padding-right:0;border-right:0}
+  .context-fields > .context-setting--background{padding-left:0;border-left:0}
+}
+@media(pointer:coarse){
+  .image-history-actions .history-icon-button{width:44px;min-width:44px;height:44px;min-height:44px}
+  .editor-options .context-fields .setting-field,
+  .editor-options .context-fields .setting-check,
+  .editor-options .context-fields .setting-field > input:not([type="hidden"]),
+  .editor-options .context-fields .setting-field > select,
+  .editor-options .context-fields .font-size-controls input,
+  .editor-options .context-fields .font-size-controls .button,
+  .editor-options .context-fields [data-context] > .button,
+  .style-details > summary{min-height:44px}
+  .editor-options .context-fields .font-size-controls{width:152px;grid-template-columns:44px minmax(0,1fr) 44px}
+  .editor-options .context-fields .setting-field > input:not([type="color"]),
+  .editor-options .context-fields .setting-field > select,
+  .editor-options .context-fields .font-size-controls input{font-size:16px}
+  .editor-options .context-fields .setting-field--color > input{width:44px}
+}
+@media(forced-colors:active){
+  .style-details-body{border-color:CanvasText;box-shadow:none}
+}
+
+/* 左ツールの説明をスクロール欄の外に描画し、画面端で見切れないようにする。 */
+.image-tool-tooltip{
+  position:fixed;
+  z-index:90;
+  width:max-content;
+  max-width:calc(100vw - 24px);
+  padding:8px 11px;
+  border:1px solid #4c5867;
+  border-radius:8px;
+  background:#29313e;
+  color:#fff;
+  box-shadow:0 5px 18px rgba(0,0,0,.18);
+  font-size:12px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+  pointer-events:none;
+}
+.image-tool-tooltip[hidden]{display:none!important}
+@media(forced-colors:active){
+  .image-tool-tooltip{background:Canvas;color:CanvasText;border-color:CanvasText}
+}
+
+/* フォント名を各書体で表示。選択欄の幅を保ち、一覧だけを画面内でスクロールする。 */
+.setting-field--font > label{margin:0;font:inherit;white-space:nowrap}
+.setting-field--color > label{margin:0;font:inherit;white-space:nowrap}
+.setting-field--font > select[hidden]{display:none!important}
+.image-font-trigger{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  width:150px;max-width:100%;height:32px;min-height:32px;
+  padding:4px 8px;border:1px solid var(--line);border-radius:5px;
+  background:var(--surface);color:var(--text);font:inherit;
+  text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+}
+.image-font-trigger::after{content:"▾" / "";flex:0 0 auto}
+.image-font-trigger-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.image-font-trigger[aria-expanded="true"]::after{content:"▴" / ""}
+.image-font-trigger:disabled{opacity:.55;cursor:not-allowed}
+.image-font-picker-panel{
+  position:fixed;z-index:70;display:flex;flex-direction:column;
+  width:min(320px,calc(100vw - 24px));max-height:min(420px,calc(100dvh - 24px));
+  min-width:0;min-height:0;overflow:hidden;
+  border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);
+  box-shadow:var(--shadow);
+}
+.image-font-picker-panel[hidden]{display:none!important}
+.image-font-picker-heading{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:13px;border-bottom:1px solid var(--line)}
+.image-font-dismiss{display:grid;place-items:center;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--text);font-size:20px;cursor:pointer}
+.image-font-options{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:4px;scroll-padding:4px}
+.image-font-option{
+  display:grid;grid-template-columns:minmax(0,1fr) 18px;align-items:center;gap:8px;
+  width:100%;min-height:36px;padding:6px 8px;border:1px solid transparent;border-radius:4px;
+  background:var(--surface);color:var(--text);text-align:left;cursor:pointer;
+}
+.image-font-name{grid-column:1;min-width:0;font-size:16px;line-height:1.5;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image-font-check{grid-column:2;visibility:hidden}
+.image-font-option.is-selected .image-font-check{visibility:visible}
+.image-font-option.is-active{background:#eef8ff;border-color:#0099cc}
+.image-font-trigger:focus-visible,.image-font-dismiss:focus-visible,.image-font-option:focus-visible{outline:2px solid #0099cc;outline-offset:-2px}
+.image-font-picker-note{flex:0 0 auto;margin:0;padding:7px 10px;border-top:1px solid var(--line);font-size:11px;line-height:1.5}
+.image-font-name[data-font="biz-udgothic"]{font-family:"BIZ UDGothic","BIZ UDゴシック","Yu Gothic UI","Meiryo",sans-serif}
+.image-font-name[data-font="biz-udpgothic"]{font-family:"BIZ UDPGothic","BIZ UDPゴシック","Yu Gothic UI","Meiryo",sans-serif}
+.image-font-name[data-font="yu-gothic"]{font-family:"Yu Gothic","游ゴシック","Yu Gothic UI","Meiryo",sans-serif}
+.image-font-name[data-font="yu-gothic-ui"]{font-family:"Yu Gothic UI","游ゴシック UI","Yu Gothic","Meiryo",sans-serif}
+.image-font-name[data-font="meiryo"]{font-family:"Meiryo","メイリオ","Yu Gothic UI",sans-serif}
+.image-font-name[data-font="ms-gothic"]{font-family:"MS Gothic","ＭＳ ゴシック","Meiryo",monospace}
+.image-font-name[data-font="ms-pgothic"]{font-family:"MS PGothic","ＭＳ Ｐゴシック","Meiryo",sans-serif}
+.image-font-name[data-font="ms-mincho"]{font-family:"MS Mincho","ＭＳ 明朝","Yu Mincho",serif}
+.image-font-name[data-font="ms-pmincho"]{font-family:"MS PMincho","ＭＳ Ｐ明朝","Yu Mincho",serif}
+.image-font-name[data-font="segoe-ui"]{font-family:"Segoe UI","Yu Gothic UI","Meiryo",sans-serif}
+.image-font-name[data-font="arial"]{font-family:"Arial","Yu Gothic UI","Meiryo",sans-serif}
+.image-font-name[data-font="times-new-roman"]{font-family:"Times New Roman","Yu Mincho","MS PMincho",serif}
+@media(pointer:coarse){
+  .image-font-trigger{height:44px;min-height:44px}
+  .image-font-dismiss{width:44px;height:44px}
+  .image-font-option{min-height:44px}
+}
+@media(forced-colors:active){
+  .image-font-trigger,.image-font-picker-panel,.image-font-dismiss,.image-font-option{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+  .image-font-option.is-active{background:Highlight;color:HighlightText;outline:2px solid Highlight}
+  .image-font-trigger:focus-visible,.image-font-dismiss:focus-visible,.image-font-option:focus-visible{outline-color:Highlight}
+}
+
+/* 色の調整と48色の定番色を、設定バーを広げず一つのパネルにまとめる。 */
+.setting-field--color{position:relative}
+.image-color-native-field{position:absolute;right:0;top:50%;transform:translateY(-50%);opacity:0;pointer-events:none}
+.image-color-trigger{
+  flex:0 0 auto;width:34px;height:32px;min-height:32px;padding:0;
+  border:1px solid var(--line);border-radius:5px;box-shadow:inset 0 0 0 3px var(--surface);cursor:pointer;
+}
+.image-color-trigger:disabled{opacity:.55;cursor:not-allowed}
+.image-color-panel{
+  position:fixed;z-index:70;display:flex;flex-direction:column;width:min(288px,calc(100vw - 24px));
+  max-height:calc(100dvh - 24px);min-height:0;overflow:hidden;
+  border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--text);box-shadow:var(--shadow);
+}
+.image-color-panel[hidden],.image-color-recent-group[hidden],.image-color-swatch[hidden],.image-color-mixed[hidden],.image-color-status[hidden],.image-color-fallback[hidden]{display:none!important}
+.image-color-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 6px;font-size:13px;line-height:1.5}
+.image-color-mixed{font-size:11px;color:var(--muted);font-weight:400}
+.image-color-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 10px 10px}
+.image-color-area{
+  position:relative;height:136px;border:1px solid var(--line);cursor:crosshair;touch-action:none;
+  background-image:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,transparent);
+}
+.image-color-marker{position:absolute;width:10px;height:10px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #111;transform:translate(-50%,-50%);pointer-events:none}
+.image-color-axis-hint{display:none;position:absolute;top:5px;left:5px;max-width:calc(100% - 10px);padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.78);color:#fff;font-size:11px;line-height:1.5;white-space:nowrap;pointer-events:none}
+.image-color-area:has(.image-color-axis:focus-visible) .image-color-axis-hint{display:block}
+.image-color-panel .image-color-hue{
+  display:block;width:100%;height:16px;min-height:16px;margin:10px 0;padding:0;appearance:none;
+  border:1px solid var(--line);border-radius:8px;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);cursor:pointer;
+}
+.image-color-hue::-webkit-slider-thumb{appearance:none;width:14px;height:20px;border:2px solid #fff;border-radius:4px;background:transparent;box-shadow:0 0 0 1px #111}
+.image-color-hue::-moz-range-thumb{width:10px;height:16px;border:2px solid #fff;border-radius:4px;background:transparent;box-shadow:0 0 0 1px #111}
+.image-color-code-row{display:grid;grid-template-columns:32px 32px minmax(0,1fr);gap:6px;align-items:center}
+.image-color-current{width:32px;height:32px;border:1px solid var(--line);border-radius:50%}
+.image-color-eyedropper{display:grid;place-items:center;width:32px;height:32px;min-height:32px;padding:5px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--text);cursor:pointer}
+.image-color-eyedropper:hover{background:var(--surface-2,var(--surface));border-color:var(--line)}
+.image-color-eyedropper:disabled{opacity:.55;cursor:wait}
+.image-color-eyedropper svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.image-color-status{margin-top:8px;font-size:12px;line-height:1.5}
+.image-color-fallback{max-width:100%;min-height:30px;margin-top:6px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;line-height:1.5;cursor:pointer}
+.image-color-panel input[type="text"],.image-color-panel input[type="number"]{
+  min-width:0;width:100%;height:28px;min-height:28px;padding:3px 5px;border:1px solid var(--line);border-radius:3px;
+  background:var(--surface);color:var(--text);font-size:12px;line-height:1.4;
+}
+.image-color-hex{font-family:monospace}
+.image-color-rgb{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.image-color-rgb > label{display:flex;align-items:center;gap:4px;margin:0;font-size:11px;line-height:1.5}
+.image-color-panel input[aria-invalid="true"]{border-color:#c53030;outline:1px solid #c53030}
+.image-color-section-label{margin:8px 0 4px;font-size:11px;line-height:1.5}
+.image-color-presets,.image-color-recent{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:2px}
+.image-color-presets{margin-top:8px}
+.image-color-swatch{
+  position:relative;display:grid;place-items:stretch;width:100%;min-width:0;aspect-ratio:1;padding:1px;
+  border:1px solid transparent;border-radius:2px;background:var(--surface);cursor:pointer;
+}
+.image-color-swatch-fill{display:block;min-width:0;min-height:0;outline:1px solid rgba(0,0,0,.16);outline-offset:-1px}
+.image-color-swatch[aria-pressed="true"]{border-color:var(--text)}
+.image-color-swatch[aria-pressed="true"]::after{content:"✓" / "";position:absolute;inset:0;display:grid;place-items:center;color:#111;font-size:13px;font-weight:700;text-shadow:0 0 2px #fff,0 0 2px #fff;pointer-events:none}
+.image-color-footer{display:flex;flex:0 0 auto;align-items:center;justify-content:flex-end;gap:6px;padding:7px 10px;border-top:1px solid var(--line)}
+.image-color-footer button{min-height:30px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--text);font:inherit;font-size:12px;white-space:nowrap;cursor:pointer}
+.image-color-footer .image-color-apply{background:var(--yellow,#fff6bd);font-weight:700}
+.image-color-trigger:focus-visible,.image-color-panel button:focus-visible,.image-color-panel input:focus-visible{outline:2px solid #0099cc;outline-offset:1px}
+.image-color-panel .image-color-swatch:focus-visible{outline-offset:-1px;z-index:1}
+@media(pointer:coarse){
+  .image-color-trigger{width:44px;height:44px;min-height:44px}
+  .image-color-panel{width:min(360px,calc(100vw - 24px))}
+  .image-color-code-row{grid-template-columns:44px 32px minmax(0,1fr)}
+  .image-color-eyedropper{width:44px;height:44px;min-height:44px}
+  .image-color-fallback{min-height:44px;font-size:16px}
+  .image-color-presets,.image-color-recent{gap:4px}
+  .image-color-panel input[type="text"],.image-color-panel input[type="number"],.image-color-footer button{height:36px;min-height:36px;font-size:16px}
+  .image-color-panel .image-color-hue{height:24px;min-height:24px}
+}
+@media(forced-colors:active){
+  .image-color-panel,.image-color-footer button,.image-color-eyedropper,.image-color-fallback{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+  .image-color-trigger,.image-color-current,.image-color-area,.image-color-hue,.image-color-swatch-fill{forced-color-adjust:none}
+  .image-color-panel .image-color-apply{background:Highlight;color:HighlightText}
+  .image-color-trigger:focus-visible,.image-color-panel button:focus-visible,.image-color-panel input:focus-visible{outline-color:Highlight}
+  .image-color-swatch[aria-pressed="true"]{border-color:CanvasText}
+  .image-color-axis-hint{forced-color-adjust:auto;background:CanvasText;color:Canvas}
 }

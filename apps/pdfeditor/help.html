@@ -10,14 +10,14 @@
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
   <title>PDFかんたん編集 ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=2.5.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=c3c10a33">
+  <link rel="stylesheet" href="../../assets/appbox-help-theme.css?v=25bb9a96">
 </head>
 
 <body class="appbox-help-theme-background">
@@ -25,8 +25,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -52,7 +52,7 @@
         </div>
         <p class="appbox-help-header-desc">PDFの結合、ページ操作・番号付与・透かし、墨消し、テキストや図形・スタンプの追加、保存までを説明します。</p>
       </div>
-      <span class="version-badge">Version 1.14.2</span>
+      <span class="version-badge">Version 1.16.0</span>
 
       <div class="help-callout help-callout-warning">
                 <strong>通常保存ではマスキングできません（元データが残ります）</strong>
@@ -86,6 +86,7 @@
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#shapes">四角と矢印</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#handwriting">手書き</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#redaction">墨消し</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#bookmarks">しおり</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#save">保存</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#project-file">作業ファイル</a></li>
             </ul>
@@ -165,15 +166,14 @@
                     <div class="help-callout help-callout-info">
                       <strong>プレビューを広く使う</strong>
                       <p>
-                        PDFを読み込むと、アプリ名・説明と画面上部の注意喚起を自動で閉じ、
+                        PDFを読み込むと、アプリ名と説明を自動で閉じ、
                         編集領域を縦に広く使える表示へ切り替わります。
-                        PDFを閉じると、案内と注意喚起は自動で再表示されます。
+                        PDFを閉じると、アプリ名と説明は自動で再表示されます。
                         読込み前に手動で閉じたい場合は、画面右上の「説明を閉じる」を使用できます。
                       </p>
                       <p>
                         閉じた状態は保存しません。ページを開き直すと必ず表示された状態に戻ります。
-                        なお、墨消し範囲がなく、四角・丸・テキスト・画像・手書きがある状態で通常保存すると、画面上の注意喚起が隠れていても
-                        元データが残る注意と、画像化保存への切替を表示します。
+                        通常保存の注意は、図形を置いたときと保存の直前に表示します（「<a href="#save">保存</a>」を参照）。
                       </p>
                     </div>
         </section>
@@ -186,7 +186,7 @@
           <ul>
             <li>
               <strong>ページ選択：</strong>
-              一覧のサムネイルをクリックして選択します。Ctrl＋クリックで追加・解除、Shift＋クリックで範囲選択できます。チェックボックスの周囲もクリックでき、再度押すと選択を解除します。灰色の余白をクリックすると全選択を解除します。「編集」で個別編集を開き、「一覧へ戻る」でページ操作へ戻ります。
+              一覧のサムネイルをクリックして選択します。Ctrl＋クリックで追加・解除、Shift＋クリックで範囲選択できます。チェックボックスの周囲もクリックでき、再度押すと選択を解除します。灰色の余白をクリックすると全選択を解除します。一覧上部の「全選択」で全ページを選び、全ページを選んでいる間は同じボタンが「全解除」になり、押すと選択を空にします。Ctrl＋A（MacはCommand＋A）は常に全ページを選択します。「編集」で個別編集を開き、「一覧へ戻る」でページ操作へ戻ります。
             </li>
             <li>灰色の余白からドラッグすると、矩形にかかったページをまとめて選択できます。CtrlまたはShiftを押しながらドラッグすると選択を追加します。上下端では自動スクロールし、Escで選択前の状態に戻せます。ページ上からのドラッグは並べ替えです。</li>
             <li>
@@ -292,6 +292,7 @@
             <li>黒色・透明背景の番号を配置します。余白の「自動」は従来どおりの位置で、用紙の端から番号の文字枠まで約11mmです。小さい用紙では縮めます。「mmで指定する」では上下・左右の余白を3〜50mm（0.5mm刻み）で指定でき、指定した余白は縮めません。番号が収まらない場合は、余白か文字サイズを小さくしてください。</li>
             <li>「ページ番号を削除」で、追加した番号をすべてのページから外します。入力内容に関係なく押せ、1回の「元に戻す」で戻せます。元PDFにある番号は消えません。</li>
             <li>プレビューは元PDFと追加予定の番号を表示します。追加済みの図形は省略します。適用後の番号は、個別編集の画面でも確認できます。</li>
+            <li>画面の幅が広いときは、設定を左、プレビューと「適用する」「キャンセル」を右に並べ、設定を変えながら結果を見比べられます。狭い画面や、拡大などで表示幅が狭くなったときは縦に並びます（透かしの設定画面も同じです）。</li>
             <li>キャンセル・Escでは変更しません。適用・再設定は1回の「元に戻す」「やり直す」で取り消し・復元できます。</li>
             <li>再設定では作業中に追加した番号を置き換えます。開始ページより前の追加済み番号も取り除きます。番号は通常の図形の移動・コピー・削除の対象になりません。</li>
             <li>回転したページにも指定した位置へ正立して配置します。付与後の回転で番号が収まらなくなる場合は、文字サイズを再設定してください。</li>
@@ -317,7 +318,7 @@
           </ul>
           <div class="help-callout help-callout-info">
             <strong>保存後の透かしについて</strong>
-            <p>透かし文字は画像としてPDFへ保存され、検索・読み上げ・再編集はできません。元PDFの文字や画像を削除する機能ではないため、墨消しやマスキングには使用しないでください。</p>
+            <p>透かし文字は画像としてPDFへ保存され、検索・読み上げ・再編集はできません。元PDFの文字や画像を削除する機能ではないため、墨消しやマスキングには使用しないでください（設定画面にも表示しています）。</p>
           </div>
           <h3 class="appbox-help-subheading" id="stamps">スタンプ</h3>
           <ol class="help-steps">
@@ -530,6 +531,39 @@
           </div>
 
 
+          <h3 class="appbox-help-subheading" id="bookmarks">しおり</h3>
+          <p>
+            しおりは、保存したPDFをEdge等で開いたときに章や項目へ移動するための目次です。
+            元のPDFのしおりを引き継いで編集でき、新しく追加もできます。
+          </p>
+          <ol class="help-steps">
+            <li>「しおり」を押してパネルを開きます。件数があるときは、ボタンに表示されます。</li>
+            <li>入れたいページを選び、パネルの「○ページに追加」を押してタイトルを入力します。</li>
+            <li>しおりを選ぶと、「編集」「上へ」「下へ」「削除」で変更できます。</li>
+            <li>PDFを保存すると、しおりも保存されます。</li>
+          </ol>
+          <ul>
+            <li>しおりを押すと、一覧ではそのページを選択し、個別編集ではそのページを表示します。</li>
+            <li>ページを並べ替えたり回転したりしても、しおりは同じページを指し続けます。</li>
+            <li>ページを削除すると、そのページを指すしおりも削除します。該当するときは確認を表示します。下位のしおりが残るものは、移動先のない見出しになります。</li>
+            <li>PDFを追加すると、そのPDFのしおりも取り込みます。</li>
+            <li>選択ページの保存では、選択したページを指すしおりだけを残します。</li>
+            <li>作業ファイルには、編集できる状態で保存します。</li>
+            <li>追加と編集、削除は「元に戻す」で取り消せます。</li>
+            <li>パネル内でEscキーを押すと、パネルを閉じて「しおり」ボタンへ戻ります。</li>
+          </ul>
+          <div class="help-callout help-callout-info">
+            <strong>引き継げないしおりについて</strong>
+            <p>
+              引き継げるのは、ページへの移動と階層です。ページ内の位置や表示倍率、文字の色・太字は保持せず、保存後はページ全体を表示します。
+              外部URLやスクリプトを実行するしおりなどは移動先として引き継がず、下位のしおりがあるものは見出しとして残します。該当するかもしれないしおりがあるときは、ボタンの「!」とパネルの案内でお知らせします。この案内は動作のない見出しにも表示されますが、見出しと階層は保持されます。
+              何も編集せずに保存した場合は元のPDFをそのまま保存するので、これらのしおりも残ります。
+            </p>
+          </div>
+          <div class="help-callout help-callout-info">
+            <strong>墨消しPDF・画像化PDFについて</strong>
+            <p>しおりのタイトルに機密情報が残らないよう、墨消しPDFと画像化PDFにはしおりを引き継ぎません。</p>
+          </div>
           <h3 class="appbox-help-subheading" id="save">保存</h3>
                     <div class="help-table-wrap"><table class="help-table">
                       <thead><tr><th scope="col">保存するもの</th><th scope="col">用途と注意</th></tr></thead>
@@ -540,6 +574,7 @@
                       </tbody>
                     </table></div>
                     <p>一部だけ出力する場合は、対象を選んで「選択を保存」を使います。文書内に専用の墨消し範囲がある場合は、選択ページの保存も画像化方式になります。</p>
+                    <p>文書内に専用の墨消し範囲がある間は、保存メニューに「PDFを保存（通常）」を表示せず、PDFは「墨消しPDFとして保存」だけで保存します（Ctrl＋Sも同じです）。墨消し範囲をすべて取り除くと、元に戻ります。作業ファイル（.abpdf）は墨消し範囲があっても保存できますが、元の情報が残ります。</p>
           <p>
                       保存したファイルはブラウザからダウンロードされます。
                       通常保存のファイル名は、原則として出力の先頭ページの元ファイル名を基準に
@@ -557,8 +592,44 @@
                     </div>
           
                     <p>
-                      墨消し範囲がない通常保存で四角・丸・テキスト・画像・手書きがある場合は、元データが残る注意と、
-                      画像化保存への切替を表示します。
+                      墨消し範囲がない通常保存で四角・丸・テキスト・画像・手書きがある場合は、保存の直前に毎回、元データが残る注意と、
+                      画像化保存への切替を表示します（「選択を保存」・Ctrl＋Sも同じです）。
+                    </p>
+                    <p>
+                      また、PDFを開いてから閉じるまでの間に、四角・丸・テキスト・画像（スタンプを含む）・手書きを初めて置いたときは、
+                      ツールバーの下に同じ趣旨の案内を一度だけ表示します。案内は「閉じる」を押すまで残ります。
+                      覆う図形がある作業ファイルを開いたときは、読込み後に表示します。
+                    </p>
+                    <div class="help-callout help-callout-warning">
+                      <strong>注意を表示しない場合</strong>
+                      <p>次の場合は、案内や保存直前の注意を表示しません。注意が出なかったことは、元の文字や画像がPDFに残らないことを意味しません。</p>
+                      <ul>
+                        <li>透かしだけを付けた場合（透かしは覆う用途の機能ではありません。元の文字や画像は消えません）。</li>
+                        <li>読み込んだPDFに、元から図形などの覆いがある場合（本アプリでは検出しません）。</li>
+                      </ul>
+                      <p>情報を隠すときは、専用の「墨消し」で範囲を指定し、「墨消しPDFとして保存」を選んでください。</p>
+                    </div>
+
+                    <h4 class="help-subheading">削除・除外したページの内容</h4>
+
+                    <p>
+                      「PDFを保存（通常）」「選択を保存」では、削除・除外したページへの参照や、使われていない共有データを可能な範囲で取り除きます。
+                      残したページのリンクなどは次のように扱います。
+                    </p>
+
+                    <ul>
+                      <li>残したページ同士のリンクは、保存後のページへ移動するよう付け替えます。</li>
+                      <li>削除・除外したページへのリンクは、押しても移動しなくなります。</li>
+                      <li>残したページに付いた添付ファイルの注釈は維持します。作業ファイルには入りません。</li>
+                      <li>ページに付いた関連ファイル、XMPメタデータ、作成アプリ固有のデータは保存しません。</li>
+                      <li>回転したページへ図形やページ番号などを追加して保存すると、そのページのリンクと注釈はなくなります。</li>
+                      <li>何も編集していない場合の「PDFを保存（通常）」は、元PDFをそのまま保存します。削除したページはないため内容は残りませんが、元PDFの関連ファイルや添付ファイルなどもそのまま残ります。</li>
+                    </ul>
+
+                    <p>
+                      PDFの構造によっては、見た目を保つため共有データを整理できず、削除・除外したページの情報が残る場合があります。通常保存は情報の完全な除去を保証しません。
+                      残したページで使っている画像やフォントは丸ごと残ります。画像の見えない部分や、図形で覆った内容も残るため、
+                      機密情報を確実に除くには「墨消しPDFとして保存」を使い、保存結果を開いて確認してください。
                     </p>
           
                     <h4 class="help-subheading">保存後に維持されない場合がある機能</h4>
@@ -572,7 +643,7 @@
                     <ul>
                       <li>電子署名と署名の有効性</li>
                       <li>入力フォーム</li>
-                      <li>しおり、アウトライン</li>
+                      <li>しおりのうち、ページへの移動以外のもの</li>
                       <li>ページ内リンク、外部リンク</li>
                       <li>添付ファイル</li>
                       <li>PDF注釈</li>
@@ -676,12 +747,14 @@
 
           <details class="appbox-help-faq-item">
           <summary>
-          保存したらしおりやリンクが消えました。
+          保存したらリンクやしおりの一部が消えました。
           </summary>
           <div class="appbox-help-faq-answer">
           <p>
-          編集した場合は新しいPDFとして組み直すため、しおり、リンク、
+          編集した場合は新しいPDFとして組み直すため、リンク、
           入力フォーム、電子署名、添付ファイルなどが維持されないことがあります。
+          削除・除外したページへのリンクは、保存後は押しても移動しなくなります。
+          しおりはページへの移動と階層を引き継ぎますが、外部URLなどのしおりは引き継ぎません。
           正式文書として使用する場合は、必要な情報が残っているか確認してください。
           電子署名済みPDFは編集対象にしないでください。
           </p>
@@ -771,10 +844,10 @@
     </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / PDFかんたん編集 Version 1.14.2
+      共創アプリBOX / PDFかんたん編集 Version 1.16.0
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
+  <script src="../../assets/appbox-help.js?v=478c676f"></script>
 </body>
 </html>

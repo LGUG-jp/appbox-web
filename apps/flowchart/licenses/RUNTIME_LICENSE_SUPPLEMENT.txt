@@ -7,52 +7,68 @@ not a replacement for copyright and permission notices. The package list below
 is copied from that inventory (including versions that may be build-only).
 Radix code is present in the generated distributed entry bundle (assets/index-*.js).
 
-Dependency rebuild and native build-package review (2026-10-19)
--------------------------------------------------------------
-The generated inventory for this rebuild contains 249 installed packages on
-Windows x64. Exactly 43 entries have no local LICENSE/NOTICE file: the 40
-previously supplemented runtime entries below (35 Radix versions and
-Excalidraw, fastdom, fuzzy, react-remove-scroll-bar, strictdom), plus these
-three native build packages:
+Dependency rebuild and native build-package review (2026-10-30, Issue #341)
+-------------------------------------------------------------------------
+The generated inventory contains 251 installed packages on Linux x64.
+Exactly 44 entries have no local LICENSE/NOTICE: the 40 previously supplemented
+runtime entries below, plus four native build packages reviewed here.
 
-  @esbuild/win32-x64@0.25.12
-    Purpose: Windows x64 esbuild executable used by Vite during build.
+  @esbuild/linux-x64@0.25.12
+    Purpose: Linux x64 esbuild executable used by Vite during build.
     Package metadata: MIT; repository evanw/esbuild.
     Same-version original notice: esbuild@0.25.12, LICENSE.md.
     Copyright (c) 2020 Evan Wallace
     Source: https://github.com/evanw/esbuild/blob/v0.25.12/LICENSE.md
 
-  @rollup/rollup-win32-x64-gnu@4.63.5
-  @rollup/rollup-win32-x64-msvc@4.63.5
-    Purpose: Windows x64 native Rollup bindings for build-time parsing.
-    Both package metadata entries: MIT; repository rollup/rollup.
+  @rollup/rollup-linux-x64-gnu@4.63.5
+  @rollup/rollup-linux-x64-musl@4.63.5
+    Purpose: Linux x64 native Rollup bindings for build-time parsing.
+    Package metadata: MIT; repository rollup/rollup.
     Same-version original notice: rollup@4.63.5, LICENSE.md.
     Copyright (c) 2017 [these people](https://github.com/rollup/rollup/graphs/contributors)
     Source: https://github.com/rollup/rollup/blob/v4.63.5/LICENSE.md
 
-The complete MIT permission and warranty texts for these native packages are
-preserved under their same-version parent entries in THIRD_PARTY_LICENSE_TEXTS.txt.
-The executables and native bindings are development tools, not browser assets
-copied by the deployment sync. This is an exact review of these three package
-versions, not an exemption for other native packages or versions. A different
-OS inventory must be reviewed again rather than accepting new MISSING entries.
+The complete original MIT texts for these three native packages remain in their
+same-version parent sections of THIRD_PARTY_LICENSE_TEXTS.txt.
 
-New or updated packages also retain their local original license texts.
-@parcel/watcher and its Windows x64 binary (2.6.0) include the MIT notice for
-Devon Govett; detect-libc 2.1.2 includes Apache-2.0; source-map-js 1.2.2 includes
-BSD-3-Clause. Other updated packages declare MIT. No new runtime-license
-omission was found in this rebuild. Unchanged Radix, pako, embedded font/wasm,
-and Cytoscape notices below remain required.
+  @napi-rs/lzma-linux-x64-gnu@1.5.1
+    Existing Rollup optional build dependency (unchanged lockfile entry).
+    Package metadata: MIT; repository Brooooooklyn/lzma.
+    No local LICENSE/NOTICE; the same-version parent npm package also lacks it.
+    Parent source commit: f164df92d83e095f195d628b1a68a141ae2eb638.
+    This commit has no root LICENSE file either. Upstream license-text follow-up
+    remains open; metadata alone is not a replacement for the original notice.
+    This native Node artifact is not redistributed in browser assets.
+    Do not redistribute the binary as part of AppBox without resolving this gap.
 
-The inventory contains installed package metadata, including build-only
-packages. Vite 6.4.4 and Rollup 4.63.5 also contain embedded Node-side
-dependencies whose upstream notices are included in each package's complete
-LICENSE.md section in THIRD_PARTY_LICENSE_TEXTS.txt. For example, Vite retains
-Chokidar, braces and readdirp notices even though those particular bundled
-copies do not appear as separate installed-package rows. Updating Sass's
-Chokidar dependency does not replace Vite's embedded copy. Installed-package
-npm audit results do not independently establish the security of every
-embedded component; see the dependency security review separately.
+    Follow-up audit (2026-11-01, Issue #350): the matching upstream
+    package.json at commit f164df92d83e095f195d628b1a68a141ae2eb638
+    explicitly declares "license": "MIT" for @napi-rs/lzma@1.5.1,
+    but does not provide a copyright holder or the permission text.
+    The upstream Cargo.toml at that same commit does not supply those
+    missing details; the root LICENSE path is absent (404).
+    Upstream references:
+      https://github.com/Brooooooklyn/lzma/blob/f164df92d83e095f195d628b1a68a141ae2eb638/package.json
+      https://github.com/Brooooooklyn/lzma/blob/f164df92d83e095f195d628b1a68a141ae2eb638/Cargo.toml
+    The npm binary package is marked MIT, but an SPDX identifier alone
+    does not identify the original notice/copyright information.
+    Neither the author's missing text nor an assumed copyright holder
+    has been inserted in this supplement. Formal provenance remains
+    unresolved. Track it at https://github.com/LGUG-jp/appbox/issues/350.
+    Before any future redistribution of the native binary or a bundle
+    containing it, obtain and verify the version-appropriate original
+    license/attribution (including any embedded third-party code), or
+    exclude/replace it and seek a license review.
+
+The Linux native packages replace Windows-only build rows; the runtime package
+set is unchanged except DOMPurify 3.4.16 -> 3.4.17. Vite 6.4.4 -> 6.4.5 is build-only.
+The two @parcel/watcher Linux binaries at 2.6.0 retain their local MIT notices.
+DOMPurify retains its dual MPL-2.0 OR Apache-2.0 declaration and Apache text.
+Vite and Rollup retain full embedded dependency notices in LICENSE.md, including
+Chokidar, braces and readdirp in Vite. Installed-package npm audit is not an
+independent audit of every embedded component. No runtime notice is removed.
+An inventory on a different OS must be reviewed again; this is no wildcard
+exemption for new packages, versions or MISSING entries.
 
 Radix UI package versions in the installed package inventory:
   @radix-ui/primitive@1.0.0

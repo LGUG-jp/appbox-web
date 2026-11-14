@@ -166,6 +166,7 @@
       dialog.classList.remove("hidden");$("appMain").inert=true;
       document.querySelectorAll(".appbox-header").forEach(element => {element.inert=true;});
       document.body.classList.add("dialog-open");updatePreview();$("closeStamp").focus();
+      api.renderEditor();
     }
     function closeStamp(){
       if(dialog.classList.contains("hidden")) return;
@@ -175,6 +176,7 @@
         document.querySelectorAll(".appbox-header").forEach(element => {element.inert=false;});
       }
       (returnFocus || editCanvas).focus({preventScroll:true});
+      api.renderEditor();
     }
     $("openStamp")?.addEventListener("click",openStamp);
     $("closeStamp").addEventListener("click",closeStamp);

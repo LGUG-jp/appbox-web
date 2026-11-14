@@ -2,7 +2,7 @@
 'use strict';
 
 /* =========================================================================
- * ガントチャート作成アプリ（開発名 NovaChart）v1.7.1
+ * ガントチャート作成アプリ（開発名 NovaChart）v1.7.2
  * （v1.3 で保存形式を .json に切替。v1.4 でシンプル表示・2段書き・期間とマスの単位・テンプレートを追加。
  * v1.5 で一覧最下段の「＋ 作業を追加」、ガント上のドラッグでの作成、「日程は目安」を追加。
  * v1.6.0 で AppBox の標準構成（index.html・help.html・app.css・app.js）へ移し、共通ヘッダー・共通部品を使用）
@@ -14,7 +14,7 @@
 /* =========================================================================
  * 0. 定数
  * ========================================================================= */
-var APP_VERSION = '1.7.1';
+var APP_VERSION = '1.7.2';
 /* 保存データの目印。.json は汎用の拡張子なので、別アプリのJSONと区別するために先頭へ入れる */
 var FILE_FORMAT = 'novachart-wbs';
 var APP_DISPLAY_NAME = 'ガントチャート作成アプリ';
@@ -148,13 +148,13 @@ function formatLocalDateTime(iso) {
 }
 
 /* =========================================================================
- * 1.1 日本の祝日（祝日法の規則から計算。2000〜2099年）— E8
+ * 1.1 日本の祝日（内閣府の公表データを優先し、収録期間より後は推計）
  * 固定日＋ハッピーマンデー＋春分・秋分（国立天文台の近似式、1980〜2099年で有効）＋振替休日＋国民の休日。
  * 改元・特別措置法による一時的な変更（2019・2020・2021年）は例外として個別に補正する。
- * 将来の法改正は反映されない（画面・ヘルプに注記）。
  * ========================================================================= */
-var HOLIDAY_YEAR_MIN = 2000, HOLIDAY_YEAR_MAX = 2099;
-var holidayCache = new Map();
+var holidayData = global.DeadlineCalcHolidays || global.AppBoxHolidays;
+var holidayMeta = holidayData && holidayData.meta;
+var estimatedHolidayCache = new Map();
 
 function ymd(y, m, d) { return pad4(y) + '-' + pad2(m) + '-' + pad2(d); }
 
@@ -218,17 +218,35 @@ function computeHolidaysOfYear(y) {
   return result;
 }
 
-function holidaysOfYear(y) {
-  if (y < HOLIDAY_YEAR_MIN || y > HOLIDAY_YEAR_MAX) return null;
-  if (!holidayCache.has(y)) holidayCache.set(y, computeHolidaysOfYear(y));
-  return holidayCache.get(y);
+/* 日付文字列は描画・出力で共通の YYYY-MM-DD。収録期間内の平日にも公表データを適用する。 */
+function holidaySourceOf(dateStr) {
+  if (!holidayMeta || dateStr < DATE_MIN || dateStr > DATE_MAX || dateStr < holidayMeta.startDate) return null;
+  return dateStr <= holidayMeta.endDate ? 'published' : 'estimated';
 }
 
 /* 祝日名。祝日でなければ null。範囲外の年は「祝日情報なし」として null。 */
 function holidayNameOf(dateStr) {
-  var table = holidaysOfYear(Number(dateStr.slice(0, 4)));
-  if (!table) return null;
-  return table.get(dateStr) || null;
+  var source = holidaySourceOf(dateStr);
+  if (source === 'published') return holidayData.getHolidayName(dateStr);
+  if (source !== 'estimated') return null;
+  var year = Number(dateStr.slice(0, 4));
+  if (!estimatedHolidayCache.has(year)) estimatedHolidayCache.set(year, computeHolidaysOfYear(year));
+  return estimatedHolidayCache.get(year).get(dateStr) || null;
+}
+
+function holidayCoverageNotes() {
+  if (!holidayMeta) return ['祝日データの読み込みに失敗しました。'];
+  var notes = [];
+  var start = maxDateStr([DATE_MIN, holidayMeta.startDate]);
+  var end = minDateStr([DATE_MAX, holidayMeta.endDate]);
+  if (start <= end) {
+    notes.push('祝日（内閣府公表） ' + start + '〜' + end + '（データ取得日 ' + holidayMeta.updated + '）');
+  }
+  if (holidayMeta.endDate < DATE_MAX) {
+    var estimatedStart = maxDateStr([DATE_MIN, dayAdd(holidayMeta.endDate, 1)]);
+    notes.push('祝日（推計） ' + estimatedStart + '〜' + DATE_MAX + '（祝日法の規則から計算）');
+  }
+  return notes;
 }
 
 /* =========================================================================
@@ -1820,9 +1838,10 @@ function buildLegendSheetXml(project, referenceDate, reg, opts) {
     '・小事業は大事業の行にまとめて折りたたまれています。行番号の左の［＋］で表示できます。',
     '・当初計画を確定したタスクは、上の行が当初計画、下の行が修正後の予定です（2段書き）。',
     '・詳細列（当初計画の日付・差分日数・先行タスク・備考）は列見出しの上の［＋］で表示できます。',
-    detail ? '・「状態」は基準日時点の遅延判定です（順調／要注意／遅延）。' : '・シンプル表示で出力しました（進捗率・状態の列は隠しています）。',
+    detail ? '・「状態」は基準日時点の遅延判定です（順調／要注意／遅延）。' : '・シンプル表示で出力しました（進捗率・状態の列は隠しています）。'
+  ].concat(holidayCoverageNotes().map(function (note) { return '・' + note; }), [
     '・基準日: ' + referenceDate + ' ／ 出力日: ' + todayStr() + ' ／ ' + APP_DISPLAY_NAME + ' v' + APP_VERSION
-  ];
+  ]);
   var lastRow = 2 + items.length + 1 + notes.length;
   var buf = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n',
     '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'];
@@ -2819,7 +2838,7 @@ function renderGanttHeader(svg, totalDays, totalW) {
       var t = svgEl('text', { x: x + (scale === 'day' ? px / 2 : 2), y: HEAD_H - 5, 'text-anchor': scale === 'day' ? 'middle' : 'start',
         'class': 'gantt-header-label' + (holiday ? ' holiday' : (wd === 0 || wd === 6 ? ' weekend' : '')) });
       t.textContent = scale === 'day' ? Number(day) + DOW_NAMES[wd] : Number(day);
-      if (holiday) t.appendChild(svgTitle(holiday));
+      if (holiday) t.appendChild(svgTitle(holiday + (holidaySourceOf(ds) === 'estimated' ? '（推計）' : '')));
       svg.appendChild(t);
     }
   }
@@ -3054,7 +3073,9 @@ function renderLegend() {
   items.forEach(function (it) {
     bar.appendChild(el('span', { className: 'lg-item' }, [legendSwatch(it[0]), it[1]]));
   });
-  bar.appendChild(el('span', { className: 'lg-note', text: '祝日は祝日法の規則で計算（2000〜2099年。将来の法改正は反映されません）' }));
+  holidayCoverageNotes().forEach(function (note) {
+    bar.appendChild(el('span', { className: 'lg-note', text: note }));
+  });
 }
 
 function renderPrintHeader() {
@@ -5034,7 +5055,7 @@ if (typeof module !== 'undefined' && module.exports) {
     // 日付・祝日
     isValidDateString: isValidDateString, isAppDate: isAppDate, dayDiff: dayDiff, inclusiveDays: inclusiveDays, dayAdd: dayAdd,
     toEpochDay: toEpochDay, fromEpochDay: fromEpochDay, holidayNameOf: holidayNameOf, isWeekend: isWeekend,
-    computeHolidaysOfYear: computeHolidaysOfYear, holidaysOfYear: holidaysOfYear, formatLocalDateTime: formatLocalDateTime,
+    holidaySourceOf: holidaySourceOf, holidayCoverageNotes: holidayCoverageNotes, formatLocalDateTime: formatLocalDateTime,
     DATE_MIN: DATE_MIN, DATE_MAX: DATE_MAX,
     // 計算エンジン
     computeEffectivePeriod: computeEffectivePeriod, computeMajorRawProgress: computeMajorRawProgress,

@@ -1,5 +1,5 @@
 // The output accepts only freshly painted pixels. Never copy/embed a source PDF page here.
-import { PDFDocument, PDFDict, PDFName, PDFStream } from "./vendor/pdf-lib.esm.js";
+import { PDFDocument, PDFDict, PDFName, PDFStream } from "./vendor/pdf-lib.esm.js?v=c1879c6d";
 
 export const REDACTION_DPI = 150;
 export const MAX_REDACTION_PIXELS = 16_000_000;

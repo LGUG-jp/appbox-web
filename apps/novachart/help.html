@@ -7,21 +7,21 @@
   <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'">
   <title>ガントチャート作成アプリ ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=c3c10a33">
 </head>
 <body>
   <header class="appbox-header">
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -48,7 +48,7 @@
         </div>
         <p class="appbox-help-header-desc">作業の一覧（WBS）とガントチャートで工程表を作り、ファイル保存・Excel・PDFに出力します。</p>
       </div>
-      <span class="version-badge">Version 1.7.1</span>
+      <span class="version-badge">Version 1.7.2</span>
 
       <div class="help-callout help-callout-warning">
         <strong>正本は「保存(.json)」で書き出したファイルです</strong>
@@ -215,7 +215,7 @@
           </details>
           <details class="appbox-help-faq-item">
             <summary>祝日はどのように判定していますか。</summary>
-            <div class="appbox-help-faq-answer">祝日法の規則で計算しています（2000〜2099年）。将来の法改正は反映されません。</div>
+            <div class="appbox-help-faq-answer">2000〜2099年を対象に、「期限・日数かんたん計算」と同じ内閣府の公表データを使います。収録期間の翌日以降は祝日法の規則に基づく推計です。ガント画面、印刷、Excelの「凡例」で各期間を確認できます。工程日数は祝日や土日を含む暦日で数えます。</div>
           </details>
           <details class="appbox-help-faq-item">
             <summary>PDFを社外に渡すときに気を付けることはありますか。</summary>
@@ -251,10 +251,10 @@
     </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / ガントチャート作成アプリ Version 1.7.1
+      共創アプリBOX / ガントチャート作成アプリ Version 1.7.2
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
+  <script src="../../assets/appbox-help.js?v=478c676f"></script>
 </body>
 </html>

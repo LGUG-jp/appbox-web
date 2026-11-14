@@ -345,6 +345,65 @@ body > .appbox-header {
 }
 
 
+.canvas-guidance {
+  display: contents;
+}
+
+/* サンプルと操作案内を上部中央に縦に並べ、互いの表示を覆わないようにする。 */
+.canvas-guidance:has(> .canvas-sample-notice:not([hidden])) {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--appbox-space-2);
+  pointer-events: none;
+}
+
+.canvas-sample-notice {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  max-width: 100%;
+  gap: var(--appbox-space-1);
+  padding: var(--appbox-space-2) var(--appbox-space-3);
+  border: 1px solid var(--appbox-primary);
+  border-left-width: 4px;
+  border-radius: var(--appbox-control-radius);
+  color: var(--appbox-text);
+  background: var(--appbox-primary-soft);
+  box-shadow: var(--appbox-card-shadow);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.canvas-sample-notice strong {
+  flex: none;
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: var(--appbox-weight-bold);
+}
+
+.canvas-sample-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canvas-guidance:has(> .canvas-sample-notice:not([hidden])) > .canvas-mode-banner {
+  position: static;
+  transform: none;
+  max-width: 100%;
+}
+
+.canvas-sample-notice[hidden] {
+  display: none;
+}
+
 .canvas-first-hint,
 .canvas-mode-banner {
   position: absolute;
@@ -1141,6 +1200,10 @@ button:disabled {
 @container (max-width: 1250px) {
   .canvas-mode-banner,
   .canvas-first-hint {
+    top: 62px;
+  }
+
+  .canvas-guidance:has(> .canvas-sample-notice:not([hidden])) {
     top: 62px;
   }
 }

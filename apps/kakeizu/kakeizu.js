@@ -228,6 +228,7 @@ function resetSample(kind) {
   selectedAnnotationId = null;
   selectedAnnotationIds.clear();
   normalizeRelations();
+  setSampleNotice(kind);
 }
 
 
@@ -610,6 +611,7 @@ function loadPersonForm() {
 function updateChartMemoFromInput() {
 const el = document.getElementById("chartMemo");
 chartMemo = el ? el.value : "";
+updateSampleNotice();
 
 // 未保存判定はページ離脱時に保存済みの実データと比較する。
 }
@@ -2307,6 +2309,7 @@ function renderChart({ preserveSnapshot = false } = {}) {
   }
   if (typeof refreshPlacementPreview === "function") refreshPlacementPreview();
   if (typeof updateViewportControls === "function") updateViewportControls();
+  updateSampleNotice();
 }
 
 function drawMarqueeSelection() {
@@ -4245,6 +4248,7 @@ function restoreAutoSaveData(data) {
   if (!data || !Array.isArray(data.people)) {
     return;
   }
+  setSampleNotice();
 
   people = (data.people || []).map(createPerson);
 
@@ -4855,6 +4859,7 @@ function handleJsonFile(event) {
        */
       ++saveOperationSequence; // 未完了の保存結果による基準上書きを防ぐ
       pushUndo("JSONファイル復元前");
+      setSampleNotice();
 
       people = (data.people || []).map(createPerson);
 

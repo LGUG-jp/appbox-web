@@ -1,23 +1,24 @@
-import { isLine, bounds, translate, rotateAnnotation, reorderAnnotations, movePages, stepPages, rangeIds, nearestCorner, drawingBox, constrainedLinePoint, angleLockedLinePoint, resizeBox, selectionRects, samePageRaster, samePageLayout, thumbnailRasterSize, thumbnailColumns } from "./editor-core.mjs?v=1.13.2";
-import { MAX_STROKE_POINTS, MAX_DOCUMENT_INK_POINTS, appendInkPoint, stabilizeInkPoint, inkPath, inkIntersectsSegment, documentInkPointCount, acceptsInkPointer } from "./ink.mjs?v=1.8.0";
-import { embedTextPng } from "./text-image.mjs?v=1.4.0";
-import { MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, checkImageSize, imageMetadata, initialImageBox, imagePlacement, referencedImageIds, clipboardFiles } from "./image-insertion.mjs?v=1.7.0";
-import { PAGE_NUMBER_MARGIN_MM, createPageNumberPlan, pageNumberAnnotation, replacePageNumbers, removePageNumbers, resolvePageNumberPosition } from "./page-numbering.mjs?v=1.13.0";
-import { WATERMARK_PRESETS, createWatermarkPlan, watermarkAnnotation, replaceWatermarks, removeWatermarks } from "./watermark.mjs?v=1.10.0";
-import { MAX_PROJECT_JSON_BYTES, storedZipParts, readStoredZip, serializeProject, readProjectManifest, normalizeProjectPages, projectFileName, detachExcludedPages, relinkKeptPages } from "./project-file.mjs?v=1.14.1";
-import { hasRedactions, redactionColor, redactionRasterSize, createRedactedPdf } from "./redaction.mjs?v=1.14.1";
-import { MM_TO_PT, STAMP_PRESETS, MAX_STAMP_TEMPLATE_FILE_BYTES, normalizeStampSettings, formatStampDate, expandStampLines, layoutStamp, serializeStampTemplates, parseStampTemplates, mergeStampTemplates } from "./stamp.mjs?v=1.11.0";
+import { isLine, bounds, translate, rotateAnnotation, reorderAnnotations, movePages, stepPages, rangeIds, nearestCorner, drawingBox, constrainedLinePoint, angleLockedLinePoint, resizeBox, selectionRects, samePageRaster, samePageLayout, thumbnailRasterSize, thumbnailColumns } from "./editor-core.mjs?v=de85a3cb";
+import { MAX_STROKE_POINTS, MAX_DOCUMENT_INK_POINTS, appendInkPoint, stabilizeInkPoint, inkPath, inkIntersectsSegment, documentInkPointCount, acceptsInkPointer } from "./ink.mjs?v=dcc7885c";
+import { embedTextPng } from "./text-image.mjs?v=f9bb024f";
+import { MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, checkImageSize, imageMetadata, initialImageBox, imagePlacement, referencedImageIds, clipboardFiles } from "./image-insertion.mjs?v=4533c4d0";
+import { PAGE_NUMBER_MARGIN_MM, createPageNumberPlan, pageNumberAnnotation, replacePageNumbers, removePageNumbers, resolvePageNumberPosition } from "./page-numbering.mjs?v=1843c8b1";
+import { WATERMARK_PRESETS, createWatermarkPlan, watermarkAnnotation, replaceWatermarks, removeWatermarks } from "./watermark.mjs?v=ec817086";
+import { MAX_PROJECT_JSON_BYTES, storedZipParts, readStoredZip, serializeProject, readProjectManifest, normalizeProjectPages, projectFileName, detachExcludedPages, relinkKeptPages, removeUnreachableObjects } from "./project-file.mjs?v=2a8c3537";
+import { hasRedactions, redactionColor, redactionRasterSize, createRedactedPdf } from "./redaction.mjs?v=7deff76b";
+import { MAX_BOOKMARKS, MAX_BOOKMARK_TITLE_LENGTH, bookmarksFromProject, canonicalBookmarks, cleanBookmarkTitle, countBookmarks, findBookmark, insertBookmarksByPage, moveBookmark, pruneBookmarks, readPdfOutline, removeBookmark, writePdfOutline } from "./bookmarks.mjs?v=67cf6357";
+import { MM_TO_PT, STAMP_PRESETS, MAX_STAMP_TEMPLATE_FILE_BYTES, normalizeStampSettings, formatStampDate, expandStampLines, layoutStamp, serializeStampTemplates, parseStampTemplates, mergeStampTemplates } from "./stamp.mjs?v=f69fff9a";
 import {
   PDFDocument,
   rgb,
   degrees, pushGraphicsState, popGraphicsState, setLineJoin
-} from "./vendor/pdf-lib.esm.js";
+} from "./vendor/pdf-lib.esm.js?v=c1879c6d";
 
 import * as pdfjsLib
-  from "./vendor/pdf.min.mjs";
+  from "./vendor/pdf.min.mjs?v=d52477eb";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "./vendor/pdf.worker.min.mjs";
+  "./vendor/pdf.worker.min.mjs?v=b53a18c9";
 
 const PDFJS_CMAP_BUNDLE_URL =
   "./vendor/cmaps.bundle.json.gz";
@@ -242,7 +243,7 @@ function getPdfJsAuxiliaryOptions() {
       BundledTextCMapReaderFactory,
     wasmUrl:
       new URL(
-        "./vendor/wasm/",
+        "./vendor/wasm-066b2e4d/",
         document.baseURI
       ).href,
     useWasm: true,
@@ -285,6 +286,9 @@ const normRotation = rotation =>
       360 +
     360
   ) % 360;
+
+const isBookmarkPanelTarget = element =>
+  Boolean(element?.closest?.("#bookmarksPanel"));
 
 const isTextEditingTarget = element =>
   Boolean(
@@ -442,6 +446,12 @@ const state = {
   sources: new Map(),
   images: new Map(),
   pages: [],
+  bookmarks: [],
+  bookmarksOpen: false,
+  bookmarkSelectionId: null,
+  bookmarkFolds: new Map(),
+  bookmarkDialogId: null,
+  bookmarkRenderKey: null,
   currentPageId: null,
   selectedAnnotationId: null,
   tool: "select",
@@ -474,7 +484,9 @@ const state = {
   busy: false,
   restoringHistory: false,
   historyRecoveryFailed: false,
-  dragPageId: null
+  dragPageId: null,
+  // 覆い系の図形の案内を、この文書で出したか。履歴・作業ファイル・保存領域には入れない。
+  coveringNoticeShown: false
 };
 
 const els = {
@@ -484,7 +496,7 @@ const els = {
   save: $("saveBtn"),
   collapseToggle:
     document.querySelector(
-      '[data-appbox-collapse="pdfBrand pdfNotice"]'
+      '[data-appbox-collapse="pdfBrand"]'
     ),
   annotationMenu:
     $("annotationToolsMenu"),
@@ -705,6 +717,7 @@ function snapshot() {
   ensureRevisionState();
   return {
     pages: clone(state.pages),
+    bookmarks: clone(state.bookmarks || []),
     currentPageId: state.currentPageId,
     selectedPages: [...state.pageSelection],
     revision: state.revision
@@ -1021,6 +1034,7 @@ async function restoreSnapshot(
     );
 
   state.pages = nextPages;
+  state.bookmarks = clone(snap.bookmarks || []);
   state.revision = Number.isInteger(snap.revision) ? snap.revision : state.revision;
   state.pageSelection = new Set(
     snap.selectedPages || []
@@ -1129,6 +1143,9 @@ function applyHistoryOperationState(
 ) {
   state.pages = clone(
     before.document.pages
+  );
+  state.bookmarks = clone(
+    before.document.bookmarks || []
   );
   state.currentPageId =
     before.document.currentPageId;
@@ -1485,6 +1502,7 @@ function syncUI() {
     state.busy ||
     !hasPages;
   syncPdfSaveOptions();
+  syncCoveringNotice();
   $("saveRedactedPdfMenuItem").disabled = state.busy || !hasPages;
   $("saveProjectBtn").disabled = state.busy || !hasPages;
   if (els.save.disabled) closeSaveMenu();
@@ -1492,6 +1510,7 @@ function syncUI() {
   $("stampBtn").disabled = state.busy || !hasPages || state.mode !== "edit";
   $("pageNumberBtn").disabled = state.busy || !hasPages;
   $("watermarkBtn").disabled = state.busy || !hasPages;
+  syncBookmarks();
 
   els.pageCount.textContent =
     `${state.pages.length}ページ`;
@@ -1702,6 +1721,7 @@ async function readPdfFiles(
    * sourceだけを記録します。
    */
   const addedSourceIds = [];
+  const addedBookmarks = [];
 
   setBusy(
     true,
@@ -1861,6 +1881,23 @@ async function readPdfFiles(
             // 読込み処理を継続します。
           }
         }
+
+        // しおりを読み込めなくても、PDF自体は開きます。
+        const outline = await readPdfOutline(
+          pdfjsDoc,
+          state.pages.filter(page => page.sourceId === sourceId).map(page => page.id),
+          uid,
+          MAX_BOOKMARKS - countBookmarks(state.bookmarks) - countBookmarks(addedBookmarks)
+        );
+        const addedSource = state.sources.get(sourceId);
+        // 元バイトと対になる基準なので、保存しても更新しません。
+        addedSource.bookmarkBaseline = canonicalBookmarks(outline.bookmarks);
+        addedSource.bookmarkImport = {
+          skipped: outline.skipped,
+          headings: outline.headings,
+          failed: outline.failed
+        };
+        addedBookmarks.push(...outline.bookmarks);
       } catch (error) {
         /*
          * source登録前にPDF.jsドキュメントを作成済みなら、
@@ -1894,6 +1931,13 @@ async function readPdfFiles(
     }
 
     insertLoadedPages(before.pages.length, insertAt);
+    state.bookmarks = insertBookmarksByPage(
+      state.bookmarks,
+      addedBookmarks,
+      state.pages.map(page => page.id),
+      insertAt,
+      state.pages.length - before.pages.length
+    );
 
     state.currentPageId ||=
       state.pages[0]?.id ||
@@ -1915,7 +1959,9 @@ async function readPdfFiles(
     syncUI();
 
     updateStatus(
-      `${files.length}ファイルを読み込みました。全${state.pages.length}ページです。`
+      `${files.length}ファイルを読み込みました。全${state.pages.length}ページです。${
+        addedBookmarks.length ? `しおりを${countBookmarks(addedBookmarks)}件読み込みました。` : ""
+      }${bookmarkNoticeText()}`
     );
 
     showToast(
@@ -1930,6 +1976,8 @@ async function readPdfFiles(
      */
     state.pages =
       clone(before.pages);
+    state.bookmarks =
+      clone(before.bookmarks || []);
 
     // 描画まで成功する前の失敗では、保存判定と履歴も読込み前へ戻す。
     state.revision = before.revision;
@@ -2883,6 +2931,12 @@ function syncThumbnailSelection() {
 function updateThumbnailAnnotationMarker(
   pageId
 ) {
+  /*
+   * 図形の確定（作図・手書き・文字入力の終了・貼り付け・画像追加）の後に必ず通るため、
+   * 覆い系の図形の案内もここで判定する。取消・小さすぎる図形・空の文字は除いた後に呼ばれる。
+   */
+  syncCoveringNotice();
+
   const page =
     state.pages.find(
       item =>
@@ -2999,6 +3053,9 @@ function rotateCurrent(delta) {
 function deleteCurrentPage() {
   const pages=selectedPages();if(state.busy||!pages.length)return;
   if(pages.length===state.pages.length){showToast('最後の1ページは残してください。すべて閉じる場合は「閉じる」を使用します。');return;}
+  const pruned = pruneBookmarks(state.bookmarks, new Set(state.pages.filter(p=>!state.pageSelection.has(p.id)).map(p=>p.id)));
+  const bookmarkNote = bookmarkDeletionNote(pruned);
+  if (bookmarkNote && !confirm(`${pages.length}ページを削除します。${bookmarkNote}元に戻すで復元できます。`)) return;
   const restoreFocus = state.mode === "overview" && els.thumbs.contains(document.activeElement);
   // Keep focus within the list until the replacement thumbnail is available.
   if (restoreFocus)
@@ -3006,11 +3063,12 @@ function deleteCurrentPage() {
   finishTextEditing();pushHistory();
   const index = state.pages.findIndex(page => state.pageSelection.has(page.id));
   state.pages=state.pages.filter(p=>!state.pageSelection.has(p.id));
+  state.bookmarks=pruned.bookmarks;
   state.currentPageId=state.pages[Math.min(index,state.pages.length-1)].id;
   state.pageSelection=new Set([state.currentPageId]);state.selectionAnchor=state.currentPageId;state.selectedAnnotationId=null;state.figureSelection.clear();
   syncUI();
   if(state.mode==="overview") renderThumbnails(null, restoreFocus ? state.currentPageId : null); else renderCurrentPage();
-  const message = `${pages.length}ページを削除しました（残り${state.pages.length}ページ）。元に戻すで復元できます。`;
+  const message = `${pages.length}ページを削除しました（残り${state.pages.length}ページ）。${bookmarkNote ? "しおりも更新しました。" : ""}元に戻すで復元できます。`;
   updateStatus(message);
   showToast(message);
 }
@@ -4548,7 +4606,9 @@ function originalSourceIfUnchanged() {
 
   if (
     state.pages.length !==
-    source.pdfjsDoc.numPages
+    source.pdfjsDoc.numPages ||
+    canonicalBookmarks(state.bookmarks) !==
+    (source.bookmarkBaseline ?? "[]")
   ) {
     return null;
   }
@@ -4855,6 +4915,25 @@ function confirmPdfSave({ rasterize, extract, masked }) {
   });
 }
 
+// 残したページ同士のリンクを、出力したページへ付け替えます。pagesは出力順です。
+function relinkOutputPages(output, pages, placeholders) {
+  const linkTargets =
+    new Map();
+
+  pages.forEach((page, index) => {
+    const name =
+      placeholders
+        .get(page.sourceId)
+        ?.get(page.sourceIndex);
+
+    if (name && !linkTargets.has(name)) {
+      linkTargets.set(name, output.getPage(index).ref);
+    }
+  });
+
+  relinkKeptPages(output, linkTargets);
+}
+
 async function exportRedactedPdf(exportPages, extract, confirmed = false) {
   // Freeze the selected pages/ranges before any asynchronous work or pending pointer completion.
   exportPages = clone(exportPages);
@@ -4999,12 +5078,40 @@ async function exportPdf(extract = false, rasterize = false) {
     const flattenedSourcePages =
       new Map();
 
+    // 元PDFごとの「元ページ番号→付け替え用の名前」。ページ間リンクの付け替えに使います。
+    const placeholders =
+      new Map();
+
     for (
       const [
         sourceId,
         sourceDocument
       ] of loadedSources
     ) {
+      /*
+       * 削除・除外したページの内容が出力へ入らないよう、コピーの前に切り離します。
+       * 残すページ上の添付ファイル注釈は、通常保存の機能として維持します。
+       */
+      placeholders.set(
+        sourceId,
+        detachExcludedPages(
+          sourceDocument,
+          exportPages
+            .filter(
+              reference =>
+                reference.sourceId ===
+                sourceId
+            )
+            .map(
+              reference =>
+                reference.sourceIndex
+            ),
+          {
+            keepAttachments: true
+          }
+        )
+      );
+
       const regularReferences =
         exportPages.filter(
           reference =>
@@ -5219,6 +5326,30 @@ async function exportPdf(extract = false, rasterize = false) {
       }
     }
 
+    /*
+     * 埋め込みページを確定してからリンクを付け替え、回転ページの
+     * 埋め込みに使ったコピーなど、どこからも参照されないものを除きます。
+     */
+    await output.flush();
+
+    relinkOutputPages(
+      output,
+      exportPages,
+      placeholders
+    );
+
+    // ページの追加後に最終的な参照を集めるため、回転ページの別経路も同じ扱いになります。
+    const outputPageRefs = new Map(
+      exportPages.map((reference, index) => [reference.id, output.getPage(index).ref])
+    );
+    writePdfOutline(
+      output,
+      pruneBookmarks(state.bookmarks, new Set(outputPageRefs.keys())).bookmarks,
+      outputPageRefs
+    );
+
+    removeUnreachableObjects(output);
+
     const bytes =
       await output.save({
         useObjectStreams: true
@@ -5369,6 +5500,7 @@ async function clearDocument() {
     for (const asset of state.images.values()) URL.revokeObjectURL(asset.url);
     state.images.clear();
     state.pages = [];
+    resetBookmarkState();
     // 初期画面では作業ファイルも選べるよう、選択条件を戻します。
     els.input.accept = initialFileAccept;
     state.currentPageId = null;
@@ -5458,7 +5590,8 @@ async function saveProjectFile() {
         pages: state.pages,
         sizes: state.pages.map(pageDisplaySize),
         images: state.images,
-        fontFamilies: Object.keys(FONT_STACKS)
+        fontFamilies: Object.keys(FONT_STACKS),
+        bookmarks: state.bookmarks
       });
 
     const output =
@@ -5559,22 +5692,11 @@ async function saveProjectFile() {
       output.addPage(copied);
     }
 
-    // 残したページ同士のリンクを、出力したページへ付け替えます。
-    const linkTargets =
-      new Map();
-
-    state.pages.forEach((page, index) => {
-      const name =
-        placeholders
-          .get(page.sourceId)
-          ?.get(page.sourceIndex);
-
-      if (name && !linkTargets.has(name)) {
-        linkTargets.set(name, output.getPage(index).ref);
-      }
-    });
-
-    relinkKeptPages(output, linkTargets);
+    relinkOutputPages(
+      output,
+      state.pages,
+      placeholders
+    );
 
     const basePdf =
       await output.save({
@@ -5912,6 +6034,7 @@ async function openProjectFile(file) {
     );
 
     state.pages = pages;
+    state.bookmarks = bookmarksFromProject(manifest.bookmarks, pages.map(page => page.id), uid);
     state.currentPageId =
       pages[0].id;
     state.history = [];
@@ -5936,6 +6059,7 @@ async function openProjectFile(file) {
   } catch (error) {
     state.sources.delete(sourceId);
     state.pages = [];
+    resetBookmarkState();
     state.currentPageId = null;
     state.selectedAnnotationId = null;
     state.pageSelection.clear();
@@ -7221,7 +7345,8 @@ document.addEventListener(
         event.key ===
           "Backspace"
       ) &&
-      state.selectedAnnotationId
+      state.selectedAnnotationId &&
+      !isBookmarkPanelTarget(event.target)
     ) {
       event.preventDefault();
       deleteSelectedAnnotation();
@@ -7278,6 +7403,14 @@ window.addEventListener(
 function selectedPages() {
   return state.pages.filter((p) => state.pageSelection.has(p.id));
 }
+function allPagesSelected() {
+  return state.pages.length > 0 && state.pages.every((p) => state.pageSelection.has(p.id));
+}
+function selectAllPages() {
+  if (state.busy) return;
+  state.pageSelection = new Set(state.pages.map((p) => p.id));
+  syncUI();
+}
 function selectedFigures() {
   const page = currentPage();
   if (!page) return [];
@@ -7299,6 +7432,8 @@ function syncWorkspace() {
   ["selectAllPagesBtn", "backToPagesBtn"].forEach(
     (id) => ($(id).disabled = state.busy || !state.pages.length),
   );
+  // 次に行う操作をラベルで示す（aria-pressedは使わない）。
+  $("selectAllPagesBtn").textContent = allPagesSelected() ? "全解除" : "全選択";
   $("extractBtn").disabled = state.busy || !count;
   els.rotateLeft.disabled = els.rotateRight.disabled = els.deletePage.disabled = state.busy || !count;
   els.movePageUp.disabled =
@@ -7623,9 +7758,12 @@ function syncWorkspaceLayout() {
   const expanded = state.pagesPanelPreference ?? !matchMedia("(max-width: 700px)").matches;
   els.editor.dataset.pagesExpanded = String(expanded);
   els.editor.dataset.thumbnailSize = state.thumbnailSize;
+  els.editor.dataset.bookmarksOpen = String(state.bookmarksOpen);
   const button = $("togglePagesBtn");
-  const label = expanded ? "ページ一覧を閉じる" : "ページ一覧を表示";
-  button.setAttribute("aria-expanded", String(expanded));
+  // 個別編集の左列はページ一覧としおりの切替なので、しおりの表示中はページ一覧を閉じた状態です。
+  const pagesVisible = expanded && !state.bookmarksOpen;
+  const label = pagesVisible ? "ページ一覧を閉じる" : "ページ一覧を表示";
+  button.setAttribute("aria-expanded", String(pagesVisible));
   button.setAttribute("aria-label", label);
   button.setAttribute("title", label);
   button.disabled = state.busy || !state.pages.length;
@@ -7644,9 +7782,307 @@ function schedulePageLayoutRender() {
 function togglePagesPanel() {
   if (state.busy || state.mode !== "edit") return;
   finishTextEditing();
-  state.pagesPanelPreference = els.editor.dataset.pagesExpanded !== "true";
+  if (state.bookmarksOpen) {
+    state.bookmarksOpen = false;
+    state.pagesPanelPreference = true;
+    syncBookmarks();
+  } else {
+    state.pagesPanelPreference = els.editor.dataset.pagesExpanded !== "true";
+  }
   syncWorkspaceLayout();
   schedulePageLayoutRender();
+}
+
+/*
+ * しおり
+ * 閲覧用のナビゲーションではなく、保存するPDFの編集対象です。
+ * 読込み時に自動で開かず、現在位置の追従やページ内座標へのジャンプも持ちません。
+ * 折りたたみと選択行は表示上の状態なので、履歴と未保存判定には入れません。
+ */
+function resetBookmarkState() {
+  state.bookmarks = [];
+  state.bookmarksOpen = false;
+  state.bookmarkSelectionId = null;
+  state.bookmarkFolds = new Map();
+  state.bookmarkDialogId = null;
+  state.bookmarkRenderKey = null;
+}
+
+function bookmarkImportSummary() {
+  const summary = { skipped: 0, headings: 0, failed: false };
+  for (const sourceId of new Set(state.pages.map(page => page.sourceId))) {
+    const info = state.sources.get(sourceId)?.bookmarkImport;
+    if (!info) continue;
+    summary.skipped += info.skipped;
+    summary.headings += info.headings;
+    summary.failed ||= info.failed;
+  }
+  return summary;
+}
+
+// 元PDFをそのまま保存する場合は元のしおりが残るため、「組み直して保存」に限定して案内します。
+function bookmarkNoticeText() {
+  const { skipped, headings, failed } = bookmarkImportSummary();
+  const parts = [];
+  if (failed) parts.push("しおりを読み取れなかったPDFがあります。元のしおりは、PDFを組み直して保存すると引き継がれません。");
+  if (skipped) parts.push(`ページへの移動ではないしおり、移動先の不明なしおりなど${skipped}件は一覧に表示しておらず、PDFを組み直して保存すると引き継がれません。`);
+  if (headings) parts.push(`移動先のないしおり${headings}件は、読込み時に見出しとして取り込みました。スクリプトなどの動作が設定されていた場合、PDFを組み直して保存すると引き継がれません。`);
+  return parts.join("");
+}
+
+function bookmarkDeletionNote({ removed, headings }) {
+  return (removed ? `移動先を失うしおり${removed}件も削除します。` : "") +
+    (headings ? `しおり${headings}件は移動先を解除して見出しにします。` : "");
+}
+
+function isBookmarkFolded(node) {
+  return state.bookmarkFolds.get(node.id) ?? node.collapsed;
+}
+
+function renderBookmarkNodes(nodes, pageNumbers) {
+  const list = document.createElement("ul");
+  list.className = "bookmark-list";
+  for (const node of nodes) {
+    const item = document.createElement("li");
+    const row = document.createElement("div");
+    row.className = "bookmark-row";
+    row.classList.toggle("is-selected", node.id === state.bookmarkSelectionId);
+    const folded = isBookmarkFolded(node);
+    if (node.children.length) {
+      const fold = document.createElement("button");
+      fold.type = "button";
+      fold.className = "bookmark-fold";
+      fold.dataset.bookmarkId = node.id;
+      fold.setAttribute("aria-expanded", String(!folded));
+      fold.setAttribute("aria-label", `${node.title}の下位のしおり`);
+      fold.title = "下位のしおりの表示を切り替える";
+      fold.textContent = folded ? "▶" : "▼";
+      row.append(fold);
+    } else {
+      const spacer = document.createElement("span");
+      spacer.className = "bookmark-fold-spacer";
+      row.append(spacer);
+    }
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "bookmark-link";
+    link.dataset.bookmarkId = node.id;
+    if (node.id === state.bookmarkSelectionId) link.setAttribute("aria-current", "true");
+    const title = document.createElement("span");
+    title.className = "bookmark-title";
+    title.textContent = node.title;
+    const page = document.createElement("span");
+    page.className = "bookmark-page";
+    page.textContent = node.pageId === null ? "見出し" : `${pageNumbers.get(node.pageId)}ページ`;
+    link.setAttribute("aria-label", `${node.title}、${page.textContent}`);
+    link.append(title, page);
+    row.append(link);
+    item.append(row);
+    if (node.children.length && !folded) item.append(renderBookmarkNodes(node.children, pageNumbers));
+    list.append(item);
+  }
+  return list;
+}
+
+function renderBookmarkTree() {
+  const tree = $("bookmarkTree");
+  const key = JSON.stringify([
+    state.bookmarks,
+    state.pages.map(page => page.id),
+    state.bookmarkSelectionId,
+    [...state.bookmarkFolds]
+  ]);
+  if (key === state.bookmarkRenderKey) return;
+  state.bookmarkRenderKey = key;
+  const focused = tree.contains(document.activeElement) ? document.activeElement : null;
+  const focusClass = focused?.classList.contains("bookmark-fold") ? "bookmark-fold" : "bookmark-link";
+  const focusId = focused?.dataset.bookmarkId;
+  const pageNumbers = new Map(state.pages.map((page, index) => [page.id, index + 1]));
+  tree.replaceChildren(...(state.bookmarks.length ? [renderBookmarkNodes(state.bookmarks, pageNumbers)] : []));
+  if (focusId) {
+    // Undoで行が消えても、フォーカスをパネル内に残します。
+    (tree.querySelector(`.${focusClass}[data-bookmark-id="${CSS.escape(focusId)}"]`) || $("bookmarkAddBtn"))
+      .focus({ preventScroll: true });
+  }
+}
+
+function syncBookmarks() {
+  const count = countBookmarks(state.bookmarks);
+  const notice = bookmarkNoticeText();
+  const toggle = $("bookmarksBtn");
+  toggle.disabled = state.busy || !state.pages.length;
+  toggle.setAttribute("aria-expanded", String(state.bookmarksOpen));
+  const label = `しおり${count ? ` ${count}件` : ""}${notice ? "（保存時の注意あり）" : ""}`;
+  toggle.setAttribute("aria-label", label);
+  toggle.title = label;
+  $("bookmarksCount").textContent = String(count);
+  $("bookmarksCount").hidden = !count;
+  $("bookmarksWarning").hidden = !notice;
+  $("bookmarksPanel").hidden = !state.bookmarksOpen;
+  if (!state.bookmarksOpen) return;
+
+  const found = state.bookmarkSelectionId ? findBookmark(state.bookmarks, state.bookmarkSelectionId) : null;
+  if (!found) state.bookmarkSelectionId = null;
+  const pageIndex = currentPageIndex();
+  const add = $("bookmarkAddBtn");
+  add.disabled = state.busy || pageIndex < 0;
+  $("bookmarkAddLabel").textContent = pageIndex >= 0 ? `${pageIndex + 1}ページに追加` : "追加";
+  $("bookmarkEditBtn").disabled = state.busy || !found;
+  $("bookmarkDeleteBtn").disabled = state.busy || !found;
+  $("bookmarkUpBtn").disabled = state.busy || !found || found.index === 0;
+  $("bookmarkDownBtn").disabled = state.busy || !found || found.index === found.siblings.length - 1;
+  $("bookmarksEmpty").hidden = count > 0;
+  $("bookmarksNotice").textContent = notice;
+  $("bookmarksNotice").hidden = !notice;
+  renderBookmarkTree();
+}
+
+function toggleBookmarksPanel() {
+  if (state.busy || !state.pages.length) return;
+  finishTextEditing();
+  state.bookmarksOpen = !state.bookmarksOpen;
+  syncBookmarks();
+  syncWorkspaceLayout();
+  schedulePageLayoutRender();
+  if (state.bookmarksOpen) $("bookmarkAddBtn").focus();
+}
+
+// 一覧ではページを選ぶだけで、個別編集へ移りません（並べ替えなどの作業を続けられます）。
+function activateBookmark(id) {
+  const found = findBookmark(state.bookmarks, id);
+  if (state.busy || !found) return;
+  state.bookmarkSelectionId = id;
+  if (found.node.pageId !== null && state.pages.some(page => page.id === found.node.pageId)) {
+    choosePage(found.node.pageId);
+    if (state.mode === "overview") {
+      els.thumbs
+        .querySelector(`[data-page-id="${CSS.escape(found.node.pageId)}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+    }
+  }
+  syncBookmarks();
+}
+
+function openBookmarkDialog(id = null) {
+  if (state.busy || !state.pages.length) return;
+  const node = id ? findBookmark(state.bookmarks, id)?.node : null;
+  if (id && !node) return;
+  if (!id && countBookmarks(state.bookmarks) >= MAX_BOOKMARKS) {
+    showToast(`しおりは${MAX_BOOKMARKS}件まで追加できます。`, true);
+    return;
+  }
+  finishTextEditing();
+  state.bookmarkDialogId = id;
+  const pageInput = $("bookmarkPageInput"), titleInput = $("bookmarkTitleInput");
+  const pageIndex = node
+    ? state.pages.findIndex(page => page.id === node.pageId)
+    : currentPageIndex();
+  $("bookmarkDialogTitle").textContent = node ? "しおりを編集" : "しおりを追加";
+  $("bookmarkDialogSave").textContent = node ? "変更" : "追加";
+  titleInput.value = node?.title ?? "";
+  titleInput.maxLength = MAX_BOOKMARK_TITLE_LENGTH;
+  titleInput.setCustomValidity("");
+  pageInput.max = state.pages.length;
+  pageInput.value = pageIndex >= 0 ? pageIndex + 1 : "";
+  // 下位のしおりがあれば、移動先のない見出しにできます。
+  pageInput.required = !node?.children.length;
+  $("bookmarkPageHint").textContent = node?.children.length
+    ? `全${state.pages.length}ページ。空欄にすると、移動先のない見出しになります。`
+    : `全${state.pages.length}ページ`;
+  $("bookmarkDialog").showModal();
+  titleInput.select();
+}
+
+function submitBookmarkForm(event) {
+  event.preventDefault();
+  const titleInput = $("bookmarkTitleInput"), pageInput = $("bookmarkPageInput");
+  const title = cleanBookmarkTitle(titleInput.value);
+  titleInput.setCustomValidity(title ? "" : "タイトルを入力してください。");
+  if (state.busy || !$("bookmarkForm").reportValidity()) return;
+  const page = pageInput.value === "" ? null : state.pages[Number(pageInput.value) - 1];
+  const pageId = page?.id ?? null;
+  const id = state.bookmarkDialogId;
+  if (id) {
+    const node = findBookmark(state.bookmarks, id)?.node;
+    if (node && (node.title !== title || node.pageId !== pageId)) {
+      pushHistory();
+      node.title = title;
+      node.pageId = pageId;
+      showToast("しおりを変更しました。");
+    }
+  } else {
+    pushHistory();
+    const node = { id: uid(), title, pageId, collapsed: false, children: [] };
+    state.bookmarks = insertBookmarksByPage(
+      state.bookmarks,
+      [node],
+      state.pages.map(item => item.id),
+      Number(pageInput.value) - 1
+    );
+    state.bookmarkSelectionId = node.id;
+    showToast(`${Number(pageInput.value)}ページにしおりを追加しました。`);
+  }
+  $("bookmarkDialog").close();
+  syncUI();
+  $("bookmarkTree").querySelector(".bookmark-row.is-selected")?.scrollIntoView({ block: "nearest" });
+}
+
+function moveSelectedBookmark(delta) {
+  const found = findBookmark(state.bookmarks, state.bookmarkSelectionId);
+  if (state.busy || !found) return;
+  const target = found.index + delta;
+  if (target < 0 || target >= found.siblings.length) return;
+  pushHistory();
+  moveBookmark(state.bookmarks, found.node.id, delta);
+  syncUI();
+  showToast(`「${found.node.title}」を${delta < 0 ? "上" : "下"}へ移動しました。`);
+  const button = $(delta < 0 ? "bookmarkUpBtn" : "bookmarkDownBtn");
+  if (button.disabled) $(delta < 0 ? "bookmarkDownBtn" : "bookmarkUpBtn").focus();
+  $("bookmarkTree").querySelector(".bookmark-row.is-selected")?.scrollIntoView({ block: "nearest" });
+}
+
+function deleteSelectedBookmark() {
+  const found = findBookmark(state.bookmarks, state.bookmarkSelectionId);
+  if (state.busy || !found) return;
+  const descendants = countBookmarks(found.node.children);
+  if (descendants && !confirm(`「${found.node.title}」と、その下位のしおり${descendants}件を削除します。元に戻すで復元できます。`)) return;
+  pushHistory();
+  const removed = removeBookmark(state.bookmarks, found.node.id);
+  state.bookmarkSelectionId = null;
+  syncUI();
+  $("bookmarkAddBtn").focus();
+  showToast(`しおり${removed}件を削除しました。元に戻すで復元できます。`);
+}
+
+function setupBookmarks() {
+  $("bookmarksBtn").addEventListener("click", toggleBookmarksPanel);
+  $("bookmarkAddBtn").addEventListener("click", () => openBookmarkDialog());
+  $("bookmarkEditBtn").addEventListener("click", () => openBookmarkDialog(state.bookmarkSelectionId));
+  $("bookmarkUpBtn").addEventListener("click", () => moveSelectedBookmark(-1));
+  $("bookmarkDownBtn").addEventListener("click", () => moveSelectedBookmark(1));
+  $("bookmarkDeleteBtn").addEventListener("click", deleteSelectedBookmark);
+  $("bookmarkForm").addEventListener("submit", submitBookmarkForm);
+  $("bookmarkTitleInput").addEventListener("input", event => event.target.setCustomValidity(""));
+  $("bookmarkDialogCancel").addEventListener("click", () => $("bookmarkDialog").close());
+  // しおりが多いと次の領域までTab移動が長くなるため、Escでパネルを抜けられるようにします。
+  $("bookmarksPanel").addEventListener("keydown", event => {
+    if (event.key !== "Escape" || state.busy) return;
+    event.stopPropagation();
+    toggleBookmarksPanel();
+    $("bookmarksBtn").focus();
+  });
+  $("bookmarkTree").addEventListener("click", event => {
+    const button = event.target.closest("button[data-bookmark-id]");
+    if (!button || state.busy) return;
+    const id = button.dataset.bookmarkId;
+    if (button.classList.contains("bookmark-fold")) {
+      const found = findBookmark(state.bookmarks, id);
+      if (found) state.bookmarkFolds.set(id, !isBookmarkFolded(found.node));
+      syncBookmarks();
+      return;
+    }
+    activateBookmark(id);
+  });
 }
 
 function setThumbnailSize(size) {
@@ -7755,31 +8191,84 @@ function svgNode(name, attrs = {}) {
 }
 // Ordinary PDF, image-only PDF and the work file are separate visible choices.
 function saveMenuItems() {
-  return [...$("saveMenu").querySelectorAll('[role="menuitem"]')].filter(item => !item.disabled);
+  return [...$("saveMenu").querySelectorAll('[role="menuitem"]')].filter(item => !item.disabled && !item.hidden);
 }
+// 墨消し範囲があるときは通常保存を隠し、理由を墨消し保存の説明にも関連付けて読み上げる。
 function syncPdfSaveOptions() {
   const guarded = state.pages.some(page => page.annotations?.some(a => a.type === "redact"));
-  $("savePdfMenuItem").disabled = state.busy || !state.pages.length || guarded;
+  const normal = $("savePdfMenuItem");
+  // 隠す前に記録する（隠した後はブラウザがフォーカスを外すため判定できない）。
+  const hadFocus = document.activeElement === normal;
+  normal.disabled = state.busy || !state.pages.length;
+  normal.hidden = guarded;
   $("savePdfGuardNote").hidden = !guarded;
+  $("saveRedactedPdfMenuItem").setAttribute("aria-describedby",
+    guarded ? "saveRedactedPdfDescription savePdfGuardNote" : "saveRedactedPdfDescription");
+  if (guarded && hadFocus) (saveMenuItems()[0] || els.save).focus();
 }
 function openSaveMenu(focus = "first") {
   if (state.busy || els.save.disabled) return;
   syncPdfSaveOptions();
-  $("saveMenu").hidden = false;
+  $("saveMenuPopup").hidden = false;
   els.save.setAttribute("aria-expanded", "true");
   const items = saveMenuItems();
   (focus === "last" ? items.at(-1) : items[0])?.focus();
 }
 function closeSaveMenu({ restoreFocus = false } = {}) {
-  if ($("saveMenu").hidden) return;
-  $("saveMenu").hidden = true;
+  if ($("saveMenuPopup").hidden) return;
+  $("saveMenuPopup").hidden = true;
   els.save.setAttribute("aria-expanded", "false");
   if (restoreFocus) els.save.focus();
+}
+/*
+ * 覆い系の図形を初めて置いたときに、一度だけ出す通常保存の案内（#360）。
+ * 専用の墨消しは墨消しPDFで保存されるため、ページ番号・透かしは覆う用途ではないため対象外。
+ * 文書を閉じるまでは、追加・結合・Undo／Redo・保存で繰り返さない。保存直前の確認は別に毎回出す。
+ * 保存直前の確認（hasCoveringAnnotations）は墨消しとページ番号も含むため、種別の一覧は共有しない。
+ */
+const COVERING_FIGURE_TYPES = ["rect", "ellipse", "text", "image", "ink"];
+const COVERING_NOTICE =
+  "四角・丸・テキスト・画像・手書きで覆っても、通常保存では下の文字や画像がPDF内に残ります。隠すときは「墨消し」で範囲を指定し、「墨消しPDFとして保存」を選んでください。";
+
+function hasCoveringFigures(pages = state.pages) {
+  return pages.some(page => page.annotations?.some(a => COVERING_FIGURE_TYPES.includes(a.type)));
+}
+
+function syncCoveringNotice() {
+  if (!state.pages.length) {
+    state.coveringNoticeShown = false;
+    closeCoveringNotice();
+    return;
+  }
+  // 読込み中は待ち、作業ファイルに図形が既にあれば読込み後に出す。
+  if (state.busy || state.coveringNoticeShown || !hasCoveringFigures()) return;
+  state.coveringNoticeShown = true;
+  $("coveringNotice").dataset.open = "true";
+  $("coveringNoticeClose").hidden = false;
+  // 作業ファイルの読込み直後は、編集画面と読み上げ領域が同時に表示される。
+  // 領域が認識されてから文言を入れ、読み上げを取りこぼさないようにする。
+  setTimeout(() => {
+    if ($("coveringNotice").dataset.open === "true") $("coveringNoticeText").textContent = COVERING_NOTICE;
+  }, 100);
+}
+
+function closeCoveringNotice() {
+  // 初期画面では毎回のsyncUIで呼ばれるため、閉じていれば読み上げ領域に触れない。
+  if ($("coveringNotice").dataset.open !== "true") return;
+  const close = $("coveringNoticeClose");
+  const hadFocus = document.activeElement === close;
+  $("coveringNotice").dataset.open = "false";
+  $("coveringNoticeText").textContent = "";
+  close.hidden = true;
+  // 閉じるボタンが消えてもフォーカスを失わないよう、編集中は使用中の道具へ、一覧では保存ボタンへ移す。
+  if (!hadFocus) return;
+  const tool = state.mode === "edit" ? document.querySelector(`.mode-btn[data-tool="${CSS.escape(state.tool)}"]`) : null;
+  (tool && !tool.disabled ? tool : els.save).focus();
 }
 function setupSaveMenu() {
   const menu = $("saveMenu");
   els.save.addEventListener("click", () => {
-    if (menu.hidden) openSaveMenu();
+    if ($("saveMenuPopup").hidden) openSaveMenu();
     else closeSaveMenu({ restoreFocus: true });
   });
   els.save.addEventListener("keydown", event => {
@@ -9159,6 +9648,7 @@ function setupFigureContextMenu() {
 function setupWorkspace() {
   setupFigureContextMenu();
   $("togglePagesBtn").addEventListener("click", togglePagesPanel);
+  setupBookmarks();
   $("thumbnailSize").addEventListener("change", () => setThumbnailSize($("thumbnailSize").value));
   els.thumbs.addEventListener("dragover", handlePageDragOver);
   els.thumbs.addEventListener("drop", handlePageDrop);
@@ -9179,11 +9669,14 @@ function setupWorkspace() {
   setupWatermarking();
   setupStamping();
   $("extractBtn").addEventListener("click", () => exportPdf(true));
+  $("coveringNoticeClose").addEventListener("click", closeCoveringNotice);
+  // 全ページ選択中は「全解除」として働く。Ctrl／Command+Aは常にselectAllPages()。
   $("selectAllPagesBtn").addEventListener("click", () => {
-    if (!state.busy) {
-      state.pageSelection = new Set(state.pages.map((p) => p.id));
+    if (state.busy) return;
+    if (allPagesSelected()) {
+      state.pageSelection.clear();
       syncUI();
-    }
+    } else selectAllPages();
   });
   for (const [id, key, kind] of [
     ["outlineInput", "outline", "checked"],
@@ -9277,9 +9770,9 @@ function setupWorkspace() {
         e.preventDefault();
         exportPdf();
       }
-      if (key === "a") {
+      if (key === "a" && !isBookmarkPanelTarget(e.target)) {
         e.preventDefault();
-        if (state.mode === "overview") $("selectAllPagesBtn").click();
+        if (state.mode === "overview") selectAllPages();
         else {
           state.figureSelection = new Set(currentPage().annotations.map((a) => a.id));
           state.selectedAnnotationId = [...state.figureSelection].at(-1) || null;
@@ -9405,7 +9898,7 @@ function handleInitialPdfPaste(event) {
 
 let nativeFigureCopyHandled = false;
 function handleFigureCopy(event) {
-  if (state.busy || state.mode !== "edit" || isTextEditingTarget(event.target) ||
+  if (state.busy || state.mode !== "edit" || isTextEditingTarget(event.target) || isBookmarkPanelTarget(event.target) ||
       !selectedFigures().length || !event.clipboardData) return;
   event.preventDefault();
   // Replace a stale system image without putting figure or PDF data on the OS clipboard.
@@ -9429,7 +9922,7 @@ function copyFiguresFromMenu() {
 }
 
 function handleEditorPaste(event) {
-  if (state.busy || state.mode !== "edit" || !currentPage() || isTextEditingTarget(event.target)) return;
+  if (state.busy || state.mode !== "edit" || !currentPage() || isTextEditingTarget(event.target) || isBookmarkPanelTarget(event.target)) return;
   const files = clipboardFiles(event.clipboardData);
   if (files.length) {
     event.preventDefault();

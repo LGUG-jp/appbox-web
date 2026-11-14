@@ -6,15 +6,15 @@
   else root.AppBoxImageProject = api;
 })(typeof globalThis === "object" ? globalThis : this,function(){
   "use strict";
-  const FORMAT = "appbox-imageedit-project", VERSION = 1, EXTENSION = ".abimg";
+  const FORMAT = "appbox-imageedit-project", VERSION = 4, EXTENSION = ".abimg";
   const MAGIC = [65,66,73,77,71,13,10,26];
   const MAX_FILE_BYTES = 200*1024*1024, MAX_JSON_BYTES = 4*1024*1024;
   const MAX_ASSET_BYTES = 64*1024*1024, MAX_TOTAL_PIXELS = 72000000;
   const MAX_LAYERS = 500, MAX_POINTS = 200000, MAX_TEXT = 200000;
   const TYPES = ["image","text","rect","ellipse","line","arrow","ink","blackoutRect","mosaicRect","blackoutBrush","mosaicBrush"];
-  const NUMBERS = ["x","y","w","h","x1","y1","x2","y2","fontSize","textWidth","lineWidth","brushSize","mosaicSize","opacity","rotation"];
+  const NUMBERS = ["x","y","w","h","x1","y1","x2","y2","fontSize","textWidth","lineSpacing","lineWidth","brushSize","mosaicSize","opacity","rotation"];
   const BOOLEANS = ["visible","bold","bgTransparent","outline","fillNone","textFlipX"];
-  const STRINGS = ["color","bgColor","fill","fontFamily","inkStabilizer","name","text"];
+  const STRINGS = ["color","bgColor","fill","fontFamily","inkStabilizer","name","text","arrowHeadSize","textAlign"];
   const KEYS = new Set(["id","type","points","asset",...NUMBERS,...BOOLEANS,...STRINGS]);
   const invalid = () => new Error("作業ファイルの形式・編集情報が不正か、上限を超えています。");
   const integer = (n,min,max) => Number.isSafeInteger(n) && n >= min && n <= max;
@@ -37,6 +37,7 @@
         if(["w","h","fontSize","textWidth","lineWidth","brushSize","mosaicSize"].includes(key) && value <= 0) throw invalid();
         if(key === "opacity" && (value < 0 || value > 100)) throw invalid();
         if(key === "fontSize" && (value < 8 || value > 300)) throw invalid();
+        if(key === "lineSpacing" && (layer.type !== "text" || value < 1 || value > 3)) throw invalid();
         if(["lineWidth","brushSize"].includes(key) && value > 32768) throw invalid();
         if(key === "rotation" && ![0,90,180,270].includes(value)) throw invalid();
         layer[key] = value;
@@ -52,6 +53,8 @@
         if(["color","bgColor","fill"].includes(key) && !/^#[0-9a-f]{6}$/i.test(raw[key])) throw invalid();
         if(key === "fontFamily" && !["biz-udgothic","biz-udpgothic","yu-gothic","yu-gothic-ui","meiryo","ms-gothic","ms-pgothic","ms-mincho","ms-pmincho","segoe-ui","arial","times-new-roman"].includes(raw[key])) throw invalid();
         if(key === "inkStabilizer" && !["none","weak","medium","strong"].includes(raw[key])) throw invalid();
+        if(key === "arrowHeadSize" && (layer.type !== "arrow" || !["small","medium","large"].includes(raw[key]))) throw invalid();
+        if(key === "textAlign" && (layer.type !== "text" || !["left","center","right"].includes(raw[key]))) throw invalid();
         layer[key] = raw[key];
       }
       text += layer.text?.length || 0;
@@ -78,7 +81,7 @@
     });
   }
   function normalizeManifest(raw){
-    if(!raw || raw.format !== FORMAT || raw.version !== VERSION) throw new Error("この版で読める画像の作業ファイル（.abimg）を選択してください。");
+    if(!raw || raw.format !== FORMAT || ![1,2,3,VERSION].includes(raw.version)) throw new Error("この版で読める画像の作業ファイル（.abimg）を選択してください。");
     if(Object.keys(raw).some(key => !["format","version","name","sourceType","assets","layers"].includes(key))) throw invalid();
     if(typeof raw.name !== "string" || !raw.name || raw.name.length > 255 || /[\x00-\x1f\x7f]/.test(raw.name) || !["image/png","image/jpeg","image/webp"].includes(raw.sourceType)) throw invalid();
     if(!Array.isArray(raw.assets) || raw.assets.length < 2 || raw.assets.length > MAX_LAYERS+2) throw invalid();
@@ -92,9 +95,12 @@
       return {width:asset.width,height:asset.height,bytes:asset.bytes};
     });
     const layers = normalizeLayers(raw.layers,assets.length);
+    if(raw.version === 1 && layers.some(layer => layer.arrowHeadSize !== undefined)) throw invalid();
+    if(raw.version < 3 && layers.some(layer => layer.textAlign !== undefined)) throw invalid();
+    if(raw.version < 4 && layers.some(layer => layer.lineSpacing !== undefined)) throw invalid();
     const used = new Set([0,1,...layers.filter(layer => layer.type === "image").map(layer => layer.asset)]);
     if(used.size !== assets.length) throw invalid();
-    return {format:FORMAT,version:VERSION,name:raw.name,sourceType:raw.sourceType,assets,layers};
+    return {format:FORMAT,version:raw.version,name:raw.name,sourceType:raw.sourceType,assets,layers};
   }
   async function encode({original,base,layers,name,sourceType},toBlob){
     if(!Array.isArray(layers) || layers.length > MAX_LAYERS) throw invalid();
@@ -103,6 +109,10 @@
     const records = layers.map(layer => {
       const record = {...layer};
       delete record.imageCanvas;delete record.maskCanvas;delete record.maskDirty;
+      // 標準サイズは従来と同じ形なので、省略してv1との互換性を保つ。
+      if(record.type === "arrow" && record.arrowHeadSize === "large") delete record.arrowHeadSize;
+      if(record.type === "text" && record.textAlign === "left") delete record.textAlign;
+      if(record.type === "text" && record.lineSpacing === 1.32) delete record.lineSpacing;
       if(layer.type === "image"){
         let index = canvases.indexOf(layer.imageCanvas);
         if(index < 0){index=canvases.length;canvases.push(layer.imageCanvas);}
@@ -111,7 +121,10 @@
       for(const key of Object.keys(record)) if(record[key] === undefined) delete record[key];
       return record;
     });
-    const raw = {format:FORMAT,version:VERSION,name,sourceType,layers:records,
+    const version = records.some(layer => layer.lineSpacing !== undefined) ? VERSION
+      : records.some(layer => layer.textAlign !== undefined) ? 3
+      : records.some(layer => layer.arrowHeadSize !== undefined) ? 2 : 1;
+    const raw = {format:FORMAT,version,name,sourceType,layers:records,
       assets:canvases.map(canvas => ({width:canvas?.width,height:canvas?.height,bytes:1}))};
     normalizeManifest(raw); // Reject size/counts before PNG allocation.
     const blobs = [];

@@ -25,20 +25,20 @@
     content="light"
   >
   <title>文章差分チェッカー | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
 
   <!-- 共通アセット。textdiff.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=a8515e56">
 
   <link
     rel="stylesheet"
-    href="./textdiff.css?v=1.4.2"
+    href="./textdiff.css?v=b19469fc"
   >
 </head>
 
@@ -47,8 +47,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -398,7 +398,14 @@
             hidden
           ></p>
         </div>
+      </div>
 
+      <div class="result-tabs" id="resultTabs" role="tablist" aria-label="比較結果の表示形式">
+        <button class="appbox-button appbox-button--secondary" id="normalTab" type="button" role="tab" aria-selected="true" aria-controls="normalPanel" tabindex="0">通常比較</button>
+        <button class="appbox-button appbox-button--secondary" id="amendmentTab" type="button" role="tab" aria-selected="false" aria-controls="amendmentPanel" tabindex="-1">新旧対照表</button>
+      </div>
+
+      <div id="normalPanel" role="tabpanel" aria-labelledby="normalTab">
         <div class="results-actions">
           <button
             class="appbox-button appbox-button--secondary"
@@ -417,7 +424,7 @@
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
               <rect x="6" y="14" width="12" height="8"></rect>
             </svg>
-            印刷
+            通常比較を印刷
           </button>
 
           <button
@@ -445,7 +452,6 @@
             比較レポートをコピー
           </button>
         </div>
-      </div>
 
       <div class="stats">
         <div class="stat add">
@@ -672,10 +678,36 @@
           ></div>
         </div>
       </div>
+      </div>
+
+      <div id="amendmentPanel" class="amendment-panel" role="tabpanel" aria-labelledby="amendmentTab" hidden>
+        <div class="amendment-settings">
+          <label class="amendment-title-label" for="amendmentTitle">表題
+            <input id="amendmentTitle" type="text" value="新旧対照表">
+          </label>
+          <label for="amendmentOrientation">印刷用紙
+            <select id="amendmentOrientation">
+              <option value="landscape" selected>A4横</option>
+              <option value="portrait">A4縦</option>
+            </select>
+          </label>
+          <button class="appbox-button appbox-button--secondary" id="amendmentSwapBtn" type="button">改正前・改正後の表示順を入れ替え</button>
+        </div>
+        <div class="amendment-actions">
+          <button class="appbox-button appbox-button--secondary" id="amendmentCopyBtn" type="button" disabled>対照表をWord向けにコピー</button>
+          <button class="appbox-button appbox-button--secondary" id="amendmentPrintBtn" type="button" disabled>対照表を印刷／PDF</button>
+        </div>
+        <p class="word-copy-hint">対照表では、通常比較の比較単位にかかわらず、対応する行の内部を文字単位で比較します。</p>
+        <p class="word-copy-hint">改正部分は下線で示します。追加は改正後、削除は改正前、変更は両側に表示します。対応する行がない側は空欄です。変更のない行も省略しません。</p>
+        <p class="word-copy-hint">行の対応と下線の位置は、出力前に原文と照合してください。Wordでは「元の書式を保持」で貼り付けてください。不可視文字の表示設定は対照表に適用しません。</p>
+        <p id="amendmentCopyStatus" class="word-copy-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        <p id="amendmentWarning" class="amendment-warning" role="status" hidden></p>
+        <div id="amendmentOutput" class="amendment-output" tabindex="0" aria-label="新旧対照表"></div>
+      </div>
     </section>
 
     <footer class="appbox-footer">
-      共創アプリBOX / 文章差分チェッカー Version 1.4.2
+      共創アプリBOX / 文章差分チェッカー Version 1.6.0
     </footer>
     </div>
   </main>
@@ -692,12 +724,12 @@
     <p id="wordCopyDialogNote" class="word-copy-dialog-note" role="status"></p>
     <button class="appbox-button appbox-button--secondary" id="wordCopySelectBtn" type="button">本文をすべて選択</button>
     <div id="wordCopyPreview" class="word-copy-preview" tabindex="0" aria-label="コピーする本文"></div>
-    <p class="word-copy-hint">
+    <p class="word-copy-hint" id="wordCopyPreviewHint">
       文字色と取り消し線を付けた文章です。Wordの「変更履歴」にはなりません。
       「テキストのみ保持」で貼り付けると、色と取り消し線は反映されません。
     </p>
   </dialog>
 
-  <script src="./textdiff.js?v=1.4.1"></script>
+  <script src="./textdiff.js?v=a5fbe840"></script>
 </body>
 </html>

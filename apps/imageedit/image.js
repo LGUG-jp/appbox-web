@@ -9,6 +9,8 @@
   const SUPPORTED_TYPES = ["image/jpeg","image/png","image/webp"];
   const RECT_TYPES = ["blackoutRect","mosaicRect","rect","ellipse"];
   const BRUSH_TYPES = ["blackoutBrush","mosaicBrush"];
+  const BRUSH_PREVIEW_TOOLS = ["ink",...BRUSH_TYPES];
+  const SELECTION_COLOR = "#0099cc";
   const drawing = window.AppBoxImageDrawing;
 
   const $ = id => document.getElementById(id);
@@ -33,7 +35,10 @@
   // 表示倍率とスクロールは編集データ・保存用の画像座標から独立させる。
   const canvasViewport = $("canvasViewport");
   const canvasHolder = $("canvasHolder");
-  const viewState = {mode:"fit",scale:1,pan:null,rule:null,pending:false};
+  const styleDetails = $("styleDetails");
+  const styleDetailsSummary = $("styleDetailsSummary");
+  let styleDetailsContext = "";
+  const viewState = {mode:"fit",scale:1,pan:null,spacePan:false,panClick:false,rule:null,pending:false};
 
   const state = {
     sourceFile:null,
@@ -79,10 +84,26 @@
   let toastTimer = null;
   let previewReturnFocus = null;
   let saveReturnFocus = null;
+  let switchReturnFocus = null;
+  let switchChoiceResolve = null;
+  let switchSaveBusy = false;
   let singleSavePreset = null;
   let singleAspect = 1;
   let styleEditSession = null;
+  let styleRangeInteraction = null;
+  const styleRangeUnits = {lineWidth:"px",brushSize:"px",mosaicSize:"px",imageOpacity:"%",lineSpacing:"倍"};
+  let selectionPointer = null;
+  let selectionCursorPending = false;
+  let canvasHoverLayerId = null;
+  let listHoverLayerId = null;
+  let listHoverRenderPending = false;
+  let brushPointer = null;
+  let brushPreviewPending = false;
   let fontPreview = null;
+  let fontPicker = null;
+  let colorPicker = null;
+  let imageNavigator = null;
+  let imageDrop = null;
   let textEditSession = null;
   let textEditorRule = null;
   let textEditorHostRule = null;
@@ -90,6 +111,7 @@
   const toolOutlinePreferences = new Map([
     ["text",true],["arrow",true],["line",true],["rect",false],["ellipse",false]
   ]);
+  const brushSizePreferences = new Map([["ink",30],["brush",50]]);
   let objectClipboard = null;
   let objectClipboardToken = "";
   let objectClipboardText = "";
@@ -142,6 +164,12 @@
       SUPPORTED_TYPES.includes(file.type) ||
       /\.(jpe?g|png|webp)$/i.test(file.name || "")
     );
+  }
+
+  function imageFileProblem(file){
+    if(!isSupportedImage(file)) return "JPEG・PNG・WebP画像を選択してください。";
+    if(file.size > MAX_FILE_BYTES) return "25MBを超える画像は読み込めません。";
+    return "";
   }
 
   function validateDimensions(width,height){
@@ -345,6 +373,7 @@
   }
 
   function pushHistory(kind="layers"){
+    finishStyleEdit();
     state.undo.push(kind === "full" ? makeFullSnapshot() : makeLayerSnapshot());
     trimHistory(state.undo);
     state.redo = [];
@@ -385,7 +414,7 @@
 
   function undo(){
     if(state.singleBusy || state.drag || viewState.pan) return;
-    finishTextEditing();
+    finishPendingEdits();
     if(!state.undo.length){
       toast("これ以上戻せません。");
       return;
@@ -400,7 +429,7 @@
 
   function redo(){
     if(state.singleBusy || state.drag || viewState.pan) return;
-    finishTextEditing();
+    finishPendingEdits();
     if(!state.redo.length){
       toast("やり直せる操作がありません。");
       return;
@@ -414,8 +443,9 @@
   }
 
   function updateHistoryButtons(){
-    $("undo").disabled = !state.undo.length;
-    $("redo").disabled = !state.redo.length;
+    const pending = styleEditChanged();
+    $("undo").disabled = !state.undo.length && !pending;
+    $("redo").disabled = !state.redo.length || pending;
   }
 
   function scheduleRender(){
@@ -466,6 +496,10 @@ function syncCanvas(){
     );
   }
 
+  function minDisplayScale(){
+    return Math.min(.25,fitDisplayScale());
+  }
+
   function widthDisplayScale(){
     return Math.min(4,Math.max(1,canvasViewport.clientWidth)/Math.max(1,baseCanvas.width));
   }
@@ -487,6 +521,7 @@ function syncCanvas(){
   }
 
   function syncModeControls(){
+    if(state.singleBusy || !editorChromeActive()){resetViewPan();hideBrushPreview();hideSelectionCursor();}
     const loaded = editorChromeActive() || (!$("batchPanel").hidden && batchState.items.length > 0);
     const tabs = $("processingModeTabs");
     const tabFocused = tabs.contains(document.activeElement);
@@ -500,11 +535,17 @@ function syncCanvas(){
       if(!$("singlePanel").hidden) editCanvas.focus({preventScroll:true});
       else $("batchAdd").focus();
     }
+    fontPicker?.sync();
+    colorPicker?.sync();
+    imageNavigator?.sync();
+    imageDrop?.sync();
   }
 
   function syncWorkspaceHeight(){
-    if(!editorChromeActive()){
-      if(viewState.sidebarRule) viewState.sidebarRule.style.setProperty("--image-sidebar-height","");
+    // 縦積みへ切り替える幅では、CSSの自然高・パネル内スクロールへ戻す。
+    // デスクトップ用の動的ルールを残すと狭幅用の高さを上書きしてしまう。
+    if($("singlePanel").hidden || window.matchMedia("(max-width: 820px)").matches){
+      if(viewState.sidebarRule) viewState.sidebarRule.style.setProperty("--image-workspace-height","");
       if(!viewState.viewportRule?.style.height) return false;
       viewState.viewportRule.style.height = "";
       return true;
@@ -512,15 +553,35 @@ function syncCanvas(){
     if(!Number.isFinite(window.innerHeight) || window.innerHeight <= 0) return false;
     const rect = canvasViewport.getBoundingClientRect();
     if(!Number.isFinite(rect.top)) return false;
-    let extra = 16;
+    const pixels = (style,name) => parseFloat(style[name]) || 0;
+    const stage = $("canvasWorkarea").parentElement;
+    const stageStyle = window.getComputedStyle(stage);
+    const panelBorderBlock = ["borderTopWidth","borderBottomWidth","paddingTop","paddingBottom"]
+      .reduce((sum,name) => sum+pixels(stageStyle,name),0);
+    // 画像の下には倍率行だけでなく、編集画面の外枠、タブパネルとshellの
+    // 下余白、版数表示もある。実際の表示寸法から末尾までの高さを予約する。
+    let extra = [stage,$("singleWorkspace"),$("singlePanel"),$("imageWorkspaceShell")].reduce((sum,element) => {
+      const style = window.getComputedStyle(element);
+      return sum+["paddingBottom","borderBottomWidth","marginBottom"]
+        .reduce((height,name) => height+pixels(style,name),0);
+    },0);
+    const footer = $("imageFooter");
+    const footerStyle = window.getComputedStyle(footer);
+    extra += footer.getBoundingClientRect().height+
+      pixels(footerStyle,"marginTop")+pixels(footerStyle,"marginBottom");
+    let zoomHeight = 0;
     for(const id of ["zoomControls"]){
       const element = $(id);
       if(!element || element.hidden || element.classList.contains("hidden")) continue;
       const height = element.getBoundingClientRect().height;
-      if(Number.isFinite(height)) extra += Math.max(0,height);
+      if(Number.isFinite(height)){
+        zoomHeight += Math.max(0,height);
+        extra += Math.max(0,height);
+      }
     }
     const top = Math.max(0,rect.top+(Number.isFinite(window.scrollY) ? window.scrollY : 0));
-    const height = `${Math.max(240,Math.floor(window.innerHeight-top-extra))}px`;
+    // 低い画面では画像と操作部の最低高を優先し、ページスクロールを許す。
+    const height = `${Math.max(240,360-zoomHeight-panelBorderBlock,Math.floor(window.innerHeight-top-extra))}px`;
     if(!viewState.viewportRule){
       const origin = new URL(document.baseURI).origin;
       const sheet = [...document.styleSheets].find(item => item.href &&
@@ -530,13 +591,15 @@ function syncCanvas(){
       try{
         const index = sheet.insertRule("#canvasViewport {}",sheet.cssRules.length);
         const viewportRule = sheet.cssRules[index];
-        const sidebarIndex = sheet.insertRule(".editor-sidebar, .editor-settings {}",sheet.cssRules.length);
+        const sidebarIndex = sheet.insertRule(".editor-sidebar, .stage-panel, .editor-settings {}",sheet.cssRules.length);
         viewState.sidebarRule = sheet.cssRules[sidebarIndex];
         viewState.viewportRule = viewportRule;
       }catch(error){return false;}
     }
-    viewState.sidebarRule.style.setProperty("--image-sidebar-height",`${parseFloat(height)+extra-16}px`);
-    const changed = viewState.viewportRule.style.height !== height;
+    const workspaceHeight = `${parseFloat(height)+zoomHeight+panelBorderBlock}px`;
+    const previousWorkspaceHeight = viewState.sidebarRule.style["--image-workspace-height"] || "";
+    viewState.sidebarRule.style.setProperty("--image-workspace-height",workspaceHeight);
+    const changed = viewState.viewportRule.style.height !== height || previousWorkspaceHeight !== workspaceHeight;
     viewState.viewportRule.style.height = height;
     return changed;
   }
@@ -565,8 +628,13 @@ function syncCanvas(){
 
   function syncDisplaySize(center=null){
     const previousCenter = !center && state.sourceFile && viewState.mode !== "fit" ? displayCenter() : null;
+    const sidebarChanged = syncLayerSidebarState();
+    if(sidebarChanged && $("layerSidebarContent").hidden){
+      finishLayerListDrag();
+      setListHoverLayer(null);
+    }
     const heightChanged = syncWorkspaceHeight();
-    if(heightChanged && previousCenter) center = previousCenter;
+    if((heightChanged || sidebarChanged) && previousCenter) center = previousCenter;
     if(!state.sourceFile || !canvasViewport.clientWidth || !canvasViewport.clientHeight) return;
 
     if(!viewState.rule){
@@ -598,7 +666,7 @@ function syncCanvas(){
     }
 
     $("zoomValue").value = Math.round(scale*1000)/10;
-    $("zoomOut").disabled = scale <= Math.min(.05,fitDisplayScale());
+    $("zoomOut").disabled = scale <= minDisplayScale();
     $("zoomIn").disabled = scale >= 4;
     $("zoomFit").setAttribute("aria-pressed",String(viewState.mode === "fit"));
     $("zoomWidth")?.setAttribute("aria-pressed",String(viewState.mode === "width"));
@@ -609,7 +677,7 @@ function syncCanvas(){
     if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan) return;
     const center = anchor || displayCenter();
     viewState.mode = mode;
-    viewState.scale = clamp(scale,Math.min(.05,fitDisplayScale()),4);
+    viewState.scale = clamp(scale,minDisplayScale(),4);
     syncDisplaySize(center);
   }
 
@@ -631,6 +699,8 @@ function syncCanvas(){
     const delta = event.deltaY*unit;
     if(!Number.isFinite(delta) || delta === 0) return;
     event.preventDefault();
+    // 表示領域が広がって下限が上がっても、縮小操作で逆に拡大しない。
+    if(delta > 0 && viewState.scale <= minDisplayScale()) return;
     setDisplayZoom(viewState.scale*Math.exp(-clamp(delta,-300,300)*.003),"manual",displayAnchorAtEvent(event));
   },{passive:false});
 
@@ -646,23 +716,151 @@ function syncCanvas(){
   if("ResizeObserver" in window){
     const observer = new ResizeObserver(scheduleDisplayResize);
     observer.observe(canvasViewport);
-    [$("editorActions"),$("imageHeaderActions"),$("zoomControls")].filter(Boolean)
+    [$("imageIntro"),$("editorOptions"),$("editorActions"),$("imageHeaderActions"),$("zoomControls"),$("processingModeTabs"),$("imageFooter")].filter(Boolean)
       .forEach(element => observer.observe(element));
     const header = document.querySelector(".appbox-header");
     if(header) observer.observe(header);
   }
   window.addEventListener("resize",scheduleDisplayResize);
+  canvasViewport.addEventListener("scroll",()=>imageNavigator?.sync(),{passive:true});
 
-  // captureで手のひら操作を先に受け、注釈の移動・描画処理へ渡さない。
+  // 表示幅だけを切り替える。画像・レイヤー・Undo履歴は変更しない。
+  const toolSidebarKey = "appbox.imageedit.compactTools";
+  const toolSidebarToggle = $("toggleToolSidebar");
+  const toolSidebarWorkspace = $("singleWorkspace");
+  let toolSidebarCompact = false;
+  try{toolSidebarCompact = window.localStorage?.getItem(toolSidebarKey) === "1";}
+  catch(error){/* ストレージが無効でも表示切替は利用できる。 */}
+
+  function applyToolSidebarCompact(center=null){
+    toolSidebarWorkspace.classList.toggle("toolbar-compact",toolSidebarCompact);
+    toolSidebarToggle.setAttribute("aria-pressed",String(toolSidebarCompact));
+    const action = toolSidebarCompact ? "ツール欄を広げる" : "ツール欄を縮める";
+    toolSidebarToggle.title = action;
+    // 手動ズーム時は切替前の表示中心を保持する。
+    if(center) syncDisplaySize(center);
+    else scheduleDisplayResize();
+  }
+  toolSidebarToggle.addEventListener("click",() => {
+    const center = state.sourceFile && viewState.mode !== "fit" ? displayCenter() : null;
+    toolSidebarCompact = !toolSidebarCompact;
+    applyToolSidebarCompact(center);
+    try{window.localStorage?.setItem(toolSidebarKey,toolSidebarCompact ? "1" : "0");}
+    catch(error){/* 保存できなくても現在の画面では利用できる。 */}
+  });
+  applyToolSidebarCompact();
+
+  const layerSidebarKey = "appbox.imageedit.collapsedLayers";
+  const layerSidebarToggle = $("toggleLayerSidebar");
+  const layerSidebarContent = $("layerSidebarContent");
+  let layerSidebarCollapsed = false;
+  try{layerSidebarCollapsed = window.localStorage?.getItem(layerSidebarKey) === "1";}
+  catch(error){/* 保存できない環境でも開閉は利用できる。 */}
+
+  function syncLayerSidebarState(){
+    const narrow = window.matchMedia("(max-width: 820px)").matches;
+    const collapsed = layerSidebarCollapsed && !narrow;
+    const changed = toolSidebarWorkspace.classList.contains("layer-sidebar-collapsed") !== collapsed;
+    // 狭幅では欄を自然に表示し、再び広げたら選んだ表示へ戻す。
+    if(collapsed && layerSidebarContent.contains(document.activeElement)){
+      layerSidebarToggle.focus({preventScroll:true});
+    }else if(narrow && document.activeElement === layerSidebarToggle && !$("singlePanel").hidden){
+      (state.sourceFile ? editCanvas : $("singleEmpty")).focus({preventScroll:true});
+    }
+    toolSidebarWorkspace.classList.toggle("layer-sidebar-collapsed",collapsed);
+    layerSidebarContent.hidden = collapsed;
+    layerSidebarToggle.setAttribute("aria-expanded",String(!collapsed));
+    const action = collapsed ? "レイヤー欄を広げる" : "レイヤー欄を折りたたむ";
+    layerSidebarToggle.setAttribute("aria-label",action);
+    layerSidebarToggle.title = action;
+    return changed;
+  }
+  layerSidebarToggle.addEventListener("click",() => {
+    if(window.matchMedia("(max-width: 820px)").matches || state.singleBusy ||
+      state.drag || viewState.pan || viewState.spacePan || state.composing || listDrag) return;
+    const center = state.sourceFile && viewState.mode !== "fit" ? displayCenter() : null;
+    layerSidebarCollapsed = !layerSidebarCollapsed;
+    syncLayerSidebarState();
+    setListHoverLayer(null);
+    syncDisplaySize(center);
+    try{window.localStorage?.setItem(layerSidebarKey,layerSidebarCollapsed ? "1" : "0");}
+    catch(error){/* 記憶が拒否されても現在の表示は切り替える。 */}
+  });
+  syncLayerSidebarState();
+
+  function syncViewPanCursor(){
+    canvasViewport.classList.toggle("pan-mode",state.tool === "pan" || viewState.spacePan);
+  }
+
+  function releaseViewPan(){
+    const pan = viewState.pan;
+    viewState.pan = null;
+    canvasViewport.classList.remove("panning");
+    if(pan && canvasViewport.hasPointerCapture(pan.id)) canvasViewport.releasePointerCapture(pan.id);
+  }
+
+  function resetViewPan(){
+    if(!viewState.spacePan && !viewState.pan) return;
+    viewState.spacePan = false;
+    releaseViewPan();
+    syncViewPanCursor();
+  }
+
+  const isSpaceKey = event => event.code === "Space" || event.key === " ";
+  document.addEventListener("keydown",event => {
+    if(!isSpaceKey(event)) return;
+    // 入力欄・ボタン等のSpace操作は奪わず、編集領域にフォーカスがある場合に使う。
+    if(event.target !== editCanvas && event.target !== canvasViewport) return;
+    if(event.repeat){
+      if(viewState.spacePan) event.preventDefault();
+      return;
+    }
+    if(event.ctrlKey || event.metaKey || event.altKey || isObjectShortcutBlocked(event) || listDrag ||
+      document.body.classList.contains("dialog-open") || !state.originalCanvas || !state.tool) return;
+    event.preventDefault();
+    viewState.spacePan = true;
+    hideBrushPreview();
+    hideSelectionCursor();
+    setListHoverLayer(null);
+    syncViewPanCursor();
+  });
+  document.addEventListener("keyup",event => {
+    if(!isSpaceKey(event) || !viewState.spacePan) return;
+    viewState.spacePan = false;
+    // マウスを押したままSpaceを離した場合も、残りのpointerupを描画へ渡さない。
+    if(viewState.pan?.temporary){
+      viewState.pan.suspended = true;
+      canvasViewport.classList.remove("panning");
+    }
+    syncViewPanCursor();
+  });
+  document.addEventListener("compositionstart",resetViewPan);
+  document.addEventListener("focusin",event => {
+    if(event.target !== editCanvas && event.target !== canvasViewport) resetViewPan();
+  });
+  document.addEventListener("pointerdown",event => {
+    if(event.target !== editCanvas && event.target !== canvasViewport && !canvasViewport.contains(event.target)) resetViewPan();
+  },true);
+  window.addEventListener("blur",resetViewPan);
+  document.addEventListener("visibilitychange",() => {if(document.hidden) resetViewPan();});
+
+  // captureで画面移動を先に受け、注釈の移動・描画処理へ渡さない。
   canvasViewport.addEventListener("pointerdown",event => {
-    if(state.tool !== "pan" || !state.sourceFile || state.singleBusy || event.button !== 0) return;
+    if(viewState.pan){event.preventDefault();event.stopPropagation();return;}
+    viewState.panClick = false;
+    if((state.tool !== "pan" && !viewState.spacePan) || !state.sourceFile || state.singleBusy ||
+      state.drag || state.composing || state.textEditing || event.isPrimary === false || event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
+    viewState.panClick = true;
+    hideBrushPreview();
+    hideSelectionCursor();
     editCanvas.focus({preventScroll:true});
     canvasViewport.setPointerCapture(event.pointerId);
     viewState.pan = {
       id:event.pointerId,x:event.clientX,y:event.clientY,
-      left:canvasViewport.scrollLeft,top:canvasViewport.scrollTop
+      left:canvasViewport.scrollLeft,top:canvasViewport.scrollTop,
+      temporary:state.tool !== "pan",suspended:false
     };
     canvasViewport.classList.add("panning");
   },true);
@@ -672,6 +870,7 @@ function syncCanvas(){
     if(!pan || pan.id !== event.pointerId) return;
     event.preventDefault();
     event.stopPropagation();
+    if(pan.suspended) return;
     canvasViewport.scrollLeft = pan.left-(event.clientX-pan.x);
     canvasViewport.scrollTop = pan.top-(event.clientY-pan.y);
   },true);
@@ -679,15 +878,16 @@ function syncCanvas(){
   function endViewPan(event){
     if(!viewState.pan || viewState.pan.id !== event.pointerId) return;
     event.stopPropagation();
-    viewState.pan = null;
-    canvasViewport.classList.remove("panning");
-    if(canvasViewport.hasPointerCapture(event.pointerId)){
-      canvasViewport.releasePointerCapture(event.pointerId);
-    }
+    releaseViewPan();
+    if(event.type !== "pointerup") viewState.spacePan = false;
+    syncViewPanCursor();
   }
   canvasViewport.addEventListener("pointerup",endViewPan,true);
   canvasViewport.addEventListener("pointercancel",endViewPan,true);
   canvasViewport.addEventListener("lostpointercapture",endViewPan,true);
+  canvasViewport.addEventListener("dblclick",event => {
+    if(viewState.panClick){event.preventDefault();event.stopPropagation();}
+  },true);
 
 
 function renderLayers(){
@@ -721,6 +921,7 @@ function renderLayers(){
     // 合成素材はフレームをまたいで保持しない。大画像のbitmapを早期解放する。
     if(source){source.width = 0;source.height = 0;}
   }
+  imageNavigator?.invalidateImage();
 }
 
 
@@ -770,11 +971,11 @@ function renderLayers(){
   }
 
   function selectLayers(layers){
+    finishStyleEdit();
     if(state.textEditing) finishTextEditing();
     state.selectedLayerIds = new Set(layers.map(layer => layer.id));
     state.selectedLayerId = layers.length === 1 ? layers[0].id : null;
     state.textEditing = null;
-    styleEditSession = null;
   }
 
   function selectedLayer(){
@@ -812,13 +1013,19 @@ function renderLayers(){
         {x:layer.x2,y:layer.y2}
       );
       const pad = layer.type === "arrow" ? Math.max(10,layer.lineWidth*2) : Math.max(1,layer.lineWidth/2);
-
-      return {
+      const bounds = {
         x:rectangle.x-pad,
         y:rectangle.y-pad,
         w:Math.max(1,rectangle.w+pad*2),
         h:Math.max(1,rectangle.h+pad*2)
       };
+      const arrow = layer.type === "arrow" && annotationStyle.arrowGeometry(layer);
+      if(arrow){
+        const x = Math.min(bounds.x,arrow.bounds.x),y = Math.min(bounds.y,arrow.bounds.y);
+        return {x,y,w:Math.max(bounds.x+bounds.w,arrow.bounds.x+arrow.bounds.w)-x,
+          h:Math.max(bounds.y+bounds.h,arrow.bounds.y+arrow.bounds.h)-y};
+      }
+      return bounds;
     }
 
     if(BRUSH_TYPES.includes(layer.type) || layer.type === "ink"){
@@ -864,11 +1071,19 @@ function renderLayers(){
 
     if(drawing.isLine(layer)){
       const tolerance = Math.max(10*displayScale(),layer.lineWidth*2);
-      return pointToSegmentDistance(
+      if(pointToSegmentDistance(
         point,
         {x:layer.x1,y:layer.y1},
         {x:layer.x2,y:layer.y2}
-      ) <= tolerance;
+      ) <= tolerance) return true;
+      const arrow = layer.type === "arrow" && annotationStyle.arrowGeometry(layer);
+      if(!arrow) return false;
+      const along = (point.x-layer.x1)*arrow.ux+(point.y-layer.y1)*arrow.uy;
+      const across = (point.x-layer.x1)*arrow.nx+(point.y-layer.y1)*arrow.ny;
+      if(along >= arrow.length-arrow.headLength && along <= arrow.length &&
+        Math.abs(across) <= (arrow.length-along)*Math.tan(Math.PI/6)) return true;
+      const edgeTolerance = Math.max(4*displayScale(),layer.outline ? annotationStyle.SHAPE_OUTLINE_EXTRA : 0);
+      return arrow.head.some((p,index) => pointToSegmentDistance(point,p,arrow.head[(index+1)%3]) <= edgeTolerance+1e-8);
     }
 
     if(BRUSH_TYPES.includes(layer.type) || layer.type === "ink"){
@@ -1294,27 +1509,151 @@ function renderLayers(){
     editContext.restore();
   }
 
+  function strokeSelectionBox(bounds,scale,dash=[]){
+    editContext.setLineDash(dash.map(value => value*scale));
+    for(const [color,width] of [["#fff",4],[SELECTION_COLOR,2]]){
+      editContext.strokeStyle = color;
+      editContext.lineWidth = width*scale;
+      editContext.strokeRect(bounds.x,bounds.y,bounds.w,bounds.h);
+    }
+  }
+
+  function endpointCursor(layer){
+    const step = Math.round(Math.atan2(layer.y2-layer.y1,layer.x2-layer.x1)/(Math.PI/4));
+    return ["ew-resize","nwse-resize","ns-resize","nesw-resize"][((step%4)+4)%4] || "nwse-resize";
+  }
+
+  // Canvas hover only changes an existing list row class. Never recompose image pixels.
+  function setCanvasHoverLayer(id){
+    const next = id == null ? null : String(id);
+    if(canvasHoverLayerId === next) return;
+    const list = $("layerList");
+    for(const row of list?.children || []){
+      if(!row.dataset?.layerId) continue;
+      if(row.dataset.layerId === canvasHoverLayerId) row.classList.remove("canvas-layer-hover");
+      if(row.dataset.layerId === next) row.classList.add("canvas-layer-hover");
+    }
+    canvasHoverLayerId = next;
+  }
+
+  // The list hover only redraws the existing transparent editor overlay, once
+  // per hovered row, not on every mousemove and not the source/layer canvases.
+  function scheduleListHoverOverlay(){
+    if(listHoverRenderPending) return;
+    listHoverRenderPending = true;
+    requestAnimationFrame(() => {
+      listHoverRenderPending = false;
+      if(!state.renderPending) renderEditor();
+    });
+  }
+  function setListHoverLayer(id){
+    // Selected or hidden layers have no preview outline; do not redraw.
+    // Only row transitions are processed, never continuous pointer movement.
+    const layer = id == null ? null : state.layers.find(item => String(item.id) === String(id));
+    const next = layer && layer.visible !== false &&
+      !selectedLayers().some(item => item.id === layer.id) ? String(layer.id) : null;
+    if(listHoverLayerId === next) return;
+    listHoverLayerId = next;
+    scheduleListHoverOverlay();
+  }
+  function drawListHoverOutline(){
+    if(!listHoverLayerId || state.tool !== "select" || state.singleBusy ||
+      state.drag || listDrag || state.textEditing || viewState.pan || viewState.spacePan ||
+      !$("layerListPanel")?.open || $("layerSidebarContent").hidden || $("singlePanel").hidden) return;
+    const layer = state.layers.find(item => String(item.id) === listHoverLayerId);
+    if(!layer || layer.visible === false || selectedLayers().some(item => item.id === layer.id)) return;
+    const bounds = layerBounds(layer);
+    if(![bounds.x,bounds.y,bounds.w,bounds.h].every(Number.isFinite)) return;
+    const scale = displayScale();
+    editContext.save();
+    editContext.lineWidth = 1.5*scale;
+    editContext.strokeStyle = "#66afd4";
+    editContext.setLineDash([4*scale,4*scale]);
+    editContext.strokeRect(bounds.x,bounds.y,bounds.w,bounds.h);
+    editContext.restore();
+  }
+
+  function hideSelectionCursor(event=null){
+    if(event?.pointerId !== undefined && selectionPointer && event.pointerId !== selectionPointer.pointerId) return;
+    selectionPointer = null;
+    setCanvasHoverLayer(null);
+    if(editCanvas.dataset.selectionCursor !== undefined) delete editCanvas.dataset.selectionCursor;
+  }
+
+  function refreshSelectionCursor(){
+    let cursor = "";
+    let hoveredLayer = null;
+    if(selectionPointer && state.tool === "select" && state.sourceFile && !state.singleBusy && !state.textEditing &&
+      !viewState.pan && !viewState.spacePan && !$("singlePanel").hidden && !document.body.classList.contains("dialog-open") &&
+      selectionPointer.loadVersion === state.loadVersion){
+      const drag = state.drag;
+      if(drag){
+        if(["moveLayer","moveLayers"].includes(drag.mode)) cursor = "move";
+        else if(drag.mode === "resizeLayer") cursor = "nwse-resize";
+        else if(drag.mode === "resizeEndpoint") cursor = endpointCursor(drag.startLayer);
+        else if(drag.mode === "marquee") cursor = "crosshair";
+      }else{
+        const rect = editCanvas.getBoundingClientRect(),viewport = canvasViewport.getBoundingClientRect();
+        const {clientX,clientY} = selectionPointer;
+        const left = viewport.left+canvasViewport.clientLeft,top = viewport.top+canvasViewport.clientTop;
+        if(rect.width && rect.height && clientX >= rect.left && clientX <= rect.left+rect.width &&
+          clientY >= rect.top && clientY <= rect.top+rect.height && clientX >= left && clientX <= left+canvasViewport.clientWidth &&
+          clientY >= top && clientY <= top+canvasViewport.clientHeight){
+          const point = pointFromEvent(selectionPointer),handle = selectedHandleAt(point);
+          if(handle){
+            hoveredLayer = handle.layer;
+            cursor = handle.mode === "resizeEndpoint" ? endpointCursor(handle.layer) : "nwse-resize";
+          }else{
+            hoveredLayer = hitLayer(point);
+            cursor = hoveredLayer ? (selectionPointer.shiftKey ? "pointer" : "move") : "crosshair";
+          }
+        }
+      }
+    }
+    setCanvasHoverLayer(hoveredLayer?.id ?? null);
+    if(cursor){
+      if(editCanvas.dataset.selectionCursor !== cursor) editCanvas.dataset.selectionCursor = cursor;
+    }else if(editCanvas.dataset.selectionCursor !== undefined) delete editCanvas.dataset.selectionCursor;
+  }
+
+  function updateSelectionPointer(event){
+    if(event.isPrimary === false || (state.drag?.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
+    if(event.pointerType === "touch" || state.tool !== "select" || !state.sourceFile || state.singleBusy ||
+      !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)){
+      hideSelectionCursor();
+      return;
+    }
+    selectionPointer = {clientX:event.clientX,clientY:event.clientY,pointerId:event.pointerId,
+      shiftKey:!!event.shiftKey,loadVersion:state.loadVersion};
+    scheduleSelectionCursor();
+  }
+
+  function updateSelectionModifier(event){
+    if(event.key !== "Shift" || !selectionPointer) return;
+    selectionPointer.shiftKey = !!event.shiftKey;
+    scheduleSelectionCursor();
+  }
+
+  function scheduleSelectionCursor(){
+    if(selectionCursorPending || state.renderPending) return;
+    selectionCursorPending = true;
+    requestAnimationFrame(() => {
+      selectionCursorPending = false;
+      if(!state.renderPending) refreshSelectionCursor();
+    });
+  }
+
   function drawSelection(){
     if(state.textEditing) return;
     const selected = selectedLayers();
     const layers = selected.filter(layer => layer.visible !== false);
     if(!layers.length) return;
     const scale = displayScale();
-    const handle = 7*scale;
+    // 表示は8px角（枠込み10px）。つかめる範囲はselectedHandleAtで別に確保する。
+    const handle = 4*scale;
 
     editContext.save();
-    editContext.strokeStyle = "#9a721b";
-    editContext.lineWidth =
-        Math.max(1.5,2*scale);
-    editContext.setLineDash([
-        7*scale,
-        5*scale
-    ]);
-
-    layers.forEach(layer => {
-      const bounds = layerBounds(layer);
-      editContext.strokeRect(bounds.x,bounds.y,bounds.w,bounds.h);
-    });
+    layers.forEach(layer => strokeSelectionBox(layerBounds(layer),scale));
 
     if(selected.length !== 1){
       editContext.restore();
@@ -1325,7 +1664,8 @@ function renderLayers(){
 
     editContext.setLineDash([]);
     editContext.fillStyle = "#fff";
-    editContext.strokeStyle = "#9a721b";
+    editContext.strokeStyle = SELECTION_COLOR;
+    editContext.lineWidth = 2*scale;
 
     if(drawing.isLine(layer)){
       [{x:layer.x1,y:layer.y1},{x:layer.x2,y:layer.y2}].forEach(point => {
@@ -1358,12 +1698,9 @@ function renderLayers(){
     const rectangle = normalizeRectangle(drag.start,drag.last);
     const scale = displayScale();
     editContext.save();
-    editContext.fillStyle = "rgba(154,114,27,.12)";
-    editContext.strokeStyle = "#9a721b";
-    editContext.lineWidth = 1.5*scale;
-    editContext.setLineDash([5*scale,3*scale]);
+    editContext.fillStyle = "rgba(0,153,204,.12)";
     editContext.fillRect(rectangle.x,rectangle.y,rectangle.w,rectangle.h);
-    editContext.strokeRect(rectangle.x,rectangle.y,rectangle.w,rectangle.h);
+    strokeSelectionBox(rectangle,scale,[5,3]);
     editContext.restore();
   }
 
@@ -1419,6 +1756,100 @@ function renderLayers(){
     editContext.restore();
   }
 
+  function scheduleBrushPreview(){
+    if(brushPreviewPending || state.renderPending) return;
+    brushPreviewPending = true;
+    requestAnimationFrame(() => {
+      brushPreviewPending = false;
+      if(!state.renderPending) renderEditor();
+    });
+  }
+
+  function hideBrushPreview(event=null){
+    if(!brushPointer || (event?.pointerId !== undefined && event.pointerId !== brushPointer.pointerId)) return;
+    brushPointer = null;
+    scheduleBrushPreview();
+  }
+
+  function updateBrushPointer(event){
+    if(event.isPrimary === false || (state.drag?.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
+    if(event.pointerType === "touch" || !BRUSH_PREVIEW_TOOLS.includes(state.tool) || !state.sourceFile || state.singleBusy ||
+      !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)){
+      hideBrushPreview();
+      return;
+    }
+    brushPointer = {clientX:event.clientX,clientY:event.clientY,pointerId:event.pointerId,loadVersion:state.loadVersion};
+    // 描画中は既存のscheduleRenderがまとめて再描画する。ホバーでは画像を再合成しない。
+    if(!state.drag) scheduleBrushPreview();
+  }
+
+  function drawBrushPreview(){
+    if(!brushPointer || !BRUSH_PREVIEW_TOOLS.includes(state.tool) || !state.sourceFile || state.singleBusy ||
+      state.textEditing || viewState.pan || viewState.spacePan || $("singlePanel").hidden || document.body.classList.contains("dialog-open") ||
+      brushPointer.loadVersion !== state.loadVersion || (state.drag && !["brush","ink"].includes(state.drag.mode))) return;
+    const rect = editCanvas.getBoundingClientRect(),viewport = canvasViewport.getBoundingClientRect();
+    const {clientX,clientY} = brushPointer;
+    const left = viewport.left+canvasViewport.clientLeft,top = viewport.top+canvasViewport.clientTop;
+    if(!rect.width || !rect.height || clientX < rect.left || clientX > rect.left+rect.width ||
+      clientY < rect.top || clientY > rect.top+rect.height || clientX < left || clientX > left+canvasViewport.clientWidth ||
+      clientY < top || clientY > top+canvasViewport.clientHeight) return;
+    // 手ぶれ補正中は入力位置ではなく、実際のストローク末端と同じ位置を示す。
+    const point = state.drag?.last || pointFromEvent(brushPointer);
+    const size = state.drag?.layer.brushSize ?? currentStyle().brushSize;
+    if(!Number.isFinite(size) || size <= 0 || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+    const scale = displayScale();
+    editContext.save();
+    editContext.globalAlpha = 1;
+    editContext.setLineDash([]);
+    editContext.beginPath();
+    editContext.arc(point.x,point.y,size/2,0,Math.PI*2);
+    editContext.strokeStyle = "#fff";
+    editContext.lineWidth = 3*scale;
+    editContext.stroke();
+    editContext.strokeStyle = "#000";
+    editContext.lineWidth = scale;
+    editContext.stroke();
+    editContext.restore();
+  }
+
+  function drawAlignmentGuides(){
+    const drag = state.drag;
+    if(state.tool !== "select" || !drag?.changed || !["moveLayer","moveLayers"].includes(drag.mode) ||
+      drag.guidesHidden || !drag.guideTargets || !state.sourceFile || state.singleBusy || state.textEditing || state.composing ||
+      viewState.pan || viewState.spacePan || $("singlePanel").hidden || document.hidden || document.body.classList.contains("dialog-open")) return;
+    const scale = displayScale();
+    const bounds = {...drag.bounds,x:drag.bounds.x+drag.translation.dx,y:drag.bounds.y+drag.translation.dy};
+    // At most half a display pixel: a nearby object must not look snapped.
+    const guides = drawing.alignmentGuides(bounds,drag.guideTargets,.5*scale);
+    if(!guides.length) return;
+    editContext.save();
+    editContext.globalAlpha = 1;
+    editContext.setLineDash([4*scale,3*scale]);
+    editContext.beginPath();
+    for(const guide of guides){
+      if(guide.axis === "x"){
+        editContext.moveTo(guide.position,0);editContext.lineTo(guide.position,editCanvas.height);
+      }else{
+        editContext.moveTo(0,guide.position);editContext.lineTo(editCanvas.width,guide.position);
+      }
+    }
+    editContext.strokeStyle = "#fff";
+    editContext.lineWidth = 3*scale;
+    editContext.stroke();
+    editContext.strokeStyle = "#b323a0";
+    editContext.lineWidth = scale;
+    editContext.stroke();
+    editContext.restore();
+  }
+
+  function hideAlignmentGuides(){
+    if(!state.drag?.guideTargets || state.drag.guidesHidden) return;
+    state.drag.guidesHidden = true;
+    renderEditor();
+  }
+  window.addEventListener("blur",hideAlignmentGuides);
+  document.addEventListener("visibilitychange",() => {if(document.hidden) hideAlignmentGuides();});
+
   function renderEditor(){
     editContext.clearRect(
         0,
@@ -1436,12 +1867,18 @@ function renderLayers(){
     }
 
     if(state.tool === "select"){
+        drawListHoverOutline();
+        drawAlignmentGuides();
         drawSelection();
         if(state.drag?.mode === "marquee") drawSelectionRectangle(state.drag);
     }
 
+    drawBrushPreview();
+    refreshSelectionCursor();
     updateCropControls();
     syncTextEditor();
+    imageNavigator?.sync();
+    imageDrop?.sync();
   }
 
 
@@ -1501,33 +1938,57 @@ function renderLayers(){
       "layer-list-dragging","layer-list-drop-before","layer-list-drop-after"
     ));
   }
-  function showLayerDropIndicator(button,after){
+  function showLayerDropIndicator(row,after){
     clearLayerDropIndicator();
     if(!listDrag) return;
     const rows = Array.from($("layerList").children).filter(item => item.dataset?.layerId);
     rows.find(item => item.dataset.layerId === listDrag.id)
       ?.classList.add("layer-list-dragging");
-    if(!button || button.dataset.layerId === listDrag.id) return;
+    if(!row || row.dataset.layerId === listDrag.id) return;
     // The bottom half of a row and the top half of the next row refer to
     // the same boundary. Always draw on the next row to avoid two styles
     // of insertion line and flickering at that shared boundary.
-    const index = rows.indexOf(button);
+    const index = rows.indexOf(row);
     const next = after && index + 1 < rows.length ? rows[index+1] : null;
-    const marker = next || button;
+    const marker = next || row;
     if(marker.dataset.layerId === listDrag.id) return;
     marker.classList.add(after && !next ? "layer-list-drop-after" : "layer-list-drop-before");
   }
   function layerListGapPosition(clientY){
     const rows = Array.from($("layerList").children).filter(item => item.dataset?.layerId);
-    for(const button of rows){
-      const bounds = button.getBoundingClientRect();
-      if(clientY < bounds.top+bounds.height/2) return {button,after:false};
+    for(const row of rows){
+      const bounds = row.getBoundingClientRect();
+      if(clientY < bounds.top+bounds.height/2) return {row,after:false};
     }
-    return rows.length ? {button:rows[rows.length-1],after:true} : null;
+    return rows.length ? {row:rows[rows.length-1],after:true} : null;
   }
   function finishLayerListDrag(){
     listDrag = null;
     clearLayerDropIndicator();
+  }
+
+  function setLayerVisibility(layerId,visible){
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing || listDrag) return;
+    const layer = state.layers.find(item => String(item.id) === layerId);
+    if(!layer || (layer.visible !== false) === visible) return;
+    finishPendingEdits();
+    pushHistory("layers");
+    layer.visible = visible;
+    renderLayers();
+    renderEditor();
+  }
+
+  // Reveal only the canvas-activated row; never move page scroll or keyboard focus.
+  function revealCanvasSelection(id){
+    const panel = $("layerListPanel");
+    const list = $("layerList");
+    if(id == null || !panel?.open || !list || $("layerSidebarContent").hidden) return;
+    const row = Array.from(list.children).find(item => item.dataset?.layerId === String(id));
+    if(!row) return;
+    const viewport = list.getBoundingClientRect();
+    const item = row.getBoundingClientRect();
+    if(item.top < viewport.top) list.scrollTop -= viewport.top-item.top;
+    else if(item.bottom > viewport.bottom) list.scrollTop += item.bottom-viewport.bottom;
   }
 
   function renderLayerList(){
@@ -1537,10 +1998,11 @@ function renderLayers(){
     count.textContent = String(state.layers.length);
     const focused = list.contains(document.activeElement) ? document.activeElement : null;
     const focusedId = focused?.dataset?.layerId;
-    const focusedIndex = focused ? Array.from(list.children).indexOf(focused) : -1;
-    // Keep existing buttons (and their children) alive during text-editor blur:
+    const focusedControl = focused?.dataset?.layerControl;
+    const focusedIndex = focused ? Array.from(list.children).findIndex(item => item.dataset?.layerId === focusedId) : -1;
+    // Keep existing rows and controls alive during text-editor blur:
     // replacing them on pointerdown can swallow the pending click.
-    const buttons = new Map(Array.from(list.children)
+    const rows = new Map(Array.from(list.children)
       .filter(item => item.dataset?.layerId)
       .map(item => [item.dataset.layerId,item]));
     const selectedIds = new Set(selectedLayers().map(layer => layer.id));
@@ -1554,14 +2016,17 @@ function renderLayers(){
       // state.layers は背面→前面。リストは前面を上に表示する。
       [...state.layers].reverse().forEach((layer,index) => {
         const id = String(layer.id);
-        let button = buttons.get(id);
-        if(!button){
-          button = document.createElement("button");
+        let row = rows.get(id);
+        if(!row){
+          row = document.createElement("div");
+          row.className = "layer-list-row";
+          row.dataset.layerId = id;
+          const button = document.createElement("button");
           button.type = "button";
           button.className = "layer-list-item";
           button.dataset.layerId = id;
           button.draggable = true;
-          button.setAttribute("aria-keyshortcuts","Alt+ArrowUp Alt+ArrowDown");
+          button.setAttribute("aria-keyshortcuts","ArrowUp ArrowDown");
           const kind = document.createElement("span");
           kind.className = "layer-list-kind";
           const preview = document.createElement("span");
@@ -1571,43 +2036,87 @@ function renderLayers(){
           selected.setAttribute("aria-hidden","true");
           selected.textContent = "✓";
           button.append(kind,preview,selected);
+          const visibility = document.createElement("button");
+          visibility.type = "button";
+          visibility.className = "layer-visibility";
+          visibility.dataset.layerId = id;
+          visibility.dataset.layerControl = "visibility";
+          const svgNS = "http://www.w3.org/2000/svg";
+          const eye = document.createElementNS(svgNS,"svg");
+          eye.classList.add("layer-eye-icon");
+          eye.setAttribute("viewBox","0 0 24 24");
+          eye.setAttribute("aria-hidden","true");
+          eye.setAttribute("focusable","false");
+          const addEyeShape = (parent,tag,attributes) => {
+            const shape = document.createElementNS(svgNS,tag);
+            Object.entries(attributes).forEach(([name,value]) => shape.setAttribute(name,value));
+            parent.appendChild(shape);
+          };
+          const openEye = document.createElementNS(svgNS,"g");
+          openEye.classList.add("layer-eye-open");
+          addEyeShape(openEye,"path",{d:"M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"});
+          addEyeShape(openEye,"circle",{cx:"12",cy:"12",r:"3"});
+          const closedEye = document.createElementNS(svgNS,"g");
+          closedEye.classList.add("layer-eye-closed");
+          addEyeShape(closedEye,"path",{d:"M10.6 5.6A10 10 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a13.5 13.5 0 0 1-3.3 4M6.1 7C3.5 8.8 2 12 2 12s3.6 6.5 10 6.5c1.6 0 3-.4 4.2-1M10 10a3 3 0 0 0 4 4M3 3l18 18"});
+          eye.append(openEye,closedEye);
+          visibility.appendChild(eye);
+          row.append(button,visibility);
+          row.addEventListener("pointerenter",event => {
+            if(event.pointerType === "touch" || state.tool !== "select" ||
+              state.singleBusy || state.drag || listDrag || viewState.pan || state.textEditing) return;
+            setListHoverLayer(row.dataset.layerId);
+          });
+          row.addEventListener("pointerleave",() => {
+            if(listHoverLayerId === row.dataset.layerId) setListHoverLayer(null);
+          });
+          visibility.addEventListener("click",() => {
+            const target = state.layers.find(item => String(item.id) === visibility.dataset.layerId);
+            if(target) setLayerVisibility(visibility.dataset.layerId,target.visible === false);
+            // Restore model state even when a gesture or IME guard rejects the click.
+            if(state.drag) renderLayerList();
+            else updateSelectedControls();
+          });
           button.addEventListener("dragstart",event => {
             if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing){
               event.preventDefault();
               return;
             }
             listDrag = {id:button.dataset.layerId};
+            setListHoverLayer(null); // Clear the last hover outline during reordering.
             // Edge/Chromium require data on the native transfer to start dragging.
             event.dataTransfer?.setData("text/plain",listDrag.id);
             if(event.dataTransfer) event.dataTransfer.effectAllowed = "move";
             showLayerDropIndicator(null,false);
           });
-          button.addEventListener("dragover",event => {
+          row.addEventListener("dragover",event => {
             if(!listDrag) return;
             event.preventDefault();
             if(event.dataTransfer) event.dataTransfer.dropEffect = "move";
-            const bounds = button.getBoundingClientRect();
+            const bounds = row.getBoundingClientRect();
             const after = event.clientY >= bounds.top+bounds.height/2;
             listDrag.targetId = button.dataset.layerId;
             listDrag.after = after;
-            showLayerDropIndicator(button,after);
+            showLayerDropIndicator(row,after);
           });
-          button.addEventListener("drop",event => {
+          row.addEventListener("drop",event => {
             if(!listDrag) return;
             event.preventDefault();
             event.stopPropagation();
             const draggedId = listDrag.id;
-            const bounds = button.getBoundingClientRect();
+            const bounds = row.getBoundingClientRect();
             const after = event.clientY >= bounds.top+bounds.height/2;
             finishLayerListDrag();
             moveLayerFromList(draggedId,button.dataset.layerId,after);
           });
           button.addEventListener("dragend",finishLayerListDrag);
           button.addEventListener("keydown",event => {
-            if(!event.altKey || event.ctrlKey || event.metaKey ||
+            if(event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+              event.isComposing || event.keyCode === 229 || state.composing ||
               !["ArrowUp","ArrowDown"].includes(event.key)) return;
             event.preventDefault();
             event.stopPropagation();
+            if(listDrag || viewState.spacePan) return;
             const ordered = [...state.layers].reverse();
             const position = ordered.findIndex(layer => String(layer.id) === button.dataset.layerId);
             const next = position+(event.key === "ArrowUp" ? -1 : 1);
@@ -1626,16 +2135,25 @@ function renderLayers(){
             setTool("select");
           });
         }
+        const button = row.children[0];
+        const visibility = row.children[1];
+        const name = typeLabel(layer.type) + " " + (state.layers.length-index);
+        const visible = layer.visible !== false;
+        visibility.disabled = !state.sourceFile || state.singleBusy;
+        visibility.setAttribute("aria-label",name + "の表示");
+        visibility.setAttribute("aria-pressed",String(visible));
+        visibility.title = visible ? "非表示にする" : "表示する";
         button.setAttribute("aria-pressed",String(selectedIds.has(layer.id)));
+        row.classList.toggle("canvas-layer-hover",id === canvasHoverLayerId);
         const kind = button.children[0];
-        kind.textContent = typeLabel(layer.type) + " " + (state.layers.length-index);
+        kind.textContent = name + (visible ? "" : "（非表示）");
         const preview = button.children[1];
         const text = layer.type === "text"
           ? String(layer.text || "").replace(/\s+/g," ").trim() : "";
         preview.textContent = text;
         preview.hidden = !text;
         button.title = text ? `${kind.textContent}: ${text}` : kind.textContent;
-        entries.push(button);
+        entries.push(row);
       });
     }
     // Selection/text changes update the same DOM nodes; replace only when
@@ -1644,14 +2162,18 @@ function renderLayers(){
       list.replaceChildren(...entries);
     }
     if(focused){
-      const same = focusedId && entries.find(item => item.dataset?.layerId === focusedId);
+      const control = row => {
+        if(!row?.dataset?.layerId) return null;
+        return focusedControl === "visibility" ? row.children[1] : row.children[0];
+      };
+      const same = control(focusedId && entries.find(item => item.dataset?.layerId === focusedId));
       if(same){
         if(document.activeElement !== same) same.focus();
       }else{
         // Removing the focused layer must not strand keyboard focus in a
-        // detached button. Continue at the adjacent layer, or the summary.
+        // detached control. Continue at the adjacent layer, or the summary.
         const next = entries[Math.min(focusedIndex,entries.length-1)];
-        const fallback = next?.tagName === "BUTTON" ? next : $("layerListPanel")?.querySelector("summary");
+        const fallback = control(next) || $("layerListPanel")?.querySelector("summary");
         fallback?.focus();
       }
     }
@@ -1664,7 +2186,7 @@ function renderLayers(){
     event.preventDefault();
     if(event.dataTransfer) event.dataTransfer.dropEffect = "move";
     const position = layerListGapPosition(event.clientY);
-    showLayerDropIndicator(position?.button,position?.after);
+    showLayerDropIndicator(position?.row,position?.after);
   });
   $("layerList")?.addEventListener("drop",event => {
     if(!listDrag || event.target !== $("layerList")) return;
@@ -1672,7 +2194,7 @@ function renderLayers(){
     const draggedId = listDrag.id;
     const position = layerListGapPosition(event.clientY);
     finishLayerListDrag();
-    if(position) moveLayerFromList(draggedId,position.button.dataset.layerId,position.after);
+    if(position) moveLayerFromList(draggedId,position.row.dataset.layerId,position.after);
   });
   $("layerList")?.addEventListener("dragleave",event => {
     if(!listDrag) return;
@@ -1682,6 +2204,30 @@ function renderLayers(){
     showLayerDropIndicator(null,false);
   });
 
+  function focusAfterStyleDetailsClose(){
+    if(!styleDetails.contains(document.activeElement)) return;
+    const hidden = styleDetails.hidden || $("contextPanel").inert;
+    if(!hidden && document.activeElement === styleDetailsSummary) return;
+    const target = hidden ? editCanvas : styleDetailsSummary;
+    target.focus({preventScroll:true});
+  }
+
+  function dismissStyleDetails(){
+    if(!styleDetails.open) return;
+    styleDetails.open = false;
+    focusAfterStyleDetailsClose();
+  }
+
+  function syncStyleDetails(fields,layers){
+    const available = fields.has("text");
+    const context = [state.tool,...layers.map(layer => String(layer.id)).sort()].join("\n");
+    styleDetails.hidden = !available;
+    styleDetails.inert = !available;
+    if(context !== styleDetailsContext || !available) dismissStyleDetails();
+    if(!available) focusAfterStyleDetailsClose();
+    styleDetailsContext = context;
+  }
+
   function updateSelectedControls(){
     // Apply the final selection's controls after pointer-up/cancel, keeping
     // control and work-area changes out of an active gesture.
@@ -1689,6 +2235,12 @@ function renderLayers(){
     renderLayerList();
     const layers = selectedLayers();
     const layer = selectedLayer();
+    const canDeleteSelection = state.tool === "select" && layers.length > 0 && !state.singleBusy;
+    const deleteActions = $("deleteSelectionActions");
+    deleteActions.classList.toggle("hidden",!canDeleteSelection);
+    deleteActions.inert = !canDeleteSelection;
+    deleteActions.setAttribute("aria-hidden",String(!canDeleteSelection));
+    $("deleteSelected").disabled = !canDeleteSelection;
     const actions = $("editorActions");
     actions.classList.toggle("hidden",!layers.length);
     actions.inert = !layers.length;
@@ -1722,6 +2274,7 @@ function renderLayers(){
       if(type === "text") fields.add("text");
       if(["text","rect","ellipse","arrow","line","ink"].includes(type)) fields.add("color");
       if(["rect","ellipse","arrow","line"].includes(type)) fields.add("line");
+      if(type === "arrow") fields.add("arrow");
       if(["text","arrow","line","rect","ellipse"].includes(type)) fields.add("outline");
       if(["rect","ellipse"].includes(type)) fields.add("fill");
       if(type === "image") fields.add("image");
@@ -1735,30 +2288,36 @@ function renderLayers(){
     });
     const title = $("contextTitle");
     const colorTypes = [...types].filter(type => ["text","ink","rect","ellipse","arrow","line"].includes(type));
-    const colorLabel = colorTypes.length && colorTypes.every(type => type === "text") ? "テキスト"
-      : colorTypes.length && colorTypes.every(type => ["rect","ellipse","arrow","line"].includes(type)) ? "枠" : "色";
+    const colorLabel = colorTypes.length && colorTypes.every(type => type === "text") ? "文字色"
+      : colorTypes.length && colorTypes.every(type => ["rect","ellipse","arrow","line"].includes(type)) ? "枠色" : "色";
     $("annotationColorLabel").textContent = colorLabel;
-    $("annotationColor").setAttribute("aria-label",colorLabel === "色" ? "文字・図形・手書きの色" : `${colorLabel}の色`);
-    const mixedFill = fields.has("text") && fields.has("fill");
-    $("textFillLabel").textContent = mixedFill ? "文字の塗り" : "塗り";
-    $("shapeFillLabel").textContent = mixedFill ? "図形の塗り" : "塗り";
+    $("annotationColor").setAttribute("aria-label",colorLabel === "色" ? "文字・図形・手書きの色" : colorLabel);
     const showPanel = fields.size > 0 || layers.length > 0 || ["crop","transform"].includes(contextType);
     const panel = $("contextPanel");
+    panel.classList.toggle("mixed-backgrounds",fields.has("text") && fields.has("fill"));
+    $("lineWidthLabel").textContent = fields.has("brush") ? "線の太さ" : "太さ";
+    $("brushSizeLabel").textContent = fields.has("line") ? "ブラシの太さ" : "太さ";
     panel.classList.toggle("hidden",!showPanel);
     panel.inert = !showPanel;
     panel.setAttribute("aria-hidden",String(!showPanel));
     if(title){
       title.textContent = layers.length && state.tool === "select"
-        ? layers.length > 1 ? `${layers.length}個` : typeLabel(layer.type)
-        : contextType === "crop" ? "トリミング"
-        : contextType === "transform" ? "サイズ"
+        ? layers.length > 1 ? `${layers.length}個の設定` : `${typeLabel(layer.type)}の設定`
+        : contextType === "crop" ? "トリミングの設定"
+        : contextType === "transform" ? "サイズの設定"
         : contextType && contextType !== "select" && contextType !== "pan"
-          ? typeLabel(contextType) : "";
+          ? `${typeLabel(contextType)}の設定` : "";
     }
     scheduleDisplayResize();
 
     syncFontSizeButtons();
-    if(!layers.length || state.tool !== "select") return;
+    syncStyleDetails(fields,layers);
+    if(!layers.length || state.tool !== "select"){
+      syncStyleRanges();
+      fontPicker?.sync();
+      colorPicker?.sync();
+      return;
+    }
 
     for(const [id,property] of Object.entries(styleFieldProperties)){
       const field = $(id);
@@ -1775,15 +2334,37 @@ function renderLayers(){
         field.placeholder = mixed ? "複数の値" : "";
         // color入力には空値を指定できないため、先頭の色とmixed表示を併用する。
         const value = mixed && field.type !== "color" ? "" : common.value;
-        if(field.value !== String(value ?? "")) field.value = value ?? "";
+        if(styleEditSession?.field !== id || document.activeElement !== field){
+          if(field.value !== String(value ?? "")) field.value = value ?? "";
+        }
       }
     }
+    syncStyleRanges();
+    fontPicker?.sync();
+    colorPicker?.sync();
+  }
+
+  function brushPreferenceKey(tool){
+    return tool === "ink" ? "ink"
+      : BRUSH_TYPES.includes(tool) || tool === "inkEraser" ? "brush" : null;
   }
 
   function setTool(tool){
+    resetViewPan();
+    hideSelectionCursor();
+    setListHoverLayer(null);
+    brushPointer = null;
+    finishStyleEdit();
+    // 新規ツールで入力途中の無効な数値を、次の描画設定へ持ち越さない。
+    for(const id of Object.keys(styleRangeUnits)) restoreInvalidNewToolRange(id);
     if(state.textEditing) finishTextEditing();
     if(toolOutlinePreferences.has(state.tool)){
       toolOutlinePreferences.set(state.tool,$("whiteOutline").checked);
+    }
+    const previousBrushKey = brushPreferenceKey(state.tool);
+    if(previousBrushKey){
+      brushSizePreferences.set(previousBrushKey,
+        readNumber("brushSize",5,500,brushSizePreferences.get(previousBrushKey)));
     }
     const leavingCrop =
         state.tool === "crop" &&
@@ -1791,10 +2372,16 @@ function renderLayers(){
 
     if(state.drag) cancelSelectionGesture();
     state.tool = tool;
+    if(tool === "text"){
+      // A selected text layer may retain a finer saved value (e.g. 1.333).
+      // Keep that layer unchanged, but show the actual 0.01-step value for new text.
+      restoreInvalidNewToolRange("lineSpacing");
+    }
     if(toolOutlinePreferences.has(tool)) $("whiteOutline").checked = toolOutlinePreferences.get(tool);
+    const nextBrushKey = brushPreferenceKey(tool);
+    if(nextBrushKey) $("brushSize").value = brushSizePreferences.get(nextBrushKey);
     state.drag = null;
     state.textEditing = null;
-    styleEditSession = null;
     if(tool !== "select") selectLayers([]);
 
     if(leavingCrop){
@@ -1825,8 +2412,11 @@ function renderLayers(){
 
 
   function readNumber(id,min,max,fallback){
-    if(!$(id) || $(id).value === "") return fallback;
-    const value = Number($(id).value);
+    const field = $(id);
+    // 新規ツールの空欄・範囲外・刻み違いは、スライダーに残る最終有効値を使う。
+    if(field && styleRangeUnits[id] && !validStyleField(field)) return Number($(id+"Range").value);
+    if(!field || field.value === "") return fallback;
+    const value = Number(field.value);
     return Number.isFinite(value)
       ? clamp(value,min,max)
       : fallback;
@@ -1839,13 +2429,18 @@ function renderLayers(){
       fontFamily:annotationStyle.safeFontFamily($("fontFamily")?.value),
       bold:$("boldText")?.checked ?? true,
       textWidth:300,
+      ...(["text","select"].includes(state.tool)
+        ? {textAlign:annotationStyle.safeTextAlign($("textAlign").value),
+          lineSpacing:readNumber("lineSpacing",1,3,annotationStyle.DEFAULT_LINE_SPACING)} : {}),
       bgColor:$("textBgColor")?.value || "#ffffff",
       bgTransparent:$("textBgTransparent")?.checked ?? true,
       outline:$("whiteOutline")?.checked ?? true,
-      fill:$("shapeFill")?.value || "#ffff00",
+      fill:$("shapeFill")?.value || "#ffffff",
       fillNone:$("shapeFillNone")?.checked ?? true,
       lineWidth:readNumber("lineWidth",1,100,8),
-      brushSize:readNumber("brushSize",5,500,50),
+      ...(["arrow","select"].includes(state.tool)
+        ? {arrowHeadSize:annotationStyle.safeArrowHeadSize($("arrowHeadSize").value)} : {}),
+      brushSize:readNumber("brushSize",5,500,state.tool === "ink" ? 30 : 50),
       mosaicSize:readNumber("mosaicSize",4,200,18),
       inkStabilizer:$("inkStabilizer")?.value || "none",
       opacity:readNumber("imageOpacity",0,100,100)
@@ -1864,20 +2459,34 @@ function renderLayers(){
   function isEditingTarget(target){
     return !!target && (
       target.isContentEditable ||
+      !!fontPicker?.contains(target) ||
+      !!colorPicker?.contains(target) ||
+      !!imageNavigator?.contains(target) ||
       !!target.closest?.("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']")
     );
   }
 
   function isObjectShortcutBlocked(event,includeDrag=true){
     return event.defaultPrevented || event.isComposing || event.keyCode === 229 || state.composing || state.singleBusy ||
-      !!viewState.pan ||
+      !!viewState.pan || viewState.spacePan ||
       (includeDrag && !!state.drag) || !!state.textEditing || $("singlePanel").hidden ||
       !$("previewDialog").classList.contains("hidden") ||
       !$("saveDialog").classList.contains("hidden") ||
+      !$("switchDialog").classList.contains("hidden") ||
+      !$("imageDropDialog").classList.contains("hidden") ||
       !!document.querySelector("#stampDialog:not(.hidden)") ||
       !!document.querySelector("#objectMenu:not([hidden]):not(.hidden)") ||
       !!document.querySelector("dialog[open]") ||
-      isEditingTarget(event.target) || isEditingTarget(document.activeElement);
+      isEditingTarget(event.target) || isEditingTarget(document.activeElement) ||
+      ((styleDetails.contains(event.target) || styleDetails.contains(document.activeElement)) &&
+        !(event.ctrlKey || event.metaKey)) ||
+      // Panel controls must not trigger object movement/deletion by Arrow/Delete,
+      // but Ctrl/Command shortcuts and native clipboard events still work.
+      (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(event.key) && $("layerList").contains(event.target)) ||
+      ((event.target?.dataset?.layerControl === "visibility" ||
+        document.activeElement?.dataset?.layerControl === "visibility" ||
+        event.target === layerSidebarToggle || document.activeElement === layerSidebarToggle) &&
+        !(event.ctrlKey || event.metaKey || event.type === "copy" || event.type === "paste"));
   }
 
   function deleteSelectedLayer(){
@@ -1892,6 +2501,11 @@ function renderLayers(){
     updateSelectedControls();
     return true;
   }
+
+  $("deleteSelected").addEventListener("click",() => {
+    if(state.tool !== "select" || state.singleBusy || state.drag) return;
+    if(deleteSelectedLayer()) editCanvas.focus({preventScroll:true});
+  });
 
   function syncTextEditor(){
     if(!textEditSession || textEditor.hidden) return;
@@ -1920,7 +2534,8 @@ function renderLayers(){
     style.width = `${box.width}px`;
     style.height = `${box.height}px`;
     style.font = annotationStyle.fontFor(layer);
-    style.lineHeight = String(box.lineHeight/layer.fontSize);
+    style.textAlign = annotationStyle.safeTextAlign(layer.textAlign);
+    style.lineHeight = String(annotationStyle.safeLineSpacing(layer.lineSpacing));
     style.transform = `scale(${scale})`;
     style.setProperty("--editing-text-color",layer.color || "#111111");
     // Native textarea handles IME, selection, clipboard and its own undo.
@@ -2008,6 +2623,13 @@ function renderLayers(){
     }
   });
   document.addEventListener("pointerdown",event => {
+    if(!state.composing && (styleEditSession || fontPreview || styleRangeInteraction)){
+      const field = $(styleRangeInteraction ? styleRangeInteraction.id+"Range" : styleEditSession?.field || "fontFamily");
+      if(!field.contains(event.target) && !(fontPreview && fontPicker?.contains(event.target)) && !colorPicker?.contains(event.target)){
+        finishStyleEdit();
+        updateSelectedControls();
+      }
+    }
     if(textEditSession && !textEditorHost.contains(event.target) && !state.composing) finishTextEditing(true);
   },true);
 
@@ -2103,11 +2725,10 @@ function renderLayers(){
   document.addEventListener("compositionend",() => {state.composing = false;});
   document.addEventListener("keydown",event => {
     if(event.key === "Escape" && !isObjectShortcutBlocked(event,false) && state.drag){
+      // Cancel the active gesture without losing the prior selection or tool.
       cancelSelectionGesture();
-      selectLayers([]);
-      setTool("select");
-      updateSelectedControls();
       event.preventDefault();
+      event.stopPropagation();
       return;
     }
     if(isObjectShortcutBlocked(event) || event.altKey) return;
@@ -2121,7 +2742,7 @@ function renderLayers(){
       }else if(key === "s" && state.originalCanvas){
         openSaveSettings();event.preventDefault();
       }else if(key === "a" && state.originalCanvas){
-        selectLayers(state.layers.filter(layer => layer.visible));
+        selectLayers(state.layers.filter(layer => layer.visible !== false));
         setTool("select");updateSelectedControls();event.preventDefault();
       }
       return;
@@ -2311,6 +2932,14 @@ function renderLayers(){
     const dx = translation.dx-(drag.translation?.dx || 0);
     const dy = translation.dy-(drag.translation?.dy || 0);
     if(!dx && !dy) return;
+    if(!drag.guideTargets){
+      const moving = new Set(drag.layers.map(layer => layer.id));
+      // Other bounds remain fixed during this gesture. Measure text/ink once,
+      // not on each pointer event or overlay redraw, and exclude hidden layers.
+      drag.guideTargets = [{x:0,y:0,w:baseCanvas.width,h:baseCanvas.height},
+        ...state.layers.filter(layer => layer.visible !== false && !moving.has(layer.id)).map(layerBounds)];
+    }
+    drag.guidesHidden = false;
     if(!drag.historyPushed){
       drag.undoBefore = state.undo.slice();
       pushHistory("layers");
@@ -2424,6 +3053,8 @@ function renderLayers(){
   }
 
   function cancelSelectionGesture(){
+    hideSelectionCursor();
+    brushPointer = null;
     const drag = state.drag;
     if(drag?.mode === "marquee"){
       const ids = new Set(drag.selectionBefore);
@@ -2457,6 +3088,27 @@ function renderLayers(){
     updateSelectedControls();
   }
 
+  editCanvas.addEventListener("pointerenter",event => {updateBrushPointer(event);updateSelectionPointer(event);});
+  editCanvas.addEventListener("pointerleave",event => {
+    hideBrushPreview(event);
+    if(!state.drag || state.drag.pointerId !== event.pointerId) hideSelectionCursor(event);
+  });
+  editCanvas.addEventListener("contextmenu",() => {hideBrushPreview();hideSelectionCursor();});
+  document.addEventListener("keydown",updateSelectionModifier);
+  document.addEventListener("keyup",updateSelectionModifier);
+  document.addEventListener("pointerdown",event => {
+    if(event.target !== editCanvas){hideBrushPreview();hideSelectionCursor();}
+  },true);
+  document.addEventListener("focusin",event => {
+    if(event.target !== editCanvas){hideBrushPreview();hideSelectionCursor();}
+  });
+  window.addEventListener("blur",() => {hideBrushPreview();hideSelectionCursor();});
+  document.addEventListener("visibilitychange",() => {if(document.hidden){hideBrushPreview();hideSelectionCursor();}});
+  window.addEventListener("scroll",() => {
+    if(brushPointer) scheduleBrushPreview();
+    if(selectionPointer) scheduleSelectionCursor();
+  },true);
+
   editCanvas.addEventListener("pointerdown",event => {
     if(
         state.singleBusy ||
@@ -2469,6 +3121,8 @@ function renderLayers(){
         return;
     }
 
+    updateBrushPointer(event);
+    updateSelectionPointer(event);
     const point = pointFromEvent(event);
     const beforeRevision = state.revision;
     editCanvas.focus({preventScroll:true});
@@ -2482,6 +3136,7 @@ function renderLayers(){
         selectLayers([existing]);
         setTool("select");
         updateSelectedControls();
+        revealCanvasSelection(existing.id);
         releaseGestureCapture({pointerId:event.pointerId});
         return;
       }
@@ -2497,6 +3152,7 @@ function renderLayers(){
           ? selected.filter(item => item.id !== layer.id) : [...selected,layer]);
         renderEditor();
         updateSelectedControls();
+        if(!alreadySelected) revealCanvasSelection(layer.id);
         releaseGestureCapture({pointerId:event.pointerId});
         return;
       }
@@ -2642,7 +3298,7 @@ function renderLayers(){
   });
 
   editCanvas.addEventListener("dblclick",event => {
-    if(state.singleBusy || !baseCanvas.width || state.tool === "pan") return;
+    if(state.singleBusy || !baseCanvas.width || state.tool === "pan" || viewState.spacePan || viewState.pan) return;
     const layer = hitLayer(pointFromEvent(event));
     if(layer?.type === "text"){
       event.preventDefault();
@@ -2651,7 +3307,10 @@ function renderLayers(){
   });
 
   editCanvas.addEventListener("pointermove",event => {
-    if(!state.drag || (state.drag.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
+    if(state.drag?.pointerId !== undefined && event.pointerId !== state.drag.pointerId) return;
+    updateBrushPointer(event);
+    updateSelectionPointer(event);
+    if(!state.drag) return;
 
     const point = pointFromEvent(event);
     const drag = state.drag;
@@ -2722,6 +3381,8 @@ function renderLayers(){
 
     editCanvas.addEventListener("pointerup",event => {
     if(!state.drag || (state.drag.pointerId !== undefined && event.pointerId !== state.drag.pointerId)) return;
+    updateBrushPointer(event);
+    updateSelectionPointer(event);
 
     const point = pointFromEvent(event);
     const drag = state.drag;
@@ -2814,10 +3475,16 @@ function renderLayers(){
     renderLayers();
     renderEditor();
     updateSelectedControls();
+    if(state.tool === "select"){
+      const target = drag.mode === "marquee" ? selectedLayers().at(-1) : drag.layer;
+      if(target && selectedLayers().some(item => item.id === target.id)) revealCanvasSelection(target.id);
+    }
     });
 
 
   editCanvas.addEventListener("pointercancel",event => {
+    hideBrushPreview(event);
+    hideSelectionCursor(event);
     if(state.drag?.pointerId === event.pointerId) cancelSelectionGesture();
   });
   editCanvas.addEventListener("lostpointercapture",event => {
@@ -2967,7 +3634,7 @@ function renderLayers(){
 
   function applyCurrentCrop(){
     if(state.singleBusy || state.drag || state.tool !== "crop") return;
-    finishTextEditing();
+    finishPendingEdits();
     if(
         !state.crop ||
         Math.round(state.crop.w) < 1 ||
@@ -3096,7 +3763,7 @@ function renderLayers(){
 
   function resizeSingle(width,height){
     if(state.singleBusy || state.drag || !state.originalCanvas) return false;
-    finishTextEditing();
+    finishPendingEdits();
     validateDimensions(width,height);
 
     if(width === baseCanvas.width && height === baseCanvas.height){
@@ -3179,7 +3846,7 @@ function renderLayers(){
 
   function rotateSingle(degrees){
     if(state.singleBusy || state.drag || !state.originalCanvas) return;
-    finishTextEditing();
+    finishPendingEdits();
 
     pushHistory("full");
 
@@ -3259,7 +3926,7 @@ function renderLayers(){
 
   function flipSingle(horizontal){
     if(state.singleBusy || state.drag || !state.originalCanvas) return;
-    finishTextEditing();
+    finishPendingEdits();
 
     pushHistory("full");
     const output = cloneCanvas(baseCanvas);
@@ -3324,76 +3991,398 @@ function renderLayers(){
 
   const styleFieldProperties = {
     annotationColor:"color",fontSize:"fontSize",
+    arrowHeadSize:"arrowHeadSize",
     lineWidth:"lineWidth",brushSize:"brushSize",mosaicSize:"mosaicSize",
-    fontFamily:"fontFamily",boldText:"bold",
+    fontFamily:"fontFamily",boldText:"bold",textAlign:"textAlign",lineSpacing:"lineSpacing",
     textBgColor:"bgColor",textBgTransparent:"bgTransparent",whiteOutline:"outline",
     shapeFill:"fill",shapeFillNone:"fillNone",imageOpacity:"opacity"
   };
 
+  const textAlignRadios = [["textAlignLeft","left"],["textAlignCenter","center"],["textAlignRight","right"]];
+  function syncTextAlignRadios(){
+    const field = $("textAlign");
+    for(const [id,align] of textAlignRadios) $(id).checked = field.value === align;
+    const message = field.dataset.mixed === "true" ? "複数の値" : "";
+    if($("textAlignMixed").textContent !== message) $("textAlignMixed").textContent = message;
+  }
+
+  for(const [id,align] of textAlignRadios){
+    $(id).addEventListener("focus",() => {if(!state.composing) finishStyleEdit();});
+    $(id).addEventListener("change",() => {
+      if(!$(id).checked) return;
+      if(state.singleBusy || state.drag || state.composing){updateSelectedControls();return;}
+      finishStyleEdit();
+      const field = $("textAlign");
+      field.value = align;
+      field.dataset.mixed = "false";
+      applySelectedField({target:field,type:"change"});
+      syncTextAlignRadios();
+    });
+  }
+
+  function syncArrowSizeRadios(){
+    const field = $("arrowHeadSize");
+    for(const [id,size] of [["arrowSizeSmall","small"],["arrowSizeMedium","medium"],["arrowSizeLarge","large"]]){
+      $(id).checked = field.value === size;
+    }
+    const message = field.dataset.mixed === "true" ? "複数の値" : "";
+    if($("arrowSizeMixed").textContent !== message) $("arrowSizeMixed").textContent = message;
+  }
+
+  for(const [id,size] of [["arrowSizeSmall","small"],["arrowSizeMedium","medium"],["arrowSizeLarge","large"]]){
+    $(id).addEventListener("focus",() => {if(!state.composing) finishStyleEdit();});
+    $(id).addEventListener("change",() => {
+      if(!$(id).checked) return;
+      if(state.singleBusy || state.drag || state.composing){updateSelectedControls();return;}
+      finishStyleEdit();
+      const field = $("arrowHeadSize");
+      field.value = size;
+      field.dataset.mixed = "false";
+      applySelectedField({target:field,type:"change"});
+      syncArrowSizeRadios();
+    });
+  }
+
+  function previewSelectedFont(key,layers=selectedLayers().filter(layer=>layer.type === "text")){
+    if(!layers.length || state.tool !== "select" || state.singleBusy || state.drag || state.composing) return;
+    fontPreview={ids:new Set(layers.map(layer=>layer.id)),key:annotationStyle.safeFontFamily(key)};
+    renderLayers();renderEditor();
+  }
+
   function applySelectedField(event){
+    // スライダーへ移る際、元の数値欄のnative changeが遅れて届くことがある。
+    if(styleRangeInteraction && !event.fromRange) return;
     const field = event.target;
     const property = styleFieldProperties[field.id];
     const layers = selectedLayers().filter(layer => annotationStyle.eligibleForField(layer,property));
-    if(!layers.length || state.tool !== "select" || state.singleBusy || state.drag || (property === "text" && layers.length > 1)) return;
-    if(field.type === "number" && (field.value === "" || !Number.isFinite(Number(field.value)))) return;
-    if(event.type === "input" && field.checkValidity && !field.checkValidity()) return;
+    if(!layers.length || state.tool !== "select" || state.singleBusy || state.drag ||
+      state.composing || event.isComposing || (property === "text" && layers.length > 1)) return;
+    if(!validStyleField(field)){
+      if(event.type === "change"){
+        if(styleEditSession?.field === field.id) finishStyleEdit(true);
+        updateSelectedControls();
+      }
+      return;
+    }
+    const selectionKey = layers.map(layer => layer.id).sort().join("\n");
+    const value = property === "text" ? field.value : currentStyle()[property];
+    if(styleEditSession && (styleEditSession.selectionKey !== selectionKey || styleEditSession.field !== field.id)) finishStyleEdit();
+    if(fontPreview && property !== "fontFamily") finishStyleEdit();
     if(property === "fontFamily"){
       if(!field.value) return;
       if(event.type === "input"){
-        fontPreview = {ids:new Set(layers.map(layer => layer.id)),key:annotationStyle.safeFontFamily(field.value)};
-        renderLayers();
-        renderEditor();
+        previewSelectedFont(field.value,layers);
         return;
       }
       fontPreview = null;
     }
-    const value = property === "text" ? field.value
-      : currentStyle()[property];
     const changed = layers.filter(layer => annotationStyle.valueForField(layer,property) !== value);
-    if(!changed.length) return;
-    const selectionKey = layers.map(layer => layer.id).sort().join("\n");
-    if(!styleEditSession || styleEditSession.selectionKey !== selectionKey || styleEditSession.field !== field.id){
-      styleEditSession = {selectionKey,field:field.id,historyPushed:false};
-    }
-    if(!styleEditSession.historyPushed){
-      pushHistory("layers");
-      styleEditSession.historyPushed = true;
+    if(changed.length && !styleEditSession){
+      styleEditSession = {
+        selectionKey,field:field.id,property,before:makeLayerSnapshot(),
+        originals:layers.map(layer => ({id:layer.id,own:Object.hasOwn(layer,property),
+          value:layer[property],effective:annotationStyle.valueForField(layer,property)}))
+      };
     }
     for(const layer of changed){
       layer[property] = value;
       if(property === "brushSize") layer.maskDirty = true;
     }
-    renderLayers();
-    renderEditor();
+    if(event.type === "change") finishStyleEdit();
+    updateHistoryButtons();
+    if(event.fromRange) scheduleRender();
+    else{renderLayers();renderEditor();}
     updateSelectedControls();
   }
 
   Object.keys(styleFieldProperties).forEach(id => {
     const field = $(id);
     if(!field) return;
+    let finishAfterComposition = false;
     field.addEventListener("focus",() => {
-      styleEditSession = null;
+      if(!state.composing) finishStyleEdit();
     });
-    field.addEventListener("blur",() => {
-      styleEditSession = null;
-      if(id === "fontFamily" && fontPreview){
-        fontPreview = null;
-        renderLayers();
-        renderEditor();
-        updateSelectedControls();
+    function finishFieldEdit(){
+      if(state.composing){
+        // 最初の変換中はまだ調整セッションがないため、欄単位で終了を覚える。
+        finishAfterComposition = true;
+        return;
+      }
+      if(styleRangeInteraction) return;
+      restoreInvalidNewToolRange(id);
+      finishAfterComposition = false;
+      if(styleEditSession?.field === id || (id === "fontFamily" && fontPreview)) finishStyleEdit(!validStyleField(field));
+      updateSelectedControls();
+    }
+    field.addEventListener("blur",finishFieldEdit);
+    field.addEventListener("keydown",event => {
+      if(event.isComposing || state.composing || event.keyCode === 229) return;
+      const pending = styleEditSession?.field === id || (id === "fontFamily" && fontPreview);
+      if(event.key === "Escape" && pending){
+        event.preventDefault();event.stopPropagation();finishStyleEdit(true);updateSelectedControls();
+      }else if(event.key === "Enter" && styleEditSession?.field === id){
+        event.preventDefault();event.stopPropagation();applySelectedField({target:field,type:"change"});
+      }else if(event.key === "Enter" && styleRangeUnits[id] && state.tool !== "select" && !validStyleField(field)){
+        event.preventDefault();event.stopPropagation();restoreInvalidNewToolRange(id);
+        syncStyleRanges();
       }
     });
-    if(id === "fontFamily") field.addEventListener("keydown",event => {
-      if(event.key !== "Escape" || !fontPreview) return;
-      event.preventDefault();
-      fontPreview = null;
-      renderLayers();
-      renderEditor();
-      updateSelectedControls();
+    field.addEventListener("compositionend",() => {
+      state.composing = false;
+      applySelectedField({target:field,type:"input"});
+      if(finishAfterComposition) finishFieldEdit();
+    });
+    // 今後のスライダーも、1回のドラッグを1回のUndoへまとめる。
+    field.addEventListener("pointerdown",() => {
+      if(field.type === "range" && !state.composing) finishStyleEdit();
+    });
+    field.addEventListener("pointerup",() => {
+      if(field.type === "range" && styleEditSession?.field === id && !state.composing){
+        finishStyleEdit();updateSelectedControls();
+      }
+    });
+    field.addEventListener("pointercancel",() => {
+      if(field.type === "range" && styleEditSession?.field === id){
+        finishStyleEdit(true);updateSelectedControls();
+      }
     });
     field.addEventListener("input",applySelectedField);
-    field.addEventListener("change",applySelectedField);
+    field.addEventListener("change",event => {
+      restoreInvalidNewToolRange(id);
+      applySelectedField(event);
+    });
   });
+
+  styleDetailsSummary.addEventListener("click",event => {
+    if(state.singleBusy || state.drag || viewState.pan || viewState.spacePan || state.composing){
+      event.preventDefault();return;
+    }
+    finishStyleEdit();
+  });
+  styleDetails.addEventListener("toggle",() => {
+    if(styleDetails.open || state.composing) return;
+    restoreInvalidNewToolRange("lineSpacing");
+    // toggleは遅れて届くため、その間に始まった上部バーの調整を確定しない。
+    const fieldId = styleRangeInteraction?.id || styleEditSession?.field;
+    if(fieldId && styleDetails.contains($(fieldId))) finishStyleEdit();
+    focusAfterStyleDetailsClose();
+  });
+  styleDetails.addEventListener("keydown",event => {
+    // 入力欄のEsc取消を先に扱い、もう一度押すと文字の配置を閉じる。
+    if(event.key !== "Escape" || event.defaultPrevented || !styleDetails.open ||
+      event.isComposing || event.keyCode === 229 || state.composing) return;
+    event.preventDefault();event.stopPropagation();
+    finishStyleEdit(true);
+    restoreInvalidNewToolRange("lineSpacing");
+    dismissStyleDetails();
+  });
+  $("closeStyleDetails").addEventListener("click",() => {
+    if(state.composing) return;
+    restoreInvalidNewToolRange("lineSpacing");
+    finishStyleEdit();
+    dismissStyleDetails();
+  });
+  const dismissOutsideStyleDetails = event => {
+    if(!styleDetails.open || styleDetails.contains(event.target) || state.composing || styleRangeInteraction) return;
+    restoreInvalidNewToolRange("lineSpacing");
+    finishStyleEdit();
+    dismissStyleDetails();
+  };
+  document.addEventListener("pointerdown",dismissOutsideStyleDetails,true);
+  document.addEventListener("focusin",dismissOutsideStyleDetails);
+
+  function restoreInvalidNewToolRange(id){
+    if(state.tool === "select" || !styleRangeUnits[id]) return;
+    const field = $(id);
+    if(!validStyleField(field)) field.value = $(id+"Range").value;
+  }
+
+  function syncTransparencySwitches(){
+    for(const [id,mixedId,colorId] of [["textBgTransparent","textBgMixed","textBgColor"],["shapeFillNone","shapeFillMixed","shapeFill"]]){
+      const field = $(id);
+      // switchの状態はON/OFFのみ。混在は説明文で伝え、未操作の値を揃えない。
+      field.indeterminate = false;
+      const message = field.dataset.mixed === "true" ? "複数の値" : "";
+      if($(mixedId).textContent !== message) $(mixedId).textContent = message;
+      $(mixedId).classList.toggle("hidden",!message);
+      // 混在時は不透明な対象の色を調整できる。透明な対象を勝手に不透明にしない。
+      $(colorId).disabled = field.checked && !message;
+    }
+  }
+
+  for(const id of ["textBgTransparent","shapeFillNone"]){
+    $(id).addEventListener("change",syncTransparencySwitches);
+  }
+
+  function syncStyleRanges(){
+    if(brushPointer) scheduleBrushPreview();
+    syncTransparencySwitches();
+    syncArrowSizeRadios();
+    syncTextAlignRadios();
+    for(const [id,unit] of Object.entries(styleRangeUnits)){
+      const field = $(id), range = $(id+"Range");
+      if(!field || !range) continue;
+      const mixed = state.tool === "select" && field.dataset.mixed === "true";
+      const property = styleFieldProperties[id];
+      const targets = state.tool === "select"
+        ? selectedLayers().filter(layer => annotationStyle.eligibleForField(layer,property)) : [];
+      const value = mixed || !validStyleField(field)
+        ? targets.length ? annotationStyle.valueForField(targets[0],property) : Number(range.value)
+        : Number(field.value);
+      if(Number.isFinite(value)) range.value = String(value);
+      range.dataset.mixed = String(mixed);
+      range.setAttribute("aria-valuetext",mixed ? "複数の値。操作すると同じ値にそろえます。" : `${value}${unit}`);
+      $(id+"Mixed").textContent = mixed ? "複数の値" : "";
+    }
+  }
+
+  function beginStyleRange(id,kind,event){
+    finishStyleEdit();
+    restoreInvalidNewToolRange(id);
+    updateSelectedControls();
+    styleRangeInteraction = {id,kind,beforeValue:$(id).value,beforeRangeValue:$(id+"Range").value,
+      pointerId:event?.pointerId,keys:new Set(),cancelled:false};
+    if(kind === "pointer") $(id+"Range").setPointerCapture(event.pointerId);
+  }
+
+  function applyStyleRange(id,event){
+    const range = $(id+"Range"), value = range.value;
+    if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing){
+      syncStyleRanges();
+      return;
+    }
+    if(styleRangeInteraction?.id === id && styleRangeInteraction.cancelled){
+      syncStyleRanges();
+      return;
+    }
+    if(styleRangeInteraction?.id !== id) beginStyleRange(id,"input");
+    $(id).value = value;
+    applySelectedField({target:$(id),type:"input",fromRange:true});
+    syncStyleRanges();
+    // native changeはドラッグ中・キー長押し中にも来るため、操作の終了まで待つ。
+    if(event.type === "change" && styleRangeInteraction?.kind === "input"){
+      finishStyleEdit();updateSelectedControls();
+    }
+  }
+
+  function endStyleRangePointer(event,cancel=false){
+    const interaction = styleRangeInteraction;
+    if(interaction?.kind !== "pointer" || interaction.pointerId !== event.pointerId) return;
+    finishStyleEdit(cancel);updateSelectedControls();
+  }
+
+  for(const id of Object.keys(styleRangeUnits)){
+    const field = $(id), range = $(id+"Range");
+    for(const type of ["input","change"]) field.addEventListener(type,syncStyleRanges);
+    range.addEventListener("focus",() => {
+      if(!state.composing && styleRangeInteraction?.id !== id){finishStyleEdit();updateSelectedControls();}
+    });
+    range.addEventListener("blur",() => {
+      if(!state.composing && styleRangeInteraction?.id === id){finishStyleEdit();updateSelectedControls();}
+    });
+    range.addEventListener("pointerdown",event => {
+      if(event.button !== 0 || event.isPrimary === false || !state.sourceFile || state.singleBusy ||
+        state.drag || viewState.pan || state.composing){event.preventDefault();return;}
+      if(styleRangeInteraction?.kind === "pointer" && styleRangeInteraction.pointerId !== event.pointerId){event.preventDefault();return;}
+      beginStyleRange(id,"pointer",event);
+    });
+    range.addEventListener("pointerup",endStyleRangePointer);
+    for(const type of ["pointercancel","lostpointercapture"]){
+      range.addEventListener(type,event => endStyleRangePointer(event,true));
+    }
+    range.addEventListener("keydown",event => {
+      if(event.isComposing || state.composing || event.keyCode === 229) return;
+      const interaction = styleRangeInteraction?.id === id ? styleRangeInteraction : null;
+      if(event.key === "Escape" && (interaction || styleEditSession?.field === id)){
+        event.preventDefault();event.stopPropagation();
+        finishStyleEdit(true,{keepRange:!!interaction && interaction.kind !== "input"});updateSelectedControls();
+      }else if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","PageUp","PageDown","Home","End"].includes(event.key) &&
+        !event.ctrlKey && !event.metaKey && !event.altKey){
+        if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan){event.preventDefault();return;}
+        if(interaction?.cancelled){event.preventDefault();return;}
+        if(interaction?.kind !== "keyboard") beginStyleRange(id,"keyboard");
+        styleRangeInteraction.keys.add(event.key);
+      }
+    });
+    range.addEventListener("keyup",event => {
+      const interaction = styleRangeInteraction;
+      if(interaction?.id !== id || interaction.kind !== "keyboard") return;
+      interaction.keys.delete(event.key);
+      if(!interaction.keys.size){finishStyleEdit();updateSelectedControls();}
+    });
+    for(const type of ["input","change"]) range.addEventListener(type,event => applyStyleRange(id,event));
+  }
+  document.addEventListener("pointerup",endStyleRangePointer,true);
+  document.addEventListener("pointercancel",event => endStyleRangePointer(event,true),true);
+  window.addEventListener("blur",() => {
+    if(styleRangeInteraction){finishStyleEdit(true);updateSelectedControls();}
+  });
+
+  function validStyleField(field){
+    if(field.id === "arrowHeadSize") return Object.hasOwn(annotationStyle.ARROW_HEAD_SCALES,field.value);
+    if(field.id === "textAlign") return annotationStyle.TEXT_ALIGNS.includes(field.value);
+    return !["number","range"].includes(field.type) ||
+      (field.value !== "" && Number.isFinite(Number(field.value)) && (!field.checkValidity || field.checkValidity()));
+  }
+
+  function styleEditChanged(session=styleEditSession){
+    if(!session) return false;
+    const current = new Map(state.layers.map(layer => [layer.id,layer]));
+    return session.originals.some(original => {
+      const layer = current.get(original.id);
+      return layer && annotationStyle.valueForField(layer,session.property) !== original.effective;
+    });
+  }
+
+  function finishStyleEdit(cancel=false,{keepRange=false}={}){
+    const session = styleEditSession, preview = fontPreview;
+    const interaction = styleRangeInteraction;
+    if(!session && !preview && !interaction) return;
+    if(session && !validStyleField($(session.field))) cancel = true;
+    if(interaction?.cancelled) cancel = true;
+    styleEditSession = null;
+    fontPreview = null;
+    styleRangeInteraction = keepRange ? interaction : null;
+    if(interaction && cancel){
+      $(interaction.id).value = interaction.beforeValue;
+      $(interaction.id+"Range").value = interaction.beforeRangeValue;
+      interaction.cancelled = true;
+    }
+    if(session){
+      if(cancel || !styleEditChanged(session)){
+        // 既定値と同じ値へ戻した場合も、元の属性の有無まで復元する。
+        const current = new Map(state.layers.map(layer => [layer.id,layer]));
+        for(const original of session.originals){
+          const layer = current.get(original.id);
+          if(!layer) continue;
+          if(original.own) layer[session.property] = original.value;
+          else delete layer[session.property];
+          if(session.property === "brushSize") layer.maskDirty = true;
+        }
+      }else{
+        // 試行中は履歴・Redo・revisionを触らず、確定した差分だけを記録する。
+        state.undo.push(session.before);
+        trimHistory(state.undo);
+        state.redo = [];
+        state.revision = ++state.revisionCounter;
+      }
+    }
+    if(interaction && !keepRange && interaction.kind === "pointer"){
+      const range = $(interaction.id+"Range");
+      if(range.hasPointerCapture(interaction.pointerId)) range.releasePointerCapture(interaction.pointerId);
+    }
+    updateHistoryButtons();
+    renderLayers();
+    renderEditor();
+  }
+
+  function finishPendingEdits(focusCanvas=false){
+    colorPicker?.close();
+    finishStyleEdit();
+    fontPicker?.close();
+    finishTextEditing(focusCanvas);
+    dismissStyleDetails();
+  }
 
   function syncFontSizeButtons(){
     const sizes = state.tool === "text" ? [currentStyle().fontSize]
@@ -3403,18 +4392,31 @@ function renderLayers(){
     $("increaseFontSize").disabled = blocked || !sizes.some(size => size < 300);
   }
 
-  function adjustFontSize(delta){
+  // Wordの拡大・縮小と同じ段階。72の次は80、その後は10刻み。
+  const fontSizeSteps = [8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72,
+    ...Array.from({length:23},(_,index) => 80+index*10)];
+
+  function nextFontSize(size,direction){
+    const steps = direction > 0 ? fontSizeSteps : [...fontSizeSteps].reverse();
+    return steps.find(step => direction > 0 ? step > size : step < size) ?? (direction > 0 ? 300 : 8);
+  }
+
+  function adjustFontSize(direction){
     if(!state.sourceFile || state.singleBusy || state.drag || viewState.pan || state.composing) return;
-    finishTextEditing();
-    styleEditSession = null;
-    fontPreview = null;
+    finishPendingEdits();
     if(state.tool === "text"){
-      $("fontSize").value = clamp(currentStyle().fontSize+delta,8,300);
+      $("fontSize").value = nextFontSize(currentStyle().fontSize,direction);
       syncFontSizeButtons();
       return;
     }
     if(state.tool !== "select") return;
-    const changes = selectedLayers().filter(layer => layer.type === "text")
+    const texts = selectedLayers().filter(layer => layer.type === "text");
+    // 先頭の変更できる文字を次の段階へ進め、複数文字のサイズ差を保つ。
+    // 上下限の文字を基準にすると他の文字も変更できなくなるため除外する。
+    const reference = texts.find(layer => direction > 0 ? layer.fontSize < 300 : layer.fontSize > 8);
+    if(!reference) return;
+    const delta = nextFontSize(reference.fontSize,direction)-reference.fontSize;
+    const changes = texts
       .map(layer => ({layer,size:clamp(layer.fontSize+delta,8,300)}))
       .filter(({layer,size}) => size !== layer.fontSize);
     if(!changes.length) return;
@@ -3425,8 +4427,8 @@ function renderLayers(){
     updateSelectedControls();
   }
 
-  $("decreaseFontSize").addEventListener("click",() => adjustFontSize(-2));
-  $("increaseFontSize").addEventListener("click",() => adjustFontSize(2));
+  $("decreaseFontSize").addEventListener("click",() => adjustFontSize(-1));
+  $("increaseFontSize").addEventListener("click",() => adjustFontSize(1));
   $("fontSize").addEventListener("input",syncFontSizeButtons);
   $("fontSize").addEventListener("change",syncFontSizeButtons);
 
@@ -3435,8 +4437,90 @@ function renderLayers(){
   function hasUnsavedChanges(){
     if(!state.sourceFile) return false;
     const pending = state.drag && !["marquee","moveLayer","moveLayers","resizeLayer"].includes(state.drag.mode);
-    return state.revision !== state.savedRevision || !!pending;
+    return state.revision !== state.savedRevision || !!pending || styleEditChanged();
   }
+
+  function completeSwitchChoice(allowed){
+    if(!switchChoiceResolve || switchSaveBusy) return;
+    const resolve = switchChoiceResolve;
+    switchChoiceResolve = null;
+    $("switchDialog").classList.add("hidden");
+    document.body.classList.remove("dialog-open");
+    $("appMain").inert = false;
+    document.querySelectorAll(".appbox-header").forEach(element => {element.inert = false;});
+    syncModeControls();
+    if(switchReturnFocus?.focus) switchReturnFocus.focus({preventScroll:true});
+    switchReturnFocus = null;
+    resolve(allowed);
+  }
+
+  function confirmSwitchWithUnsavedChanges(){
+    if(!hasUnsavedChanges()) return Promise.resolve(true);
+    if(switchChoiceResolve) return Promise.resolve(false);
+    return new Promise(resolve => {
+      switchChoiceResolve = resolve;
+      switchReturnFocus = document.activeElement;
+      $("switchStatus").textContent = "";
+      $("switchSave").textContent = "作業ファイルをダウンロードする";
+      $("switchDiscard").hidden = false;
+      $("switchDiscard").classList.remove("hidden");
+      $("switchContinue").hidden = true;
+      $("switchContinue").classList.add("hidden");
+      $("switchDialog").classList.remove("hidden");
+      document.body.classList.add("dialog-open");
+      $("appMain").inert = true;
+      document.querySelectorAll(".appbox-header").forEach(element => {element.inert = true;});
+      syncModeControls();
+      $("switchCancel").focus();
+    });
+  }
+
+  $("switchDiscard").addEventListener("click",() => completeSwitchChoice(true));
+  $("switchContinue").addEventListener("click",() => completeSwitchChoice(true));
+  $("switchCancel").addEventListener("click",() => completeSwitchChoice(false));
+  $("switchSave").addEventListener("click",async () => {
+    if(!switchChoiceResolve || switchSaveBusy) return;
+    switchSaveBusy = true;
+    for(const id of ["switchSave","switchDiscard","switchCancel"]) $(id).disabled = true;
+    const saved = await saveProjectFile({fromSwitch:true});
+    switchSaveBusy = false;
+    for(const id of ["switchSave","switchDiscard","switchCancel"]) $(id).disabled = false;
+    if(saved){
+      // The user must confirm the downloaded file before discarding the editor.
+      $("switchStatus").textContent = "ダウンロードを開始しました。保存先に作業ファイルがあることを確認してから進んでください。";
+      $("switchSave").textContent = "もう一度ダウンロードする";
+      $("switchDiscard").hidden = true;
+      $("switchDiscard").classList.add("hidden");
+      $("switchContinue").hidden = false;
+      $("switchContinue").classList.remove("hidden");
+      $("switchContinue").focus();
+    }else{
+      $("switchStatus").textContent = "作業ファイルの保存を開始できませんでした。元の編集を維持しています。";
+      $("switchCancel").focus();
+    }
+  });
+  $("switchDialog").addEventListener("keydown",event => {
+    if(event.isComposing || state.composing || event.keyCode === 229) return;
+    if(event.key === "Escape"){
+      event.preventDefault();event.stopPropagation();
+      completeSwitchChoice(false);
+      return;
+    }
+    if(event.key !== "Tab") return;
+    const focusable = $$(
+      "#switchDialog button:not(:disabled)"
+    ).filter(element => !element.hidden && !element.classList.contains("hidden"));
+    if(!focusable.length) return;
+    const first = focusable[0],last = focusable[focusable.length-1];
+    if(!focusable.includes(document.activeElement)){
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    }else if(event.shiftKey && document.activeElement === first){
+      event.preventDefault();last.focus();
+    }else if(!event.shiftKey && document.activeElement === last){
+      event.preventDefault();first.focus();
+    }
+  });
 
   function confirmDiscardChanges(action){
     return !hasUnsavedChanges() || window.confirm(`保存していない変更があります。${action}\n保存する場合は「キャンセル」を選択してください。`);
@@ -3450,7 +4534,7 @@ function renderLayers(){
 
   $("resetSingle").addEventListener("click",() => {
     if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
-    finishTextEditing();
+    finishPendingEdits();
     if(!confirmDiscardChanges("読込み時の状態へ戻しますか？")) return;
 
     pushHistory("full");
@@ -3475,31 +4559,22 @@ function renderLayers(){
       return;
     }
 
-    if(!isSupportedImage(file)){
-        toast(
-        "JPEG・PNG・WebP画像を選択してください。"
-        );
-        return;
-    }
+    const problem=imageFileProblem(file);
+    if(problem){toast(problem);return;}
 
-    if(file.size > MAX_FILE_BYTES){
-        toast(
-        "25MBを超える画像は読み込めません。"
-        );
-        return;
-    }
-
-    finishTextEditing();
-    if(state.sourceFile && !confirmDiscardChanges("別の画像を読み込みますか？")) return;
+    finishPendingEdits();
+    if(state.sourceFile && !(await confirmSwitchWithUnsavedChanges())) return;
     if(state.drag) cancelSelectionGesture();
 
     const version = ++state.loadVersion;
     state.singleBusy = true;
+    syncModeControls();
     setSingleStatus(
         "画像を読み込んでいます。"
     );
 
     let image = null;
+    let preparedOriginal = null;
 
     try{
         image = await decodeImage(file);
@@ -3515,6 +4590,10 @@ function renderLayers(){
 
         validateDimensions(width,height);
 
+        // Finish fallible decoding/drawing before replacing the current image.
+        preparedOriginal = createCanvas(width,height);
+        preparedOriginal.getContext("2d").drawImage(image,0,0,width,height);
+
         baseCanvas.width = width;
         baseCanvas.height = height;
         baseContext.clearRect(
@@ -3523,18 +4602,12 @@ function renderLayers(){
         width,
         height
         );
-        baseContext.drawImage(
-        image,
-        0,
-        0,
-        width,
-        height
-        );
+        baseContext.drawImage(preparedOriginal,0,0);
 
         state.sourceFile = file;
         modeChoicesOpen = false;
-        state.originalCanvas =
-        cloneCanvas(baseCanvas);
+        state.originalCanvas = preparedOriginal;
+        preparedOriginal = null;
         state.layers = [];
         state.crop = null;
         selectLayers([]);
@@ -3563,7 +4636,7 @@ function renderLayers(){
         "hidden"
         );
         $("singleWorkspace")
-          .querySelectorAll(".left-panel, .stage-head, .right-panel")
+          .querySelectorAll(".left-panel, .editor-options, .right-panel")
           .forEach(element => {
             element.inert = false;
           });
@@ -3606,13 +4679,14 @@ function renderLayers(){
         ){
         image.close();
         }
+        if(preparedOriginal){preparedOriginal.width=0;preparedOriginal.height=0;}
     }
   }
 
   async function loadProjectFile(file){
     if(state.singleBusy || state.drag || viewState.pan || state.composing) return;
-    finishTextEditing();
-    if(!confirmDiscardChanges("作業ファイルを開きますか？")) return;
+    finishPendingEdits();
+    if(!(await confirmSwitchWithUnsavedChanges())) return;
     const version = ++state.loadVersion;
     state.singleBusy = true;
     syncModeControls();
@@ -3648,7 +4722,7 @@ function renderLayers(){
         .map(([id,key]) => ({element:$(id),key,value:$(id)[key]}));
       const visibility = [$("singleEmpty"),$("singleWorkspace")]
         .map(element => ({element,hidden:element.classList.contains("hidden")}));
-      const panels = [...$("singleWorkspace").querySelectorAll(".left-panel, .stage-head, .right-panel")]
+      const panels = [...$("singleWorkspace").querySelectorAll(".left-panel, .editor-options, .right-panel")]
         .map(element => ({element,inert:element.inert}));
       try{
         baseCanvas.width=prepared.width;baseCanvas.height=prepared.height;
@@ -3697,12 +4771,12 @@ function renderLayers(){
     }
   }
 
-  async function saveProjectFile(){
-    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
-    finishTextEditing();
+  async function saveProjectFile({fromSwitch=false}={}){
+    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return false;
+    finishPendingEdits();
     const version=state.loadVersion, revision=state.revision;
     state.singleBusy=true;$("projectSave").disabled=true;syncModeControls();
-    $("closeSaveSettings").focus();
+    if(!fromSwitch) $("closeSaveSettings").focus();
     setSingleStatus("編集を再開できる作業ファイルを作っています。");
     try{
       const blob=await window.AppBoxImageProject.encode({
@@ -3710,17 +4784,19 @@ function renderLayers(){
         name:state.sourceFile.name,sourceType:SUPPORTED_TYPES.includes(state.sourceFile.type) ? state.sourceFile.type
           : /\.png$/i.test(state.sourceFile.name) ? "image/png" : /\.webp$/i.test(state.sourceFile.name) ? "image/webp" : "image/jpeg"
       },canvas => canvasToBlob(canvas,"image/png"));
-      if(version !== state.loadVersion) return;
+      if(version !== state.loadVersion) return false;
       const name=sanitizeBaseName(state.sourceFile.name)+window.AppBoxImageProject.EXTENSION;
       saveBlob(blob,name);
-      state.savedRevision=revision;closeSaveSettings();
+      if(!fromSwitch){state.savedRevision=revision;closeSaveSettings();}
       toast("作業ファイルのダウンロードを開始しました。");
       setSingleStatus(name+"のダウンロードを開始しました。配布用ではなく、元画像を含む編集再開用です。","ok");
+      return true;
     }catch(error){
       if(version === state.loadVersion){
         setSingleStatus(error.message || "作業ファイルの保存に失敗しました。","warn");
         toast(error.message || "作業ファイルの保存に失敗しました。");
       }
+      return false;
     }finally{
       if(version === state.loadVersion){state.singleBusy=false;syncModeControls();}
       $("projectSave").disabled=false;
@@ -3736,14 +4812,8 @@ function renderLayers(){
       return;
     }
     if(state.singleBusy || state.drag) return;
-    if(!isSupportedImage(file)){
-      toast("JPEG・PNG・WebP画像を選択してください。");
-      return;
-    }
-    if(file.size > MAX_FILE_BYTES){
-      toast("25MBを超える画像は読み込めません。");
-      return;
-    }
+    const problem=imageFileProblem(file);
+    if(problem){toast(problem);return;}
 
     const version = state.loadVersion;
     const revision = state.baseRevision;
@@ -3895,7 +4965,7 @@ function renderLayers(){
     });
 
     zone.addEventListener("drop",event => {
-      handler(event.dataTransfer.files);
+      return handler(event.dataTransfer.files);
     });
   }
 
@@ -3930,8 +5000,10 @@ function renderLayers(){
   }
 
   function openPreview(){
-    if(state.singleBusy || state.drag || viewState.pan || !state.originalCanvas) return;
-    finishTextEditing();
+    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
+    hideBrushPreview();
+    hideSelectionCursor();
+    finishPendingEdits();
 
     drawPreview(state.originalCanvas,$("beforePreview"));
     drawPreview(compositeCanvas(),$("afterPreview"));
@@ -3941,6 +5013,7 @@ function renderLayers(){
     document.body.classList.add("dialog-open");
     $("appMain").inert = true;
     document.querySelectorAll(".appbox-header").forEach(element => {element.inert = true;});
+    syncModeControls();
     $("closePreview").focus();
   }
 
@@ -3954,6 +5027,7 @@ function renderLayers(){
       document.querySelectorAll(".appbox-header").forEach(element => {element.inert = false;});
     }
 
+    syncModeControls();
     if(previewReturnFocus && typeof previewReturnFocus.focus === "function"){
       previewReturnFocus.focus();
     }
@@ -4071,14 +5145,17 @@ function renderLayers(){
   }
 
   function openSaveSettings(){
-    if(!state.originalCanvas || state.singleBusy || state.drag || viewState.pan) return;
-    finishTextEditing();
+    if(!state.originalCanvas || state.singleBusy || state.drag || viewState.pan || state.composing) return;
+    hideBrushPreview();
+    hideSelectionCursor();
+    finishPendingEdits();
     saveReturnFocus = document.activeElement;
     updateSingleSaveSize();
     $("saveDialog").classList.remove("hidden");
     $("appMain").inert = true;
     document.querySelectorAll(".appbox-header").forEach(element => {element.inert = true;});
     document.body.classList.add("dialog-open");
+    syncModeControls();
     $("closeSaveSettings").focus();
   }
 
@@ -4090,6 +5167,7 @@ function renderLayers(){
       $("appMain").inert = false;
       document.querySelectorAll(".appbox-header").forEach(element => {element.inert = false;});
     }
+    syncModeControls();
     if(saveReturnFocus && typeof saveReturnFocus.focus === "function"){
       saveReturnFocus.focus();
     }
@@ -4294,7 +5372,8 @@ function renderLayers(){
   });
 
   $("singleSave").addEventListener("click",async () => {
-    if(state.singleBusy || state.drag || !state.originalCanvas) return;
+    if(state.singleBusy || state.drag || viewState.pan || state.composing || !state.originalCanvas) return;
+    finishPendingEdits();
     const version = state.loadVersion;
     const savedRevision = state.revision;
     try{
@@ -4315,6 +5394,7 @@ function renderLayers(){
 
         state.singleBusy = true;
         $("singleSave").disabled = true;
+        syncModeControls();
         $("closeSaveSettings").focus();
         setSingleStatus(
         "加工結果を書き出しています。"
@@ -4368,7 +5448,7 @@ function renderLayers(){
         "warn"
         );
     }finally{
-        if(version === state.loadVersion) state.singleBusy = false;
+        if(version === state.loadVersion){state.singleBusy = false;syncModeControls();}
         $("singleSave").disabled = false;
     }
   });
@@ -5584,7 +6664,7 @@ function renderLayers(){
 
   function activateTab(button){
     if(batchState.processing || batchState.adding || state.drag || viewState.pan || state.composing) return;
-    finishTextEditing();
+    finishPendingEdits();
     modeChoicesOpen = false;
 
     $$(".appbox-tab").forEach(tab => {
@@ -5607,7 +6687,7 @@ function renderLayers(){
 
   $("changeProcessingMode").addEventListener("click",() => {
     if(state.singleBusy || batchState.processing || batchState.adding || state.drag || viewState.pan || state.composing) return;
-    finishTextEditing();
+    finishPendingEdits();
     modeChoicesOpen = true;
     syncModeControls();
     const active = $$(".appbox-tab").find(tab => tab.getAttribute("aria-selected") === "true");
@@ -5649,6 +6729,73 @@ function renderLayers(){
       copySelectedLayers,pasteObjectClipboard,deleteSelectedLayer,reorderSelectedLayers,
       canPaste:() => !!objectClipboard,clipboardText:() => objectClipboardText
     });
+
+    fontPicker=window.AppBoxImageFontPicker?.initialize({
+      doc:document,win:window,field:$("fontFamily"),keys:Object.keys(annotationStyle.FONT_STACKS),
+      blocked:()=>!state.sourceFile || state.singleBusy || !!state.drag || !!viewState.pan || viewState.spacePan || state.composing,
+      context:()=>[state.loadVersion,state.tool,...selectedLayers().filter(layer=>layer.type === "text").map(layer=>String(layer.id)).sort()].join("\n"),
+      beforeOpen:()=>finishPendingEdits(),
+      preview:key=>previewSelectedFont(key),
+      commit:key=>{
+        const field=$("fontFamily");field.value=key;field.dataset.mixed="false";
+        applySelectedField({target:field,type:"change"});updateSelectedControls();
+      },
+      cancel:()=>{finishStyleEdit(true);updateSelectedControls();}
+    }) || null;
+
+    colorPicker=window.AppBoxImageColorPicker?.initialize({
+      doc:document,win:window,fields:["annotationColor","textBgColor","shapeFill"].map($),
+      blocked:()=>!state.sourceFile || state.singleBusy || !!state.drag || !!viewState.pan || viewState.spacePan || state.composing,
+      context:()=>[state.loadVersion,state.tool,...selectedLayers().map(layer=>String(layer.id)).sort()].join("\n"),
+      beforeOpen:()=>finishPendingEdits(),
+      preview:field=>applySelectedField({target:field,type:"input"}),
+      commit:field=>{applySelectedField({target:field,type:"change"});updateSelectedControls();},
+      cancel:()=>{finishStyleEdit(true);updateSelectedControls();}
+    }) || null;
+
+    imageNavigator=window.AppBoxImageNavigator?.initialize({
+      doc:document,win:window,
+      getState:()=>{
+        const viewport=canvasViewport.getBoundingClientRect(),holder=canvasHolder.getBoundingClientRect();
+        const width=baseCanvas.width,height=baseCanvas.height,scale=viewState.scale;
+        const x=clamp((viewport.left+canvasViewport.clientLeft-holder.left)/scale,0,width);
+        const y=clamp((viewport.top+canvasViewport.clientTop-holder.top)/scale,0,height);
+        return {loaded:editorChromeActive(),blocked:state.singleBusy||!!state.drag||!!viewState.pan||viewState.spacePan||
+          state.composing||!!state.textEditing||!!listDrag||$("appMain").inert||document.hidden,
+          context:[state.loadVersion,state.baseRevision,width,height].join(":"),width,height,x,y,viewWidth:Math.min(width-x,canvasViewport.clientWidth/scale),
+          viewHeight:Math.min(height-y,canvasViewport.clientHeight/scale),zoom:scale,minZoom:minDisplayScale(),sources:[baseCanvas,layerCanvas]};
+      },
+      onPan:(x,y)=>{
+        if(!editorChromeActive()||state.singleBusy||state.drag||viewState.pan||viewState.spacePan||state.composing||
+          state.textEditing||listDrag||$("appMain").inert||document.hidden)return;
+        canvasViewport.scrollLeft=clamp(x*viewState.scale-canvasViewport.clientWidth/2,0,Math.max(0,baseCanvas.width*viewState.scale-canvasViewport.clientWidth));
+        canvasViewport.scrollTop=clamp(y*viewState.scale-canvasViewport.clientHeight/2,0,Math.max(0,baseCanvas.height*viewState.scale-canvasViewport.clientHeight));
+        imageNavigator?.sync();
+      },
+      onZoom:scale=>setDisplayZoom(scale)
+    })||null;
+
+    imageDrop=window.AppBoxImageDrop?.initialize({
+      doc:document,win:window,area:canvasViewport,
+      getState:()=>{
+        const modalOpen=["previewDialog","saveDialog","switchDialog","stampDialog"]
+          .some(id=>!$(id).classList.contains("hidden"));
+        return {loaded:editorChromeActive(),modalOpen,
+          blocked:state.singleBusy||!!state.drag||!!viewState.pan||viewState.spacePan||state.composing||
+            !!listDrag||modalOpen||document.hidden||
+            ($("appMain").inert&&$("imageDropDialog").classList.contains("hidden")),
+          context:[state.loadVersion,state.baseRevision,baseCanvas.width,baseCanvas.height].join(":")};
+      },
+      checkFile:file=>{
+        if(/\.abimg$/i.test(file.name||""))return "project";
+        const problem=imageFileProblem(file);
+        if(problem){toast(problem);return null;}
+        return "image";
+      },
+      prepare:()=>{finishPendingEdits();hideBrushPreview();hideSelectionCursor();},
+      onAdd:file=>addImageLayer(file),onOpen:file=>loadSingleFile(file),notify:toast,
+      onOpenDialog:()=>syncModeControls(),onClose:()=>{syncModeControls();renderEditor();}
+    })||null;
 
     updateSingleFormatUI();
     updateBatchResizeUI();

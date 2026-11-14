@@ -9,15 +9,15 @@
        試用版の単一HTMLで必要だった 'unsafe-inline' は、CSS・JSを別ファイルにしたため外した。 -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <title>ガントチャート作成アプリ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
-  <link rel="stylesheet" href="./app.css?v=1.7.1">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=a8515e56">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=450e4ca4">
+  <link rel="stylesheet" href="./app.css?v=a58f142b">
 </head>
 <body>
 <div id="app-root">
@@ -25,8 +25,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -74,13 +74,13 @@
         </div>
         <div class="grp" role="group" aria-label="ファイル">
           <button type="button" id="btn-new" class="appbox-button appbox-button--secondary" title="新しいプロジェクトを作る（テンプレート・期間・マスの単位を選べます）">新規</button>
-          <button type="button" id="btn-open" class="appbox-button appbox-button--secondary" title=".json ファイルを開く"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg><span>開く</span></button>
+          <button type="button" id="btn-open" class="appbox-button appbox-button--secondary" title=".json ファイルを開く"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#open"></use></svg><span>開く</span></button>
           <input type="file" id="file-input" accept=".json,application/json" hidden>
-          <button type="button" id="btn-save" class="appbox-button appbox-button--secondary" title=".json ファイルとして保存（正本） Ctrl+S"><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>保存(.json)</span></button>
+          <button type="button" id="btn-save" class="appbox-button appbox-button--secondary" title=".json ファイルとして保存（正本） Ctrl+S"><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg><span>保存(.json)</span></button>
         </div>
         <div class="grp" role="group" aria-label="編集">
-          <button type="button" id="btn-undo" class="appbox-button appbox-button--secondary" title="元に戻す (Ctrl+Z)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg><span>元に戻す</span></button>
-          <button type="button" id="btn-redo" class="appbox-button appbox-button--secondary" title="やり直す (Ctrl+Y)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg><span>やり直す</span></button>
+          <button type="button" id="btn-undo" class="appbox-button appbox-button--secondary" title="元に戻す (Ctrl+Z)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#undo"></use></svg><span>元に戻す</span></button>
+          <button type="button" id="btn-redo" class="appbox-button appbox-button--secondary" title="やり直す (Ctrl+Y)"><svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#redo"></use></svg><span>やり直す</span></button>
         </div>
         <div class="grp" role="group" aria-label="追加">
           <button type="button" id="btn-add-major" class="appbox-button appbox-button--secondary" title="大事業を追加">＋ 大事業</button>
@@ -172,7 +172,7 @@
         <p id="storage-note">
           ⚠ <strong>正本は「保存(.json)」で書き出したファイルです。</strong>ブラウザへの自動保存は一時的な控えに過ぎず、同じPC・同じブラウザを使う他の人からも見える場合があります。共有PCでは使用後に「ローカルデータ消去」を押してください。
         </p>
-        <footer class="appbox-footer nc-footer-version">共創アプリBOX / ガントチャート作成アプリ Version 1.7.1</footer>
+        <footer class="appbox-footer nc-footer-version">共創アプリBOX / ガントチャート作成アプリ Version 1.7.2</footer>
       </div>
     </div>
   </main>
@@ -183,6 +183,7 @@
 <div id="toast-container" class="nc-scope" aria-live="polite"></div>
 <div id="drag-tip" class="nc-scope" role="status" hidden></div>
 
-<script src="./app.js?v=1.7.1"></script>
+<script src="../deadlinecalc/holidays.js?v=d051ca21"></script>
+<script src="./app.js?v=eaf06e2b"></script>
 </body>
 </html>

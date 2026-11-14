@@ -19,7 +19,7 @@ license inventory from the locked node_modules tree and places it in the
 deployed licenses folder during npm run sync.
 The inventory includes build tools and platform-specific optional packages;
 it is not a list of browser-runtime packages alone. The current generated
-inventory was produced on Windows x64. A rebuild on another OS can change
+inventory was produced on Linux x64 (2026-10-30, Issue #341). A rebuild on another OS can change
 the installed native-package rows even when package-lock.json is unchanged.
 
 Bundled font assets:
@@ -48,3 +48,11 @@ Dependency rebuild review (2026-10-19):
   Vite and Rollup include notices for dependencies embedded in their Node
   artifacts. Preserve those entire license sections. An npm audit result
   for installed packages does not independently audit every embedded component.
+
+Dependency rebuild review (2026-10-30, Issue #341):
+  DOMPurify 3.4.17 and Vite 6.4.5 replace the affected versions above.
+  The generated inventory now contains Linux native build packages.
+  The original MIT notices for esbuild and Rollup remain in the parent sections.
+  The build-only @napi-rs/lzma-linux-x64-gnu@1.5.1 has no upstream license text
+  in the checked package/source; this gap and non-redistribution of its binary
+  are documented in RUNTIME_LICENSE_SUPPLEMENT.txt. Runtime notices are retained.

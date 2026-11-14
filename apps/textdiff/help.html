@@ -10,13 +10,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="color-scheme" content="light">
   <title>文章差分チェッカー ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=c3c10a33">
 </head>
 
 <body>
@@ -24,8 +24,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -51,7 +51,7 @@
         </div>
         <p class="appbox-help-header-desc">2つの文章を比べて、追加・削除された箇所を確認する方法を説明します。</p>
       </div>
-      <span class="version-badge">Version 1.4.2</span>
+      <span class="version-badge">Version 1.6.0</span>
     </div>
 
     <div class="appbox-help-grid help-panel">
@@ -67,6 +67,7 @@
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#scroll-sync">比較結果のスクロール連動</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#results">結果の見方</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#operations">便利な操作</a></li>
+              <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#amendment">新旧対照表の表示と出力</a></li>
               <li><a class="appbox-help-nav-link appbox-help-nav-link--sub" href="#reset">やり直し・クリア</a></li>
             </ul>
           </li>
@@ -369,6 +370,81 @@
               </tbody>
             </table>
           </div>
+          <h3 class="appbox-help-subheading" id="amendment">新旧対照表の表示と出力</h3>
+          <p>
+            「差分を比較」を実行した後、結果上部の「新旧対照表」タブを選択すると、
+            条文や文書の改正確認に適した2列の対照表を表示します。
+            同じ比較結果から表示形式を切り替えるため、タブの切り替えで再計算は発生しません。
+            通常比較へ戻る場合は「通常比較」タブを選択します。
+          </p>
+
+          <div class="help-callout help-callout-info">
+            <strong>対照表の基本構成</strong>
+            <p>
+              既定では左側に「改正後」、右側に「改正前」を表示します。
+              表題欄（初期値「新旧対照表」）は任意の表題へ打ち替えできます。
+              「改正前・改正後の表示順を入れ替え」を押すと、入力欄の旧新の内容や意味を変えずに、
+              対照表の表示列だけを左右入れ替えます。
+            </p>
+          </div>
+
+          <ul>
+            <li>
+              <strong>差分と下線の表示</strong>
+              <p class="appbox-help-step-desc">
+                改正部分は下線（傍線）で示します。
+                画面では文字色を補助に使い、Word向けコピーと印刷にも下線を指定します。
+                貼り付け後や印刷時の見え方は、出力先で確認してください。
+                追加は改正後、削除は改正前に表示し、行内の一部が変わった行は新旧両側の変更箇所に下線を表示します。
+                新旧対照表は、通常比較でどの比較単位（行内文字単位、全文文字単位、行単位）を選んでいても、
+                常に行内の差分箇所を下線で表示します。
+              </p>
+            </li>
+            <li>
+              <strong>空欄対応と未変更行の保持</strong>
+              <p class="appbox-help-step-desc">
+                条・項・号の挿入や削除によって片側に対応する原文がない行は、空欄として左右の位置を合わせます。
+                原文にない語句は追加しません。
+                行の対応関係が曖昧な箇所は無理に対応付けを行わず、未対応の行（片側空欄）として安全に表示します。
+                変更のない行も省略せずにすべて表示します。
+              </p>
+            </li>
+            <li>
+              <strong>対照表をWord向けにコピー</strong>
+              <p class="appbox-help-step-desc">
+                新旧対照表全体を HTML テーブル形式でクリップボードへコピーします。
+                Word で貼り付ける際は「元の書式を保持」を選択してください。
+                表構造、罫線、下線、改行を指定したHTMLを渡します。貼り付け後の見え方はWordで確認してください。
+                通常の「Word向けにコピー」（統合表示の赤緑文字コピー）とは異なり、
+                新旧対照表では表形式および下線書式で出力します。
+              </p>
+              <p class="appbox-help-step-desc">
+                ブラウザの制限等で自動コピーできない場合は、画面上の対照表を直接選択してコピー（Ctrl + C、Mac は ⌘ + C）してください。
+              </p>
+            </li>
+            <li>
+              <strong>対照表を印刷／PDF</strong>
+              <p class="appbox-help-step-desc">
+                入力欄や操作ボタンを除き、新旧対照表専用のレイアウトでブラウザの印刷画面を開きます。
+                用紙の向きは「A4横」（推奨・既定）または「A4縦」を選択できます。
+              </p>
+            </li>
+          </ul>
+
+          <div class="help-callout help-callout-warning">
+            <strong>正規化時の対照表出力抑止について</strong>
+            <p>
+              空白、全角英数字、連続改行の比較条件が有効で、入力文章の表記が実際に変更される場合、
+              誤った条文表記の出力を防ぐため新旧対照表の生成、コピーおよび印刷を抑止します。
+              この場合は、比較条件のチェックを外して初期状態に戻してから再度比較してください。
+              比較条件を有効にしていても原文の表記が変わらない場合は、原文のまま対照表を出力できます。
+            </p>
+          </div>
+          <p>
+            通常比較の行単位比較は左右合計10,000行まで、新旧対照表の文字比較は左右合計100,000文字までです。
+            対照表の追加処理が文字数や処理時間等の上限を超えた場合は、通常比較の結果を保ち、
+            対照表だけ理由を表示して出力を抑止します。文章を分割して比較してください。
+          </p>
           <h3 class="appbox-help-subheading" id="reset">やり直し・クリア</h3>
           <ul>
             <li>文章や比較単位を変更すると、古い結果は消えます。「差分を比較」を押し直してください。</li>
@@ -444,10 +520,21 @@
               長い文章を比較できません。
             </summary>
             <p class="appbox-help-faq-answer">
-              文字単位の2つの比較では新旧合計30,000文字、行単位では新旧合計10,000行までです。
-              空白・全角半角・空行の比較条件を使う場合は、整えた後の文章で判定します。
+              行内文字単位は新旧合計100,000文字、全文文字単位は新旧合計60,000文字、行単位は新旧合計10,000行までです。
+              文字数はUnicodeコードポイント単位で数えます。空白・全角半角・空行の比較条件を使う場合は、整えた後の文章で判定します。
               上限以内でも、変更が多すぎたり処理時間が長くなったりすると中止します。
               章、条、項などに分けて比較してください。文字数の上限に達した場合は、行単位比較も試せます。
+            </p>
+          </details>
+          <details class="appbox-help-faq-item">
+            <summary>
+              新旧対照表が表示されない、またはコピー・印刷できません。
+            </summary>
+            <p class="appbox-help-faq-answer">
+              空白、全角英数字、連続改行の比較条件によって原文の表記が変更された場合、
+              誤った表記での出力を防ぐため新旧対照表の生成、コピーおよび印刷を抑止します。
+              「比較条件」を開き、チェックを外して初期状態に戻してから再度比較してください。
+              比較条件を有効にしていても原文の表記が変わらない場合は、そのまま出力できます。
             </p>
           </details>
         </section>
@@ -481,6 +568,14 @@
             </li>
             <li>
               正式文書の確認では、差分結果だけでなく新旧の原文も確認してください。
+            </li>
+            <li>
+              新旧対照表は下線と空欄による基本レイアウトを表示する機能であり、
+              自治体固有の法制執務規程や個別様式への完全準拠を保証するものではありません。
+              条文の対応関係や下線の過不足は、出力前に必ず原文と照合して確認してください。
+            </li>
+            <li>
+              新旧対照表の HTML ファイル出力や Word ファイル（.docx）の直接保存機能はありません。
             </li>
           </ul>
 
@@ -518,10 +613,10 @@
     </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / 文章差分チェッカー Version 1.4.2
+      共創アプリBOX / 文章差分チェッカー Version 1.6.0
     </footer>
   </main>
 
-  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
+  <script src="../../assets/appbox-help.js?v=478c676f"></script>
 </body>
 </html>

@@ -10,52 +10,44 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>画像かんたん加工｜共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
   <!-- 共通アセット。image.css より前に読み込むこと。 -->
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
 
-  <link rel="stylesheet" href="../../assets/appbox-components.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-components.css?v=a8515e56">
+  <link rel="stylesheet" href="../../assets/appbox-icons.css?v=450e4ca4">
 
-  <link rel="stylesheet" href="./image.css?v=1.13.0-r2">
+  <link rel="stylesheet" href="./image.css?v=029a83bd">
 </head>
 <body>
   <header class="appbox-header appbox-header--editor">
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
       <div id="imageHeaderActions" class="image-header-actions" role="group" aria-label="画像の編集操作" hidden inert>
         <button id="changeSingle" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="画像を変更" title="別の画像を開く">
-          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg><span>画像を変更</span>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#open"></use></svg><span>画像を変更</span>
         </button>
-        <div class="image-history-actions" role="group" aria-label="履歴操作">
-          <button id="undo" class="button plain header-icon-button appbox-button appbox-button--secondary" type="button" aria-label="元に戻す" title="元に戻す（Ctrl／Command+Z）" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#undo"></use></svg>
-          </button>
-          <button id="redo" class="button plain header-icon-button appbox-button appbox-button--secondary" type="button" aria-label="やり直す" title="やり直す（Ctrl／Command+Y）" disabled>
-            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#redo"></use></svg>
-          </button>
-          <button id="resetSingle" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="すべて戻す" title="すべての加工を読込み時の状態へ戻す">すべて戻す</button>
-        </div>
+        <button id="resetSingle" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="すべて戻す" title="すべての加工を読込み時の状態へ戻す">すべて戻す</button>
         <button id="previewButton" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="読込み時と現在を比較" title="読込み時と現在を比較">
           <svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16M6 14l3-3 3 3M15 10h3M15 14h3"></path></svg><span>比較</span>
         </button>
         <button id="showSaveSettings" class="button primary appbox-button appbox-button--primary" type="button" aria-label="加工した画像を保存" title="加工した画像を保存（Ctrl／Command+S）">
-          <svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>保存</span>
+          <svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg><span>保存</span>
         </button>
       </div>
       <nav class="appbox-header__actions" aria-label="ページ操作">
         <button id="changeProcessingMode" class="button plain mode-choice-button appbox-button appbox-button--secondary" type="button" aria-label="加工方法を変更" aria-controls="processingModeTabs" aria-expanded="false" hidden>
-          <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#back"></use></svg><span>加工方法を変更</span>
+          <svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#back"></use></svg><span>加工方法を変更</span>
         </button>
         <a class="appbox-help-button" href="./help.html" target="_blank" rel="noopener" aria-label="ヘルプ（新しいタブで開きます）">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -85,7 +77,7 @@
       </div>
       <p class="appbox-app-desc">文字・図形・手書き・スタンプ、画像の重ね合わせ、黒塗り、モザイク、トリミング、リサイズ、形式変換、一括処理に対応します。作業ファイルで編集を再開できます。表示ズームで細部を拡大して編集できます。保存時は新しい画像として書き出すため、元画像のEXIF・GPS等は引き継がれません。</p>
     </div>
-    <div class="appbox-shell appbox-shell--wide imageedit-workspace-shell">
+    <div id="imageWorkspaceShell" class="appbox-shell appbox-shell--wide imageedit-workspace-shell">
 
     <noscript>
       <p class="appbox-status appbox-status--warning">このアプリを使用するにはJavaScriptを有効にしてください。ヘルプはJavaScriptなしでも確認できます。</p>
@@ -139,52 +131,219 @@
 
     <div id="singleWorkspace" class="workspace">
       <aside class="editor-sidebar panel appbox-panel appbox-panel--accent" aria-label="加工ツール">
+        <div class="editor-sidebar-toggle-wrap">
+          <button id="toggleToolSidebar" class="editor-sidebar-toggle" type="button" aria-label="ツール欄のコンパクト表示" aria-pressed="false" title="ツール欄を縮める">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="m15 6-6 6 6 6"></path>
+            </svg>
+          </button>
+        </div>
       <section class="left-panel editor-toolbar" inert aria-label="加工ツール">
         <div class="toolbar-group">
           <h2>操作</h2>
           <div class="toolbar-buttons">
-            <button class="tool" data-tool="select" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#select"></use></svg><span>選択</span></button>
-            <button class="tool" data-tool="pan" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 4-2 7-6 7h-2c-2 0-3-1-4-3l-4-5a1.5 1.5 0 0 1 2-2z"></path></svg><span>手のひら</span></button>
+            <button class="tool" data-tool="select" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#select"></use></svg><span>選択</span></button>
+            <button class="tool" data-tool="pan" type="button" title="画面移動（編集領域ではSpaceを押しながらドラッグでも移動）"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v6c0 4-2 7-6 7h-2c-2 0-3-1-4-3l-4-5a1.5 1.5 0 0 1 2-2z"></path></svg><span>画面移動</span></button>
           </div>
         </div>
         <div class="toolbar-group">
           <h2>マスキング</h2>
           <div class="toolbar-buttons">
-            <button class="tool" data-tool="blackoutRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#blackout"></use></svg><span>黒塗り範囲</span></button>
-            <button class="tool" data-tool="mosaicRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#mosaic"></use></svg><span>モザイク範囲</span></button>
-            <button class="tool" data-tool="blackoutBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#blackout-brush"></use></svg><span>黒塗りブラシ</span></button>
-            <button class="tool" data-tool="mosaicBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#mosaic-brush"></use></svg><span>モザイクブラシ</span></button>
+            <button class="tool" data-tool="blackoutRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#blackout"></use></svg><span>黒塗り<wbr>範囲</span></button>
+            <button class="tool" data-tool="mosaicRect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#mosaic"></use></svg><span>モザイク<wbr>範囲</span></button>
+            <button class="tool" data-tool="blackoutBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#blackout-brush"></use></svg><span>黒塗り<wbr>ブラシ</span></button>
+            <button class="tool" data-tool="mosaicBrush" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#mosaic-brush"></use></svg><span>モザイク<wbr>ブラシ</span></button>
           </div>
         </div>
         <div class="toolbar-group">
           <h2>文字・図形</h2>
           <div class="toolbar-buttons">
-            <button class="tool" data-tool="text" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#text"></use></svg><span>文字</span></button>
-            <button class="tool" data-tool="rect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rectangle"></use></svg><span>四角形</span></button>
-            <button class="tool" data-tool="ellipse" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#ellipse"></use></svg><span>円</span></button>
-            <button class="tool" data-tool="arrow" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#arrow"></use></svg><span>矢印</span></button>
+            <button class="tool" data-tool="text" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#text"></use></svg><span>文字</span></button>
+            <button class="tool" data-tool="rect" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rectangle"></use></svg><span>四角形</span></button>
+            <button class="tool" data-tool="ellipse" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#ellipse"></use></svg><span>円</span></button>
+            <button class="tool" data-tool="arrow" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#arrow"></use></svg><span>矢印</span></button>
             <button class="tool" data-tool="line" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 20 16-16"></path></svg><span>直線</span></button>
             <button class="tool" data-tool="ink" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 18 11-11 3 3-11 11H4v-3ZM15 7l2-2 3 3-2 2"></path></svg><span>手書き</span></button>
             <button class="tool" data-tool="inkEraser" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="m4 14 9-9 7 7-7 7H9l-5-5ZM10 8l7 7M13 19h8"></path></svg><span>消しゴム</span></button>
             <button id="openStamp" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><path d="M9 13V7a3 3 0 0 1 6 0v6l4 3v3H5v-3l4-3ZM4 22h16"></path></svg><span>スタンプ</span></button>
-            <button id="addImageLayer" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8" cy="8" r="1.5"></circle><path d="m4 17 5-5 4 4 3-3 5 5"></path></svg><span>画像を追加</span></button>
+            <button id="addImageLayer" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8" cy="8" r="1.5"></circle><path d="m4 17 5-5 4 4 3-3 5 5"></path></svg><span>画像を<wbr>追加</span></button>
           </div>
           <input id="imageLayerInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden>
         </div>
         <div class="toolbar-group">
           <h2>回転・リサイズ</h2>
           <div class="toolbar-buttons">
-            <button id="rotateLeft" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-left"></use></svg><span>左90°</span></button>
-            <button id="rotateRight" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#rotate-right"></use></svg><span>右90°</span></button>
-            <button id="flipH" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#flip-horizontal"></use></svg><span>左右反転</span></button>
-            <button id="flipV" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#flip-vertical"></use></svg><span>上下反転</span></button>
-            <button class="tool" data-tool="crop" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#crop"></use></svg><span>トリミング</span></button>
+            <button id="rotateLeft" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rotate-left"></use></svg><span>左90°</span></button>
+            <button id="rotateRight" class="tool" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--rotation" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#rotate-right"></use></svg><span>右90°</span></button>
+            <button id="flipH" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#flip-horizontal"></use></svg><span>左右反転</span></button>
+            <button id="flipV" class="tool" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#flip-vertical"></use></svg><span>上下反転</span></button>
+            <button class="tool" data-tool="crop" type="button"><svg class="appbox-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#crop"></use></svg><span>トリミング</span></button>
             <button id="toggleTransform" class="tool" type="button"><svg class="editor-tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M7 7h5M7 7v5M17 17h-5M17 17v-5"></path></svg><span>リサイズ</span></button>
           </div>
         </div>
       </section>
 
       </aside>
+
+      <section id="editorOptions" class="editor-options panel appbox-panel appbox-panel--accent" aria-label="編集操作とツールの設定" inert>
+        <div id="imageHistoryActions" class="image-history-actions" role="group" aria-label="履歴操作">
+          <button id="undo" class="button plain history-icon-button appbox-button appbox-button--secondary" type="button" aria-label="元に戻す" title="元に戻す（Ctrl／Command+Z）" disabled>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#undo"></use></svg>
+          </button>
+          <button id="redo" class="button plain history-icon-button appbox-button appbox-button--secondary" type="button" aria-label="やり直す" title="やり直す（Ctrl／Command+Y）" disabled>
+            <svg class="appbox-icon appbox-icon--action appbox-icon--history" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#redo"></use></svg>
+          </button>
+        </div>
+        <section id="contextPanel" class="context-panel hidden" aria-labelledby="contextTitle" aria-hidden="true" inert>
+          <h2 id="contextTitle" class="context-title visually-hidden"></h2>
+          <div class="context-fields">
+            <div data-settings="text" class="context-setting context-setting--typography hidden" role="group" aria-label="文字の基本設定">
+              <div class="setting-field setting-field--font"><label id="fontFamilyLabel" for="fontFamily">フォント</label><select id="fontFamily">
+              <option value="" disabled>複数の値</option>
+              <option value="biz-udgothic" selected>BIZ UDゴシック</option>
+              <option value="biz-udpgothic">BIZ UDPゴシック</option>
+              <option value="yu-gothic">游ゴシック</option>
+              <option value="yu-gothic-ui">游ゴシック UI</option>
+              <option value="meiryo">メイリオ</option>
+              <option value="ms-gothic">MS ゴシック</option>
+              <option value="ms-pgothic">MS Pゴシック</option>
+              <option value="ms-mincho">MS 明朝</option>
+              <option value="ms-pmincho">MS P明朝</option>
+              <option value="segoe-ui">Segoe UI</option>
+              <option value="arial">Arial</option>
+              <option value="times-new-roman">Times New Roman</option>
+              </select></div>
+              <div class="setting-field setting-field--font-size">
+                <label for="fontSize">サイズ</label>
+                <div class="font-size-controls" role="group" aria-label="文字サイズ">
+                  <button id="decreaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を小さく" title="文字を小さく（次の段階）" disabled>−</button>
+                  <input id="fontSize" type="number" min="8" max="300" step="1" value="42" aria-label="文字サイズ（px）">
+                  <button id="increaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を大きく" title="文字を大きく（次の段階）" disabled>＋</button>
+                </div>
+              </div>
+            </div>
+            <div data-settings="color" class="context-setting context-setting--foreground hidden">
+              <div class="setting-field setting-field--color"><label id="annotationColorLabel" for="annotationColor">色</label><input id="annotationColor" type="color" value="#d00000" aria-label="文字・図形・手書きの色"></div>
+            </div>
+            <div data-settings="text" class="context-setting context-setting--bold hidden"><label class="check setting-check" for="boldText"><input id="boldText" type="checkbox" checked>太字</label></div>
+            <div data-settings="line" class="context-setting hidden">
+              <div class="setting-field setting-field--range">
+                <label for="lineWidth"><span id="lineWidthLabel">太さ</span></label>
+                <div class="setting-range-controls">
+                  <input id="lineWidthRange" type="range" min="1" max="100" step="1" value="8" aria-label="線の太さ（スライダー）" aria-describedby="lineWidthBounds">
+                  <input id="lineWidth" type="number" min="1" max="100" step="1" value="8" aria-label="線の太さ（px）" aria-describedby="lineWidthBounds">
+                  <span class="setting-unit" aria-hidden="true">px</span>
+                </div>
+                <div class="setting-range-bounds" id="lineWidthBounds"><span>1px</span><span id="lineWidthMixed" class="setting-range-mixed"></span><span>100px</span></div>
+              </div>
+            </div>
+            <fieldset data-settings="arrow" class="context-setting arrow-size-setting hidden" aria-describedby="arrowSizeMixed">
+              <legend>矢印のサイズ</legend>
+              <input id="arrowHeadSize" type="hidden" value="large">
+              <div class="arrow-size-options">
+                <label class="check setting-check"><input id="arrowSizeSmall" type="radio" name="arrowSize" value="small">小</label>
+                <label class="check setting-check"><input id="arrowSizeMedium" type="radio" name="arrowSize" value="medium">中</label>
+                <label class="check setting-check"><input id="arrowSizeLarge" type="radio" name="arrowSize" value="large" checked>大</label>
+              </div>
+              <span id="arrowSizeMixed" class="setting-range-mixed" role="status"></span>
+            </fieldset>
+            <div data-settings="fill" class="context-setting context-setting--background hidden" role="group" aria-label="図形の背景">
+              <span class="background-target">図形</span>
+              <div class="setting-field setting-field--color"><label id="shapeFillLabel" for="shapeFill">背景色</label><input id="shapeFill" type="color" value="#ffffff" aria-label="図形の背景色"></div>
+              <label class="check setting-check setting-switch" for="shapeFillNone"><span>背景透過</span><input id="shapeFillNone" type="checkbox" role="switch" aria-label="図形の背景透過" aria-describedby="shapeFillMixed" checked></label>
+              <span id="shapeFillMixed" class="setting-range-mixed hidden" role="status"></span>
+            </div>
+            <div data-settings="outline" class="context-setting context-setting--outline hidden" role="group" aria-labelledby="outlineTitle">
+              <h3 id="outlineTitle" class="setting-group-title visually-hidden">縁取り</h3>
+              <label class="check setting-check" for="whiteOutline"><input id="whiteOutline" type="checkbox" checked>白い縁取り</label>
+            </div>
+            <div data-settings="text" class="context-setting context-setting--background hidden" role="group" aria-label="文字の背景">
+              <span class="background-target">文字</span>
+              <div class="setting-field setting-field--color"><label id="textBgColorLabel" for="textBgColor">背景色</label><input id="textBgColor" type="color" value="#ffffff" aria-label="文字の背景色"></div>
+              <label class="check setting-check setting-switch" for="textBgTransparent"><span>背景透過</span><input id="textBgTransparent" type="checkbox" role="switch" aria-label="文字の背景透過" aria-describedby="textBgMixed" checked></label>
+              <span id="textBgMixed" class="setting-range-mixed hidden" role="status"></span>
+            </div>
+            <div data-settings="brush" class="context-setting hidden">
+              <div class="setting-field setting-field--range">
+                <label for="brushSize"><span id="brushSizeLabel">太さ</span></label>
+                <div class="setting-range-controls">
+                  <input id="brushSizeRange" type="range" min="5" max="500" step="1" value="50" aria-label="ブラシの太さ（スライダー）" aria-describedby="brushSizeBounds">
+                  <input id="brushSize" type="number" min="5" max="500" step="1" value="50" aria-label="ブラシの太さ（px）" aria-describedby="brushSizeBounds">
+                  <span class="setting-unit" aria-hidden="true">px</span>
+                </div>
+                <div class="setting-range-bounds" id="brushSizeBounds"><span>5px</span><span id="brushSizeMixed" class="setting-range-mixed"></span><span>500px</span></div>
+              </div>
+            </div>
+            <div data-settings="ink" class="context-setting hidden">
+              <label class="setting-field" for="inkStabilizer"><span>手ぶれ補正</span><select id="inkStabilizer" aria-label="手ぶれ補正">
+              <option value="none">なし</option><option value="weak">弱</option><option value="medium">中</option><option value="strong">強</option>
+              </select></label>
+            </div>
+            <div data-settings="mosaic" class="context-setting hidden">
+              <div class="setting-field setting-field--range">
+                <label for="mosaicSize"><span>粗さ</span></label>
+                <div class="setting-range-controls">
+                  <input id="mosaicSizeRange" type="range" min="4" max="200" step="1" value="18" aria-label="モザイクの粗さ（スライダー）" aria-describedby="mosaicSizeBounds">
+                  <input id="mosaicSize" type="number" min="4" max="200" step="1" value="18" aria-label="モザイクの粗さ（px）" aria-describedby="mosaicSizeBounds">
+                  <span class="setting-unit" aria-hidden="true">px</span>
+                </div>
+                <div class="setting-range-bounds" id="mosaicSizeBounds"><span>4px</span><span id="mosaicSizeMixed" class="setting-range-mixed"></span><span>200px</span></div>
+              </div>
+            </div>
+            <div data-settings="image" class="context-setting hidden">
+              <div class="setting-field setting-field--range">
+                <label for="imageOpacity"><span>濃さ</span></label>
+                <div class="setting-range-controls">
+                  <input id="imageOpacityRange" type="range" min="0" max="100" step="1" value="100" aria-label="画像の濃さ（スライダー）" aria-describedby="imageOpacityBounds">
+                  <input id="imageOpacity" type="number" min="0" max="100" step="1" value="100" aria-label="画像の不透明度（%）" aria-describedby="imageOpacityBounds">
+                  <span class="setting-unit" aria-hidden="true">%</span>
+                </div>
+                <div class="setting-range-bounds" id="imageOpacityBounds"><span>0%</span><span id="imageOpacityMixed" class="setting-range-mixed"></span><span>100%</span></div>
+              </div>
+            </div>
+            <section data-context="crop" class="context-setting hidden" aria-label="トリミング設定">
+              <label class="setting-field" for="cropW"><span>横幅</span><input id="cropW" type="number" min="1" step="1" aria-label="トリミングの横幅（px）"></label>
+              <label class="setting-field" for="cropH"><span>高さ</span><input id="cropH" type="number" min="1" step="1" aria-label="トリミングの高さ（px）"></label>
+              <label class="setting-field" for="cropRatio"><span>比率</span><select id="cropRatio">
+              <option value="free">自由</option><option value="1">1:1</option><option value="4:3">4:3</option><option value="16:9">16:9</option><option value="3:4">3:4</option><option value="35:45">35:45</option><option value="original">元画像</option>
+              </select></label>
+              <button id="centerCrop" class="button plain appbox-button appbox-button--secondary" type="button" disabled>中央配置</button>
+              <button id="applyCrop" class="button primary appbox-button appbox-button--primary" type="button" disabled>この範囲で切り抜く</button>
+              <button id="cancelCrop" class="button plain appbox-button appbox-button--secondary" type="button">キャンセル</button>
+            </section>
+            <section data-context="transform" class="context-setting hidden" aria-label="保存する画像のサイズ変更">
+              <label class="setting-field" for="resizeW"><span>横幅</span><input id="resizeW" type="number" min="1" max="8192" step="1" aria-label="保存する画像の横幅（px）"></label>
+              <label class="setting-field" for="resizeH"><span>高さ</span><input id="resizeH" type="number" min="1" max="8192" step="1" aria-label="保存する画像の高さ（px）"></label>
+              <label class="check setting-check" for="lockAspect"><input id="lockAspect" type="checkbox" checked>比率固定</label>
+              <button id="applyResize" class="button plain appbox-button appbox-button--secondary" type="button">サイズを変更</button>
+            </section>
+          <details id="styleDetails" class="style-details" hidden>
+            <summary id="styleDetailsSummary" class="button plain appbox-button appbox-button--secondary">文字の配置</summary>
+            <div class="style-details-body" role="group" aria-label="文字の配置">
+              <div data-settings="text" class="context-setting context-setting--text-details hidden" role="group" aria-label="文字揃えと行間"><fieldset class="text-align-setting" aria-describedby="textAlignMixed">
+                  <legend>文字揃え</legend>
+                  <input id="textAlign" type="hidden" value="left">
+                  <div class="text-align-options">
+                    <label class="check setting-check"><input id="textAlignLeft" type="radio" name="textAlignChoice" value="left" checked>左</label>
+                    <label class="check setting-check"><input id="textAlignCenter" type="radio" name="textAlignChoice" value="center">中央</label>
+                    <label class="check setting-check"><input id="textAlignRight" type="radio" name="textAlignChoice" value="right">右</label>
+                  </div>
+                  <span id="textAlignMixed" class="setting-range-mixed" role="status"></span>
+                </fieldset><div class="setting-field setting-field--range">
+                  <label for="lineSpacing">行間</label>
+                  <div class="setting-range-controls">
+                    <input id="lineSpacingRange" type="range" min="1" max="3" step="0.01" value="1.32" aria-label="文字の行間（スライダー）" aria-describedby="lineSpacingBounds">
+                    <input id="lineSpacing" type="number" min="1" max="3" step="0.01" value="1.32" aria-label="文字の行間（倍）" aria-describedby="lineSpacingBounds">
+                    <span class="setting-unit" aria-hidden="true">倍</span>
+                  </div>
+                  <div class="setting-range-bounds" id="lineSpacingBounds"><span>1倍</span><span id="lineSpacingMixed" class="setting-range-mixed"></span><span>3倍</span></div>
+                </div></div>
+              <button id="closeStyleDetails" class="button plain appbox-button appbox-button--secondary" type="button">閉じる</button>
+            </div>
+          </details>
+          </div>
+        </section>
+      </section>
 
       <section class="panel stage-panel appbox-panel appbox-panel--accent">
         <div id="canvasWorkarea" class="canvas-workarea">
@@ -211,7 +370,7 @@
             <div id="canvasHolder" class="canvas-holder">
               <canvas id="baseCanvas"></canvas>
               <canvas id="layerCanvas" class="layer-canvas"></canvas>
-              <canvas id="editCanvas" class="overlay-canvas" tabindex="0" aria-label="画像の編集領域"></canvas>
+              <canvas id="editCanvas" class="overlay-canvas" tabindex="0" aria-keyshortcuts="Space" aria-label="画像の編集領域"></canvas>
               <div id="textEditorHost" hidden>
                 <textarea id="textEditor" class="canvas-text-editor" maxlength="2000" rows="1" wrap="soft" spellcheck="false" aria-label="画像上の文字を編集" hidden></textarea>
               </div>
@@ -233,101 +392,49 @@
         </div>
       </section>
 
-      <aside class="editor-settings right-panel panel appbox-panel appbox-panel--accent" aria-label="ツールの設定とレイヤー" inert>
-        <section id="contextPanel" class="context-panel hidden" aria-labelledby="contextTitle" aria-hidden="true" inert>
-          <span id="contextTitle" class="context-title"></span>
-          <div class="context-fields">
-            <div data-settings="text" class="context-setting hidden">
-              <label class="setting-field setting-field--font" for="fontFamily"><span>フォント</span><select id="fontFamily">
-                <option value="" disabled>複数の値</option>
-                <option value="biz-udgothic">BIZ UDゴシック</option>
-                <option value="biz-udpgothic">BIZ UDPゴシック</option>
-                <option value="yu-gothic">游ゴシック</option>
-                <option value="yu-gothic-ui" selected>游ゴシック UI</option>
-                <option value="meiryo">メイリオ</option>
-                <option value="ms-gothic">MS ゴシック</option>
-                <option value="ms-pgothic">MS Pゴシック</option>
-                <option value="ms-mincho">MS 明朝</option>
-                <option value="ms-pmincho">MS P明朝</option>
-                <option value="segoe-ui">Segoe UI</option>
-                <option value="arial">Arial</option>
-                <option value="times-new-roman">Times New Roman</option>
-              </select></label>
-              <div class="setting-field setting-field--font-size">
-                <label for="fontSize">サイズ</label>
-                <div class="font-size-controls" role="group" aria-label="文字サイズ">
-                  <button id="decreaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を小さく" title="文字を小さく（2px）" disabled>−</button>
-                  <input id="fontSize" type="number" min="8" max="300" step="1" value="42" aria-label="文字サイズ（px）">
-                  <button id="increaseFontSize" class="button plain appbox-button appbox-button--secondary" type="button" aria-label="文字を大きく" title="文字を大きく（2px）" disabled>＋</button>
-                </div>
-              </div>
+      <aside id="layerSidebar" class="editor-settings panel appbox-panel appbox-panel--accent" aria-label="レイヤー">
+        <div class="layer-sidebar-toggle-wrap">
+          <button id="toggleLayerSidebar" class="editor-sidebar-toggle layer-sidebar-toggle" type="button" aria-label="レイヤー欄を折りたたむ" aria-controls="layerSidebarContent" aria-expanded="true" title="レイヤー欄を折りたたむ">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="m9 6 6 6-6 6"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="layerSidebarContent" class="right-panel editor-layer-controls" inert>
+
+        <details id="imageNavigator" class="image-navigator" open hidden>
+          <summary id="navigatorSummary" class="layer-list-summary">ナビゲーター</summary>
+          <div id="navigatorBody" class="image-navigator-body">
+            <div id="navigatorViewport" class="image-navigator-viewport" role="group" tabindex="-1" aria-label="画像の表示位置。クリック・ドラッグ・矢印キーで移動" aria-disabled="true">
+              <canvas id="navigatorPreview" width="320" height="200" aria-hidden="true"></canvas>
+              <span id="navigatorFrame" class="image-navigator-frame" aria-hidden="true"></span>
             </div>
-            <div data-settings="color" class="context-setting hidden">
-              <label class="setting-field setting-field--color" for="annotationColor"><span id="annotationColorLabel">色</span><input id="annotationColor" type="color" value="#d00000" aria-label="文字・図形・手書きの色"></label>
+            <div class="image-navigator-zoom" role="group" aria-label="ナビゲーターの表示倍率">
+              <button id="navigatorZoomOut" class="button plain" type="button" aria-label="画像表示を縮小" disabled>−</button>
+              <input id="navigatorZoomRange" type="range" min="0" max="1000" step="1" value="0" aria-label="画像の表示倍率" disabled>
+              <button id="navigatorZoomIn" class="button plain" type="button" aria-label="画像表示を拡大" disabled>＋</button>
+              <label class="image-navigator-percent"><input id="navigatorZoomValue" type="number" min="0.1" max="400" step="0.1" value="100" aria-label="画像の表示倍率（%）" disabled><span aria-hidden="true">%</span></label>
             </div>
-            <div data-settings="text" class="context-setting hidden">
-              <label class="check setting-check" for="boldText"><input id="boldText" type="checkbox" checked>太字</label>
-            </div>
-            <div data-settings="line" class="context-setting hidden">
-              <label class="setting-field" for="lineWidth"><span>太さ</span><input id="lineWidth" type="number" min="1" max="100" step="1" value="8" aria-label="線の太さ（px）"></label>
-            </div>
-            <div data-settings="text" class="context-setting context-setting--fill hidden">
-              <label class="setting-field setting-field--color" for="textBgColor"><span id="textFillLabel">塗り</span><input id="textBgColor" type="color" value="#ffffff" aria-label="文字の塗り色"></label>
-              <label class="check setting-check" for="textBgTransparent"><input id="textBgTransparent" type="checkbox" checked>塗りなし</label>
-            </div>
-            <div data-settings="fill" class="context-setting context-setting--fill hidden">
-              <label class="setting-field setting-field--color" for="shapeFill"><span id="shapeFillLabel">塗り</span><input id="shapeFill" type="color" value="#fff1b8" aria-label="図形の塗り色"></label>
-              <label class="check setting-check" for="shapeFillNone"><input id="shapeFillNone" type="checkbox" checked>塗りなし</label>
-            </div>
-            <div data-settings="outline" class="context-setting hidden">
-              <label class="check setting-check" for="whiteOutline"><input id="whiteOutline" type="checkbox" checked>白縁</label>
-            </div>
-            <div data-settings="brush" class="context-setting hidden">
-              <label class="setting-field" for="brushSize"><span>太さ</span><input id="brushSize" type="number" min="5" max="500" step="1" value="50" aria-label="ブラシの太さ（px）"></label>
-            </div>
-            <div data-settings="mosaic" class="context-setting hidden">
-              <label class="setting-field" for="mosaicSize"><span>粗さ</span><input id="mosaicSize" type="number" min="4" max="200" step="1" value="18" aria-label="モザイクの粗さ（px）"></label>
-            </div>
-            <div data-settings="ink" class="context-setting hidden">
-              <label class="setting-field" for="inkStabilizer"><span>補正</span><select id="inkStabilizer" aria-label="手ぶれ補正">
-                <option value="none">なし</option><option value="weak">弱</option><option value="medium">中</option><option value="strong">強</option>
-              </select></label>
-            </div>
-            <div data-settings="image" class="context-setting hidden">
-              <label class="setting-field" for="imageOpacity"><span>濃さ</span><input id="imageOpacity" type="number" min="0" max="100" step="1" value="100" aria-label="画像の不透明度（%）"></label>
-            </div>
-            <section data-context="crop" class="context-setting hidden" aria-label="トリミング設定">
-              <label class="setting-field" for="cropW"><span>横幅</span><input id="cropW" type="number" min="1" step="1" aria-label="トリミングの横幅（px）"></label>
-              <label class="setting-field" for="cropH"><span>高さ</span><input id="cropH" type="number" min="1" step="1" aria-label="トリミングの高さ（px）"></label>
-              <label class="setting-field" for="cropRatio"><span>比率</span><select id="cropRatio">
-                <option value="free">自由</option><option value="1">1:1</option><option value="4:3">4:3</option><option value="16:9">16:9</option><option value="3:4">3:4</option><option value="35:45">35:45</option><option value="original">元画像</option>
-              </select></label>
-              <button id="centerCrop" class="button plain appbox-button appbox-button--secondary" type="button" disabled>中央配置</button>
-              <button id="applyCrop" class="button primary appbox-button appbox-button--primary" type="button" disabled>この範囲で切り抜く</button>
-              <button id="cancelCrop" class="button plain appbox-button appbox-button--secondary" type="button">キャンセル</button>
-            </section>
-            <section data-context="transform" class="context-setting hidden" aria-label="保存する画像のサイズ変更">
-              <label class="setting-field" for="resizeW"><span>横幅</span><input id="resizeW" type="number" min="1" max="8192" step="1" aria-label="保存する画像の横幅（px）"></label>
-              <label class="setting-field" for="resizeH"><span>高さ</span><input id="resizeH" type="number" min="1" max="8192" step="1" aria-label="保存する画像の高さ（px）"></label>
-              <label class="check setting-check" for="lockAspect"><input id="lockAspect" type="checkbox" checked>比率固定</label>
-              <button id="applyResize" class="button plain appbox-button appbox-button--secondary" type="button">サイズを変更</button>
-            </section>
           </div>
-          <div id="editorActions" class="editor-actions hidden" role="group" aria-label="重なり順" aria-hidden="true" inert>
-            <button id="frontLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最前面</button>
-            <button id="backLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最背面</button>
-          </div>
-        </section>
+        </details>
+
         <details id="layerListPanel" class="layer-list-panel">
           <summary class="layer-list-summary">
             <span>レイヤー</span>
             <span id="layerListCount" class="layer-list-count" aria-hidden="true">0</span>
           </summary>
-          <p id="layerReorderHint" class="layer-list-hint">上下にドラッグで重なり順を変更（Alt＋↑／↓でも移動）</p>
-          <div id="layerList" class="layer-list" role="group" aria-label="レイヤーを選択・並べ替え" aria-describedby="layerReorderHint">
+          <div id="layerList" class="layer-list" role="group" aria-label="レイヤーを選択・並べ替え・表示切替">
             <p class="layer-list-empty">レイヤーはありません。</p>
           </div>
         </details>
+        <div id="editorActions" class="editor-actions hidden" role="group" aria-label="重なり順" aria-hidden="true" inert>
+            <button id="frontLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最前面</button>
+            <button id="backLayer" class="button plain appbox-button appbox-button--secondary" type="button" disabled>最背面</button>
+          </div>
+        <div id="deleteSelectionActions" class="selection-delete-actions hidden" aria-hidden="true" inert>
+            <button id="deleteSelected" class="button plain appbox-button appbox-button--secondary" type="button" disabled>選択中の対象を削除</button>
+          </div>
+        </div>
       </aside>
 
     </div>
@@ -553,8 +660,8 @@
             <p id="batchCount">0枚</p>
           </div>
           <div class="button-row">
-            <button id="batchAdd" class="button plain appbox-button appbox-button--secondary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#open"></use></svg><span>画像を追加</span></button>
-            <button id="batchClear" class="button danger appbox-button appbox-button--danger" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--delete appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#delete"></use></svg><span>一覧を消去</span></button>
+            <button id="batchAdd" class="button plain appbox-button appbox-button--secondary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--open" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#open"></use></svg><span>画像を追加</span></button>
+            <button id="batchClear" class="button danger appbox-button appbox-button--danger" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--delete appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#delete"></use></svg><span>一覧を消去</span></button>
           </div>
         </div>
 
@@ -573,11 +680,11 @@
           <label for="zipName">ZIP名</label>
           <input id="zipName" type="text" maxlength="100" value="images-batch">
 
-          <button id="batchProcess" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>一括処理してZIP保存</span></button>
+          <button id="batchProcess" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg><span>一括処理してZIP保存</span></button>
           <button id="batchCancel" class="button danger full hidden appbox-button appbox-button--danger" type="button">
             処理を中止
           </button>
-          <button id="batchRedownload" class="button plain full appbox-button appbox-button--secondary" type="button" disabled><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>最後のZIPを再保存</span></button>
+          <button id="batchRedownload" class="button plain full appbox-button appbox-button--secondary" type="button" disabled><svg class="appbox-icon appbox-icon--action appbox-icon--save" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg><span>最後のZIPを再保存</span></button>
 
           <div id="batchStatus" class="status" role="status" aria-live="polite">
             画像を追加してください。
@@ -600,7 +707,7 @@
     </div>
   </section>
 
-  <footer class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.14.0</footer>
+  <footer id="imageFooter" class="appbox-footer">共創アプリBOX / 画像かんたん加工 Version 1.24.4</footer>
     </div>
 </main>
 
@@ -610,6 +717,18 @@
   <button id="menuDelete" type="button" role="menuitem">削除</button>
   <button id="menuFront" type="button" role="menuitem">最前面へ</button>
   <button id="menuBack" type="button" role="menuitem">最背面へ</button>
+</div>
+
+<div id="imageDropDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="imageDropTitle" aria-describedby="imageDropName">
+  <div class="dialog-card image-drop-card" tabindex="-1">
+    <div class="dialog-head"><h2 id="imageDropTitle">画像の使い方</h2></div>
+    <p id="imageDropName" class="image-drop-name"></p>
+    <div class="image-drop-choices">
+      <button id="imageDropAdd" class="button soft appbox-button appbox-button--secondary" type="button">画像を重ねる</button>
+      <button id="imageDropOpen" class="button plain appbox-button appbox-button--secondary" type="button">画像を変更</button>
+    </div>
+    <div class="image-drop-cancel"><button id="imageDropCancel" class="button plain appbox-button appbox-button--secondary" type="button">キャンセル</button></div>
+  </div>
 </div>
 
 <div id="stampDialog" class="dialog hidden" role="dialog" aria-modal="true" aria-labelledby="stampTitle">
@@ -710,13 +829,37 @@
           <strong>保存前の確認</strong>
           <p>非表示のレイヤーは保存されません。個人情報等が確実に隠れていることを、比較プレビューでも確認してください。</p>
         </div>
-        <button id="singleSave" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=2.5.0#save"></use></svg><span>加工済み画像を保存</span></button>
+        <button id="singleSave" class="button primary full large appbox-button appbox-button--primary" type="button"><svg class="appbox-icon appbox-icon--action appbox-icon--save appbox-icon--inherit" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><use href="../../assets/appbox-icons.svg?v=b70f4b9c#save"></use></svg><span>加工済み画像を保存</span></button>
         <section class="section" aria-label="編集を再開するための保存">
           <h3>作業ファイル</h3>
           <p class="hint">文字・図形を後から修正できます。黒塗り・モザイクで隠した元画像や非表示レイヤーも含むため、配布用に使わないでください。</p>
           <button id="projectSave" type="button" class="button plain full appbox-button appbox-button--secondary">作業ファイルを保存（.abimg）</button>
         </section>
         <div id="singleStatus" class="status" role="status" aria-live="polite">保存時に表示中のレイヤーを画像へ焼き込みます。</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div
+  id="switchDialog"
+  class="dialog hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="switchTitle"
+  aria-describedby="switchDescription">
+  <div class="dialog-card save-dialog-card" tabindex="-1">
+    <div class="dialog-head">
+      <h2 id="switchTitle">保存していない変更があります</h2>
+      <p id="switchDescription">別の画像・作業ファイルを開くと、現在の編集内容を失います。編集を続きから再開する場合は、元画像や編集情報を含む作業ファイル（.abimg）のダウンロードを開始してから切り替えてください。実際に保存されたかはブラウザーのダウンロード先で確認してください。</p>
+    </div>
+    <section class="panel right-panel appbox-panel appbox-panel--accent">
+      <div class="panel-body">
+        <p id="switchStatus" class="hint" role="status" aria-live="polite"></p>
+        <button id="switchSave" class="button primary full appbox-button appbox-button--primary" type="button">作業ファイルをダウンロードする</button>
+        <button id="switchContinue" class="button primary full appbox-button appbox-button--primary hidden" type="button" hidden>保存したことを確認して進む</button>
+        <button id="switchDiscard" class="button plain full appbox-button appbox-button--secondary" type="button">保存せずに進む（編集内容を破棄）</button>
+        <button id="switchCancel" class="button plain full appbox-button appbox-button--secondary" type="button">キャンセル（編集を続ける）</button>
       </div>
     </section>
   </div>
@@ -754,12 +897,17 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="./drawing-core.js?v=1.4.0"></script>
-<script src="./annotation-style.js?v=1.13.1"></script>
-<script src="./stamp.js?v=1.4.0"></script>
-<script src="./editor-actions.js?v=1.10.0"></script>
-<script src="../../assets/appbox-safe-image.js?v=2.5.0"></script>
-<script src="./project-file.js?v=1.14.0"></script>
-<script src="./image.js?v=1.14.0"></script>
+<script src="./drawing-core.js?v=53f5b31a"></script>
+<script src="./annotation-style.js?v=1fdd1c12"></script>
+<script src="./stamp.js?v=e3de13f9"></script>
+<script src="./editor-actions.js?v=cc3f27ad"></script>
+<script src="../../assets/appbox-safe-image.js?v=7a110447"></script>
+<script src="./project-file.js?v=b111d43c"></script>
+<script src="./font-picker.js?v=fed48026"></script>
+<script src="./color-picker.js?v=8aad2cff"></script>
+<script src="./navigator.js?v=5dac69c5"></script>
+<script src="./image-drop.js?v=c14dddaf"></script>
+<script src="./image.js?v=006a88f0"></script>
+<script src="./tool-tooltips.js?v=d6d3cbdd"></script>
 </body>
 </html>

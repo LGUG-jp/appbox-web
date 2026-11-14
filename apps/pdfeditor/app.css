@@ -94,51 +94,9 @@ a:focus-visible,
 }
 
 /*
- * 墨消しに関する重要な注意
- */
-
-.redaction-notice {
-  width: 100%;
-  margin: 0 0 16px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 1px solid var(--warning-border);
-  border-radius: 12px;
-  color: var(--warning-text);
-  background: var(--warning-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.redaction-notice svg {
-  width: 21px;
-  height: 21px;
-  flex: 0 0 auto;
-  margin-top: 1px;
-}
-
-.redaction-notice div {
-  min-width: 0;
-}
-
-.redaction-notice strong {
-  display: block;
-  margin-bottom: 2px;
-  font-size: 13px;
-}
-
-.redaction-notice span {
-  display: block;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-/*
  * 折りたたみ（プレビューを広く使うため）
  *
- * appbox-collapse.jsがアプリ導入部と注意喚起へ
+ * appbox-collapse.jsがアプリ導入部へ
  * data-appbox-collapsed="true"を付けます。
  * 状態は保存せず、再読込み時は必ず表示状態へ戻します。
  */
@@ -148,11 +106,10 @@ a:focus-visible,
 
 /*
  * PDF読込み後は編集作業を最優先にします。
- * 初期案内と注意喚起は読込み前に確認できるため、
+ * 初期案内は読込み前に確認できるため、
  * 編集中は自動で隠し、PDFを閉じると再表示します。
  */
 body.pdf-editor-active #pdfBrand,
-body.pdf-editor-active #pdfNotice,
 body.pdf-editor-active .appbox-collapse-toggle,
 body.pdf-editor-active .pdfeditor-footer,
 body.pdf-editor-active .editor-guidance {
@@ -399,6 +356,7 @@ body.pdf-editor-active .status-bar {
  * loading-overlay自体の表示は維持します。
  */
 .editor.is-busy .pages-panel,
+.editor.is-busy .bookmarks-panel,
 .editor.is-busy .page-toolbar,
 .editor.is-busy .viewer-toolbar,
 .editor.is-busy .editor-guidance,
@@ -1108,7 +1066,6 @@ body.pdf-editor-active .status-bar {
   .empty-state { padding: 12px 10px 24px; }
   .empty-card { padding: 16px 12px 20px; border-radius: 14px; }
   .drop-zone { min-height: 240px; padding: 24px 14px; }
-  .redaction-notice { padding: 8px 10px; margin-bottom: 12px; }
   .zoom-field > span { display: none; }
 }
 
@@ -1134,7 +1091,6 @@ body.pdf-editor-active .status-bar {
     outline: 2px solid Highlight;
   }
 
-  .redaction-notice,
   .drop-zone,
   .panel-head,
   .page-toolbar,
@@ -1486,6 +1442,10 @@ body.pdf-editor-active .status-bar {
 .save-menu-list[hidden] {
   display: none;
 }
+/* 墨消し範囲があるときの通常保存など、隠した項目は下のボタンのdisplay指定より優先して消す。 */
+.save-menu .save-menu-list [hidden] {
+  display: none;
+}
 .save-menu-note { max-width: 22em; margin: 4px 8px; color: var(--muted); font-size: .8rem; }
 .save-menu .save-menu-list button {
   display: block;
@@ -1564,6 +1524,33 @@ body.pdf-editor-active .status-bar {
   color: var(--accent-dark);
   background: var(--accent-soft);
   border-color: var(--accent);
+}
+/* 覆い系の図形を初めて置いたときの案内。通常フローに置き、ツールや図形に重ねない。
+   読み上げ用の領域は常に残し、閉じている間は余白も消す。 */
+.covering-notice {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 0 12px;
+}
+.covering-notice[data-open="true"] {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--warning-border);
+  color: var(--warning-text);
+  background: var(--warning-bg);
+}
+.covering-notice p {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.covering-notice .mini-btn { flex: none; min-height: 32px; font-size: 13px; line-height: 1.2; }
+.covering-notice [hidden] { display: none; }
+@media (forced-colors: active) {
+  .covering-notice[data-open="true"] { border-color: CanvasText; }
 }
 .overview-status {
   flex: none;
@@ -1775,7 +1762,8 @@ body.pdf-editor-active .status-bar {
   flex: none;
   border-right: 1px solid var(--line);
 }
-.editor[data-mode="edit"][data-pages-expanded="false"] .pages-panel {
+.editor[data-mode="edit"][data-pages-expanded="false"] .pages-panel,
+.editor[data-mode="edit"][data-bookmarks-open="true"] .pages-panel {
   display: none;
 }
 .editor[data-mode="edit"] .thumb-list {
@@ -2098,7 +2086,7 @@ body.pdf-editor-active .status-bar {
   touch-action: none;
 }
 .annotation-layer[data-tool="ink-eraser"] {
-  cursor: url("./eraser-cursor.svg?v=1.11.0") 12 12, cell;
+  cursor: url("./eraser-cursor.svg?v=1ab9beac") 12 12, cell;
 }
 .annotation-layer[data-tool="ink"] .ann,
 .annotation-layer[data-tool="ink-eraser"] .ann {
@@ -2465,6 +2453,14 @@ body:not(.pdf-editor-active) {
 .page-number-margin-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .page-number-margin-fields[hidden] { display: none; }
 .watermark-overlay text { font-weight: 700; white-space: pre; }
+.watermark-caution { margin: 0 0 16px; }
+/* ページ番号・透かし：広い画面では左に設定、右にプレビューと操作を置き、設定を変えながら結果を見比べられるようにする。
+   右列は固定幅にせず比率で分け、表示幅900px以下（拡大で幅が狭くなった場合を含む）は1列に戻す。低い画面ではダイアログ内でスクロールして操作ボタンへ届く。 */
+.settings-preview-dialog { width: min(960px, calc(100% - 24px)); }
+.settings-preview-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.settings-preview-side > :first-child { margin-top: 0; }
+.settings-preview-side .page-number-preview-figure { margin: 12px 0; }
+.settings-preview-side .page-number-preview canvas { max-height: min(420px, 55dvh); }
 .stamp-template-row { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin: 0 0 16px; }
 .stamp-template-row label { display: grid; flex: 1 1 14em; gap: 6px; font-weight: 700; }
 .stamp-template-row input, .stamp-template-row select, .page-number-fields textarea {
@@ -2503,10 +2499,132 @@ body:not(.pdf-editor-active) {
 .stamp-save > p { margin: 8px 0 0; }
 @media (max-width: 900px) {
   .stamp-layout { grid-template-columns: minmax(0, 1fr); }
+  .settings-preview-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 }
 @media (max-width: 480px) {
   .page-number-dialog { padding: 16px; }
   .page-number-fields, .page-number-margin-fields { grid-template-columns: 1fr; gap: 12px; }
   .stamp-dialog .stamp-fields { grid-template-columns: minmax(0, 1fr); }
   .stamp-fields .stamp-wide-field, .stamp-text-group { grid-column: auto; grid-row: auto; }
+}
+
+/* しおり */
+.bookmarks-count {
+  min-width: 1.5em;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: #172033;
+  background: var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+.bookmarks-warning {
+  width: 1.5em;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--warning-text);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+}
+.bookmarks-panel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 288px;
+  min-height: 0;
+  padding: 12px;
+  border-right: 1px solid var(--line);
+  background: #fff;
+}
+.bookmarks-panel[hidden] { display: none; }
+.bookmarks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bookmarks-head h2 { margin: 0; font-size: 1rem; }
+.bookmarks-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+.bookmarks-actions .mini-btn { flex: 1 1 auto; font-size: 13px; line-height: 1.4; }
+.bookmarks-actions .mini-btn:disabled { opacity: .55; cursor: not-allowed; }
+.bookmarks-notice {
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bookmarks-empty { margin: 0; color: #4d555d; font-size: 13px; line-height: 1.6; }
+.bookmark-tree { flex: 1; min-height: 0; overflow: auto; }
+.bookmark-list { margin: 0; padding: 0; list-style: none; }
+.bookmark-list .bookmark-list { padding-left: 14px; }
+.bookmark-row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 6px;
+}
+/* 選択はテーマ色で示します。--focus は半透明なので、フォーカス枠には不透明な --page-interaction を使い、選択と区別します。 */
+.bookmark-row.is-selected { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.bookmark-row.is-selected .bookmark-title { font-weight: 700; }
+.bookmark-fold,
+.bookmark-fold-spacer { flex: none; width: 24px; }
+.bookmark-fold {
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: #4d555d;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
+.bookmark-link {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px;
+  border: 0;
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.bookmark-link:hover, .bookmark-fold:hover { background: #eef1f5; }
+.bookmark-link:focus-visible, .bookmark-fold:focus-visible {
+  outline: 2px solid var(--page-interaction);
+  outline-offset: -2px;
+}
+.bookmark-title { min-width: 0; overflow-wrap: anywhere; }
+.bookmark-page { flex: none; color: #4d555d; font-size: 12px; white-space: nowrap; }
+.bookmark-fields { grid-template-columns: minmax(0, 1fr) 8em; }
+.bookmark-page-hint { margin: 8px 0 16px; color: #4d555d; font-size: 13px; text-align: right; }
+@media (forced-colors: active) {
+  .bookmark-row.is-selected { border-left: 4px solid Highlight; }
+}
+/* 低い画面や拡大時も、見出しと注意文に押されて一覧へ届かなくならないようにします。 */
+@media (max-height: 600px) {
+  .bookmarks-panel { overflow: auto; }
+  .bookmark-tree { flex: none; overflow: visible; }
+}
+@media (max-width: 700px) {
+  .editor[data-bookmarks-open="true"] .workspace-body { flex-direction: column; }
+  .bookmarks-panel { width: 100%; max-height: 45%; overflow: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .bookmark-tree { flex: none; overflow: visible; }
+  .bookmark-fields { grid-template-columns: minmax(0, 1fr); }
+  .bookmark-page-hint { text-align: left; }
 }

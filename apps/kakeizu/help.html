@@ -25,14 +25,14 @@
     content="light"
   >
   <title>相続関係図（ジェノグラム）作成ツール ヘルプ | 共創アプリBOX</title>
-  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=2.5.0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
-  <link rel="icon" href="../../assets/appbox-favicon.svg?v=2.5.0" type="image/svg+xml" sizes="any">
+  <link rel="icon" href="../../assets/brand/appbox-favicon.ico?v=b33fdcb0" type="image/x-icon" sizes="16x16 32x32 48x48 64x64 256x256">
+  <link rel="icon" href="../../assets/appbox-favicon.svg?v=dbb88567" type="image/svg+xml" sizes="any">
 
-  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-base.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=2.5.0">
-  <link rel="stylesheet" href="../../assets/appbox-help.css?v=2.5.0">
+  <link rel="stylesheet" href="../../assets/appbox-tokens.css?v=ea34c3ad">
+  <link rel="stylesheet" href="../../assets/appbox-themes.css?v=b8863548">
+  <link rel="stylesheet" href="../../assets/appbox-base.css?v=df91469d">
+  <link rel="stylesheet" href="../../assets/appbox-chrome.css?v=75d95a65">
+  <link rel="stylesheet" href="../../assets/appbox-help.css?v=c3c10a33">
 </head>
 
 <body>
@@ -40,8 +40,8 @@
     <div class="appbox-header__inner">
       <a class="appbox-header__brand" href="../../" aria-label="共創アプリBOXのホームへ">
         <span class="appbox-header__brand-image" aria-hidden="true">
-          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=2.5.0" width="156" height="36" alt="" decoding="async">
-          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=2.5.0" width="32" height="32" alt="" decoding="async">
+          <img class="appbox-header__brand-wordmark" src="../../assets/brand/appbox-logo-horizontal.svg?v=369f2fff" width="156" height="36" alt="" decoding="async">
+          <img class="appbox-header__brand-mark" src="../../assets/brand/appbox-mark-compact.svg?v=dbb88567" width="32" height="32" alt="" decoding="async">
         </span>
         <p class="appbox-header__title appbox-header__title--visually-hidden">共創アプリBOX</p>
       </a>
@@ -84,7 +84,7 @@
         </div>
         <p class="appbox-help-header-desc">人物と関係を登録して相続関係図を作り、保存・出力するまでを説明します。</p>
       </div>
-      <span class="version-badge">Version 2.2.0</span>
+      <span class="version-badge">Version 2.2.1</span>
       <div class="help-callout help-callout-warning">
         <strong>本ツールは法的な判断を行うものではありません</strong>
         <p>
@@ -143,7 +143,7 @@
           <h2 class="appbox-help-h2" id="quick-start-title">基本の使い方</h2>
 
           <ol class="help-steps">
-            <li><strong>作り始め方を選ぶ</strong><p class="appbox-help-step-desc">初回起動時は基本の3世代サンプルが表示されます。白紙から作る場合は「新規 / サンプル」→「空白から作成」、保存した図を再開する場合は「保存 / 復元」→「ファイルを読み込む」を選びます。</p></li>
+            <li><strong>作り始め方を選ぶ</strong><p class="appbox-help-step-desc">初回起動時は基本の 3 世代サンプルと、キャンバス上部中央の「サンプルデータ表示中：サンプル名」カードが表示されます。白紙から作る場合は「新規 / サンプル」→「空白から作成」、保存した図を再開する場合は「保存 / 復元」→「ファイルを読み込む」を選びます。</p></li>
             <li><strong>人物を追加し、情報を入力する</strong><p class="appbox-help-step-desc">「＋ 人物追加」を押し、配置プレビューを確認して作図面をクリックします。人物追加モードを終了してから人物をクリックすると、氏名・性別・続柄などを入力できます。必要に応じて「詳細モード」で住所や業務情報を入力します。</p></li>
             <li><strong>人物同士の関係を登録する</strong><p class="appbox-help-step-desc">「関係」メニューの夫婦・親1人・親2人を選び、案内に従って人物をクリックします。人物カードの［•••］から「親族を新規追加」「既存人物との関係」も利用できます。続柄の文字を入力するだけでは関係線は登録されません。</p></li>
             <li><strong>配置と内容を確認する</strong><p class="appbox-help-step-desc">「整列」メニューや手動操作で位置を整え、必要な図形・注釈を追加します。「図のチェック」も利用できますが、法的な相続人の判定には使えません。</p></li>
@@ -449,54 +449,69 @@
                 <tr>
                   <th scope="row">基本の 3 世代</th>
                   <td>祖父母・被相続人と配偶者・子 2 人（6 人）</td>
-                  <td>架空の高橋家。氏名と続柄を別々に設定した、基本的な 3 世代の家族です。</td>
+                  <td>架空の氏名を用いた、基本的な 3 世代の家族です。氏名と続柄は別々に設定されています。</td>
                 </tr>
                 <tr>
                   <th scope="row">夫婦と子 2 人</th>
                   <td>夫婦・子 2 人（4 人）</td>
-                  <td>架空の青葉家。夫婦と子 2 人の基本的な親子関係です。</td>
+                  <td>架空の氏名を用いた、夫婦と子 2 人の基本的な親子関係です。</td>
                 </tr>
                 <tr>
                   <th scope="row">ひとり親と子 2 人</th>
                   <td>母・子 2 人（3 人）</td>
-                  <td>架空の若葉家。登録する親が 1 人の構成であり、もう一方の親の法的状態を示すものではありません。</td>
+                  <td>架空の氏名を用いた、母と子 2 人の構成です。登録する親が 1 人の構成であり、もう一方の親の法的状態を示すものではありません。</td>
                 </tr>
                 <tr>
                   <th scope="row">子のいない夫婦と双方の親・兄弟</th>
                   <td>夫婦・双方の親・兄弟（8 人）</td>
-                  <td>架空の桜井家と小川家。子のいない夫婦を中心に双方の親と兄弟を示します。</td>
+                  <td>架空の氏名を用いた、子のいない夫婦を中心に双方の親と兄弟を示す構成です。</td>
                 </tr>
                 <tr>
                   <th scope="row">兄弟姉妹と配偶者・甥姪</th>
                   <td>両親・兄弟姉妹 3 人・各配偶者・甥姪（11 人）</td>
-                  <td>架空の森野家と星川家。兄・本人・妹を中心に配偶者と甥姪を示します。</td>
+                  <td>架空の氏名を用いた、兄・本人・妹を中心に配偶者と甥姪を示す構成です。</td>
                 </tr>
                 <tr>
                   <th scope="row">死亡した親を含む家族</th>
                   <td>父（死亡）・母・子 2 人（4 人）</td>
-                  <td>架空の水瀬家。父の死亡表示と、母・子 2 人の親子関係を確認できます。</td>
+                  <td>架空の氏名を用いた、父の死亡表示と、母・子 2 人の親子関係を確認できる構成です。</td>
                 </tr>
                 <tr>
                   <th scope="row">再婚のある家族</th>
                   <td>本人・前妻・現妻・各婚の子 2 人ずつ（7 人）</td>
-                  <td>架空の家族。前婚の長男・長女、再婚後の次男・次女を示します。婚姻状態を区別する線はありません。</td>
+                  <td>架空の氏名を用いた、前婚の長男・長女、再婚後の次男・次女を示す構成です。婚姻状態を区別する線はありません。</td>
                 </tr>
                 <tr>
                   <th scope="row">4 世代の家族</th>
                   <td>曾祖父母から曾孫まで（7 人）</td>
-                  <td>架空の高原家。曾祖父母から曾孫まで 4 世代のつながりです。</td>
+                  <td>架空の氏名を用いた、曾祖父母から曾孫まで 4 世代のつながりを示す構成です。</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           <p>
-            氏名・家族構成・出生順・日付はすべて架空の設定です。続柄はサンプルに設定された値であり、自動算出しません。
+            全サンプルで明確に架空の氏名を使用しています。氏名・家族構成・出生順・日付はすべて架空の設定であり、実在の個人・団体とは関係ありません。続柄はサンプルに設定された値であり、自動算出しません。
             サンプルを選択すると現在の図が置き換わります。
             図上にデータが存在する場合は、置き換え前に確認画面が表示されます。
             必要なデータは事前に「JSON 保存」でファイルへ保存してください。
             置き換えた後も「元に戻す（<kbd>Ctrl</kbd> + <kbd>Z</kbd>）」で元の状態に戻せます。
           </p>
+
+          <h4 class="appbox-help-h4">サンプル利用時の案内表示</h4>
+          <p>
+            初回起動時やサンプル（「空白から作成」を除く）を読み込んだときは、キャンバス上部中央に薄紫のカードで「サンプルデータ表示中：サンプル名」を 1 行表示します。
+            狭幅で収まらないサンプル名は省略表示します。
+            パンやズーム、人物詳細パネルの開閉ではカードの位置は変わりません。作図中の操作案内はカードの下に表示し、狭幅ではズーム操作の下に配置します。
+          </p>
+          <ul>
+            <li><strong>案内が消える条件</strong>: 人物の追加や移動、情報編集、関係線の作成や解除など、図の実データを変更すると案内表示は自動的に消去されます。</li>
+            <li><strong>案内が維持される操作</strong>: 人物や図形の選択、画面のパン（移動）やズーム（拡大・縮小）、表示モードの切り替え、入力内容を変更しない確定操作では、案内表示は維持されます。</li>
+            <li><strong>元に戻す（Undo）との連動</strong>: 編集操作を元に戻しても、一度消去された案内表示は復活しません。再度案内を確認したい場合は、「新規 / サンプル」からサンプルを再度読み込んでください。</li>
+            <li><strong>非表示となる場合</strong>: 「空白から作成」を選択した場合、JSON ファイルから読み込んだ場合、旧バージョンのブラウザ保存データから復元した場合は、サンプル案内は表示されません。</li>
+            <li><strong>保存・出力との関係</strong>: サンプル案内は画面上の操作補助表示です。JSON ファイルへの保存データ、印刷プレビューや実印刷、PNG・SVG 画像の出力結果には含まれません。</li>
+            <li><strong>画面の受入確認</strong>: 画面上の見え方や実際の操作感については、利用環境に応じた人手による受入確認が必要です。</li>
+          </ul>
 
         </section>
 
@@ -927,7 +942,7 @@
             <li>未保存警告はEdgeの強制終了・PCの電源断には対応できません。</li>
             <li>作図面での人物・関係線・図形の直接操作には、マウスまたはタッチ操作が必要な機能があります。キーボードだけでは全ての作図操作を完結できません。</li>
             <li>タッチとペンの複数入力では、操作が競合する可能性があります。</li>
-            <li>開発環境における人手による Microsoft Edge での受入検証は未実施です。本番環境の Edge で動作確認してください。</li>
+            <li>画面の見え方や操作感を含め、開発環境における人手による Microsoft Edge での受入検証は未実施です。本番環境の Edge で動作確認してください。</li>
           </ul>
         </section>
 
@@ -981,9 +996,9 @@
         </div>
 
     <footer class="appbox-footer">
-      共創アプリBOX / 相続関係図（ジェノグラム）作成ツール Version 2.2.0
+      共創アプリBOX / 相続関係図（ジェノグラム）作成ツール Version 2.2.1
     </footer>
   </main>
-  <script src="../../assets/appbox-help.js?v=2.5.0"></script>
+  <script src="../../assets/appbox-help.js?v=478c676f"></script>
 </body>
 </html>

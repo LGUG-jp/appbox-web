@@ -63,6 +63,31 @@
     return {w:original.w*scale,h:original.h*scale};
   }
 
+  // Report matching selection-box edges/centres without changing coordinates.
+  // Callers convert the screen-pixel tolerance to image pixels for their zoom.
+  function alignmentGuides(bounds,targets,tolerance=0){
+    const valid = box => box && [box.x,box.y,box.w,box.h,box.x+box.w,box.y+box.h].every(Number.isFinite) &&
+      box.w >= 0 && box.h >= 0;
+    if(!valid(bounds) || !Number.isFinite(tolerance) || tolerance < 0) return [];
+    const guides = [];
+    for(const [axis,size] of [["x","w"],["y","h"]]){
+      const anchors = [bounds[axis],bounds[axis]+bounds[size]/2,bounds[axis]+bounds[size]];
+      let nearest = null;
+      for(const target of targets){
+        if(!valid(target)) continue;
+        for(const position of [target[axis],target[axis]+target[size]/2,target[axis]+target[size]]){
+          for(const anchor of anchors){
+            const distance = Math.abs(anchor-position);
+            // Keep the first target on ties, so the image itself can take priority.
+            if(distance <= tolerance && (!nearest || distance < nearest.distance)) nearest = {position,distance};
+          }
+        }
+      }
+      if(nearest) guides.push({axis,position:nearest.position});
+    }
+    return guides;
+  }
+
   function inkBounds(points){
     if(!points?.length) return {x:0,y:0,w:0,h:0};
     let x=Infinity,y=Infinity,right=-Infinity,bottom=-Infinity;
@@ -117,5 +142,5 @@
   }
 
   return {MAX_STROKE_POINTS,MAX_IMAGE_INK_POINTS,isLine,drawingBox,constrainedLinePoint,angleLockedLinePoint,
-    resizeBox,inkBounds,appendInkPoint,stabilizeInkPoint,pointSegmentDistance,inkIntersectsSegment,imageInkPointCount};
+    resizeBox,alignmentGuides,inkBounds,appendInkPoint,stabilizeInkPoint,pointSegmentDistance,inkIntersectsSegment,imageInkPointCount};
 });
